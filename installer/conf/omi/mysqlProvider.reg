@@ -1,0 +1,8 @@
+# omireg /home/jeffcof/dev/work/mysql/target/Linux_REDHAT_6.1_x64_64_Debug/libmysqlProvider.so
+LIBRARY=mysqlProvider
+HOSTING=@requestor@
+EXTRACLASS=CIM_ConcreteJob:CIM_Job:CIM_LogicalElement:CIM_ManagedSystemElement:CIM_ManagedElement
+EXTRACLASS=CIM_Error
+CLASS=MySQL_Server:CIM_InstalledProduct:CIM_Collection:CIM_ManagedElement
+CLASS=MySQL_ServerStatistics:CIM_StatisticalData:CIM_ManagedElement
+CLASS=MySQL_Server_Database:CIM_CommonDatabase:CIM_EnabledLogicalElement:CIM_LogicalElement:CIM_ManagedSystemElement:CIM_ManagedElement

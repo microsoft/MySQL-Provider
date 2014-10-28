@@ -1,0 +1,127 @@
+// -*- idl -*-
+
+// Copyright (c) Microsoft Corporation. All rights reserved. See license.txt for license information.
+
+#pragma locale ("en_US")
+
+// MySQL_Server
+// -------------------------------------------------------------------
+[   Version ( "1.0.0" ), 
+    Description ( "MySQL Server Information" )
+]
+class MySQL_Server : CIM_InstalledProduct {
+
+    [ Description ( "Configuration file for the server" ) ]
+    string ConfigurationFile;
+
+    [ Description ( "Log file containing all errors output from MySQL" ) ]
+    string ErrorLogFile;
+
+    [ Description ( "Server name" ) ]
+    string ServerName;
+
+    [ Description ( "Socket file used to connect to the MySQL instance" ) ]
+    string SocketFile;
+
+    [ Description ( "Port MySQL is listening on" ) ]
+    uint16 Port;
+
+    [ Description ( "Directory where MySQL is storing all data" ) ]
+    string DataDirectory;
+
+    [ Description ( "Current operating status for the MySQL instance" ),
+      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18" },
+      Values { "Unknown", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode" }
+    ]
+    string OperatingStatus;
+
+    [ Description ( "This function updates the MySQL Server credentials used by the MySQL OMI provider." ) ]
+    boolean UpdateCredentials(
+        [IN] string Username,
+        [IN] string Password);
+
+};
+
+// MySQL_ServerStatistics
+// -------------------------------------------------------------------
+[   Version ( "1.0.0" ), 
+    Description ( "MySQL Server Statistical Information" )
+]
+class MySQL_ServerStatistics : CIM_StatisticalData {
+
+    [ Description ( "How many current open threads (connections) are connected to a MySQL Server instance" ) ]
+    uint32 NumConnections;
+
+    [ Description ( "Maximum amount of connections allowed for MySQL Server instance" ) ]
+    uint32 MaxConnections;
+
+    [ Description ( "Failed amount of connections allowed for MySQL Server instance" ) ]
+    uint32 FailedConnections;
+
+    [ Description ( "Amount of time (seconds) the server has been up" ) ]
+    uint64 Uptime;
+
+    [ Description ( "Amount of disk space used (in bytes) by MySQL Server instance" ) ]
+    uint64 ServerDiskUseInBytes;
+
+    [ Description ( "Number of slow queries compared to all queries" ) ]
+    uint8 SlowQueryPct;
+
+    [ Description ( "Key Cache Hit Rate for MySQL Server instance" ) ]
+    uint8 KeyCacheHitPct;
+
+    [ Description ( "Key Cache Write Rate for MySQL Server instance" ) ]
+    uint8 KeyCacheWritePct;
+
+    [ Description ( "Query Cache Hit Rate for MySQL Server instance" ) ]
+    uint8 QCacheHitPct;
+
+    [ Description ( "Query Cache Low Memory Prunes from cache" ) ]
+    uint8 QCachePrunesPct;
+
+    [ Description ( "Table Cache tit rate" ) ]
+    uint8 TCacheHitPct;
+
+    [ Description ( "Table Lock contention rate" ) ]
+    uint8 TableLockContentionPct;
+
+    [ Description ( "Percent of InnoDB logical read requests satisfied from the buffer pool" ) ]
+    uint8 IDB_BP_HitPct;
+
+    [ Description ( "How much of the InnoDB buffer pool is being used" ) ]
+    uint8 IDB_DP_UsePct;
+
+    [ Description ( "Percentage of full tables scans" ) ]
+    uint8 FullTableScanPct;
+
+    [ Description ( "Status of slave server (replicating data from master to slave)" ),
+      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" },
+      Values { "Unknown", "None", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode" }
+    ]
+    string SlaveStatus;
+
+    [ Description ( "How many seconds between master and slave replication" ) ]
+    uint64 SlaveLag;
+
+};
+
+// MySQL_Server_Database
+// -------------------------------------------------------------------
+[   Version ( "1.0.0" ), 
+    Description ( "MySQL Server Database Information" )
+]
+class MySQL_Server_Database : CIM_CommonDatabase {
+
+    [ Description ( "Name of database" ) ]
+    string DatabaseName;
+
+    [ Description ( "Number of tables a database contains" ) ]
+    uint64 NumberOfTables;
+
+    [ Description ( "The underlying database engine that this database is using" ) ]
+    string DatabaseEngine;
+
+    [ Description ( "How much space (in bytes) a database in MySQL is using" ) ]
+    uint64 DiskSpaceInBytes;
+
+};

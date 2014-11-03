@@ -42,15 +42,15 @@ INCLUDE_DEFINES := $(TARGET_DIR)/defines.h
 OMI_INCLUDE_FLAGS := -I$(OMI_ROOT)/output/include
 PROVIDER_INCLUDE_FLAGS := -I$(PROVIDER_DIR)/support -I$(TARGET_DIR)
 
-PROVIDER_TEST_INCLUDE_FLAGS := -Wmissing-include-dirs -Wno-non-virtual-dtor -I$(SCXPAL_DIR)/source/code/include -I$(SOURCE_DIR)/include -I$(TARGET_DIR) -I$(SCXPAL_DIR)/test/ext/include -I$(OMI_ROOT)/output/include -I$(OMI_ROOT) -I$(OMI_ROOT)/common -I$(SCXPAL_DIR)/test/code/include $(PROVIDER_INCLUDE_FLAGS) -I$(PROVIDER_DIR) -I$(PROVIDER_TEST_SUPPORT_DIR)
+PROVIDER_TEST_INCLUDE_FLAGS := -Wmissing-include-dirs -Wno-non-virtual-dtor -I$(SCXPAL_DIR)/source/code/include -I$(TARGET_DIR) -I$(SCXPAL_DIR)/test/ext/include -I$(OMI_ROOT)/output/include -I$(OMI_ROOT) -I$(OMI_ROOT)/common -I$(SCXPAL_DIR)/test/code/include $(PROVIDER_INCLUDE_FLAGS) -I$(PROVIDER_DIR) -I$(PROVIDER_TEST_SUPPORT_DIR)
 
 ifeq ($(ENABLE_DEBUG),1)
 PROV_DEBUG_FLAGS := -g
 endif
 
-COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
+COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC `mysql_config --cflags`
 
-LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx
+LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx `mysql_config --libs`
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
 SHARED_FLAGS := -shared
@@ -65,7 +65,7 @@ STAGING_DIR := $(TARGET_DIR)/staging
 all : $(OMI_ROOT)/output $(PROVIDER_LIBRARY)
 
 clean :
-	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/target $(PROVIDER_TEST_DIR)/providertestutils.cpp
+	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/target $(PROVIDER_DIR)/support/traits.h $(PROVIDER_DIR)/support/unique_ptr.h $(PROVIDER_TEST_DIR)/providertestutils.cpp
 	-find $(BASE_DIR) -name \*~ -exec rm {} \;
 
 distclean : clean
@@ -246,6 +246,16 @@ endif
 #
 # Build the Provider Library 
 
+# We can't use the PAL in production code (yet), so copy - we can ship the source if we need to
+
+$(PROVIDER_DIR)/support/traits.h: $(SCXPAL_DIR)/source/code/include/util/traits.h
+	$(RM) $(PROVIDER_DIR)/support/traits.h
+	ln -s $(SCXPAL_DIR)/source/code/include/util/traits.h $(PROVIDER_DIR)/support/traits.h
+
+$(PROVIDER_DIR)/support/unique_ptr.h: $(SCXPAL_DIR)/source/code/include/util/unique_ptr.h
+	$(RM) $(PROVIDER_DIR)/support/unique_ptr.h
+	ln -s $(SCXPAL_DIR)/source/code/include/util/unique_ptr.h $(PROVIDER_DIR)/support/unique_ptr.h
+
 STATIC_PROVIDERLIB_SRCFILES = \
 	$(PROVIDER_DIR)/MySQL_Server_Class_Provider.cpp \
 	$(PROVIDER_DIR)/MySQL_ServerStatistics_Class_Provider.cpp \
@@ -257,10 +267,12 @@ STATIC_PROVIDERLIB_SRCFILES += \
 	$(PROVIDER_DIR)/stubs.cpp
 
 STATIC_PROVIDERLIB_SRCFILES += \
-
+	$(PROVIDER_DIR)/support/sqlbinding.cpp
 
 PROVIDER_HEADERS = \
-
+	$(PROVIDER_DIR)/support/sqlbinding.h \
+	$(PROVIDER_DIR)/support/traits.h \
+	$(PROVIDER_DIR)/support/unique_ptr.h
 
 $(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_SRCFILES) $(INCLUDE_VHOST) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
 	@echo "========================= Performing Building provider"
@@ -282,14 +294,13 @@ $(PROVIDER_TEST_DIR)/providertestutils.cpp: $(PAL_TESTUTILS_DIR)/providertestuti
 	ln -s $(PAL_TESTUTILS_DIR)/providertestutils.cpp $(PROVIDER_TEST_DIR)/providertestutils.cpp
 
 STATIC_PROVIDER_UNITFILES_INCLUDE = \
-	$(PROVIDER_TEST_SUPPORT_DIR)/mmap_builder.h \
-	$(PROVIDER_TEST_SUPPORT_DIR)/testableapache.h
+	$(PROVIDER_TEST_SUPPORT_DIR)/sqlcredentials.h
 
 STATIC_PROVIDER_UNITFILES = \
-	$(PROVIDER_TEST_DIR)/server_test.cpp \
+	$(PROVIDER_TEST_DIR)/binding_test.cpp \
+	$(PROVIDER_TEST_DIR)/sqlstats_test.cpp \
 	\
 	$(PROVIDER_TEST_DIR)/providertestutils.cpp \
-	$(PROVIDER_TEST_SUPPORT_DIR)/mmap_builder.cpp \
 	$(PROVIDER_TEST_SUPPORT_DIR)/productdependencies.cpp \
 	$(PAL_TESTUTILS_DIR)/scxassert_cppunit.cpp \
 	$(PAL_TESTUTILS_DIR)/testrunner.cpp \

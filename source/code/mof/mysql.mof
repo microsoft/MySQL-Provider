@@ -89,7 +89,7 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     uint8 IDB_BP_HitPct;
 
     [ Description ( "How much of the InnoDB buffer pool is being used" ) ]
-    uint8 IDB_DP_UsePct;
+    uint8 IDB_BP_UsePct;
 
     [ Description ( "Percentage of full tables scans" ) ]
     uint8 FullTableScanPct;

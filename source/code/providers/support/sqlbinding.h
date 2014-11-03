@@ -1,0 +1,320 @@
+/*--------------------------------------------------------------------------------
+ *        Copyright (c) Microsoft Corporation. All rights reserved. See license.txt for license information.
+ *     
+ *        */
+ /**
+      \file        sqlbinding.h
+
+      \brief       Provider helper functions for MySQL bindings and access
+
+      \date        10-28-14
+*/
+/*----------------------------------------------------------------------------*/
+
+#ifndef SQLBINDING_H
+#define SQLBINDING_H
+
+#include <map>
+#include <mysql.h>
+#include <sstream>
+#include <stdint.h>
+#include <string>
+
+#include "unique_ptr.h"
+
+#include <iostream>   // *TODO* Only included for CIM_PEX_BEGIN / CIM_PEX_END ; get rid of this once real logging is set up
+
+/*------------------------------------------------------------------------------*/
+/**
+ *   MySQL_Dependencies
+ *   Helper class to help with access to MySQL Database
+ */
+
+class MySQL_Dependencies
+{
+public:
+    MySQL_Dependencies()
+    : m_sqlConnection(NULL)
+    {}
+    virtual ~MySQL_Dependencies();
+
+    bool Attach(const std::string& hostname, const std::string& username, const std::string& password)
+    {
+        m_sqlHostName = hostname;
+        m_sqlUserID = username;
+        m_sqlPassword = password;
+
+        return Attach();
+    }
+    bool Attach();
+    bool Detach();
+
+    std::string& GetConnectionInfo() { return m_infoConnection; }
+    std::string& GetClientInfo() { return m_infoClient; }
+    std::string& GetServerInfo() { return m_infoServer; }
+
+protected:
+    std::string m_sqlHostName;
+    std::string m_sqlUserID;
+    std::string m_sqlPassword;
+
+private:
+    MYSQL *m_sqlConnection;
+
+    std::string m_infoConnection;
+    std::string m_infoClient;
+    std::string m_infoServer;
+
+    friend class MySQL_Query;
+};
+
+
+
+/*------------------------------------------------------------------------------*/
+/**
+ *   MySQL_Query
+ *   Helper class to execute a query against a MySQL database
+ *
+ *   Note: the MySQL provider generally looks up key:value associations from the
+ *   database (i.e. "show global status" and such). This class is optimized for
+ *   that, and won't work well with queries that don't return two columns.
+ *
+ *   This class is "plugged in" to the class factory. Be sure to connect to a
+ *   database prior to using this class, and be sure to instanciate this class
+ *   via the class factory.
+ */
+
+class MySQL_Query
+{
+public:
+    explicit MySQL_Query(MySQL_Dependencies* deps)
+    : m_deps(deps)
+    { }
+    virtual ~MySQL_Query() {}
+
+    virtual bool ExecuteQuery( const char* query );
+    virtual const std::string& GetErrorText() { return m_sqlErrorText; }
+    virtual std::map<std::string, std::string>& GetResults() { return m_queryResults; }
+
+private:
+    std::map<std::string, std::string> m_queryResults;
+    std::string m_sqlErrorText;
+
+    MySQL_Dependencies* m_deps;
+};
+
+
+
+//
+// MySQL_Binding
+//
+// Note: The Attach() method MUST be called, and MUST be checked for a valid
+// return code. If Attach() is not called, or if it fails and queries are
+// performed anyway, then failures will follow. Consider yourself warned!
+//
+
+class MySQL_Binding
+{
+public:
+    explicit MySQL_Binding(MySQL_Dependencies* deps)
+    : m_deps(deps)
+    { }
+    virtual ~MySQL_Binding();
+    bool Attach(const std::string& hostname, const std::string& username, const std::string& password)
+        { return m_deps->Attach(hostname, username, password); }
+    bool Attach() { return m_deps->Attach(); }
+    bool AttachUsingStoredCredentials() { return m_deps->Attach(); }
+    bool Detach() { return m_deps->Detach(); }
+
+    std::string& GetConnectionInfo() { return m_deps->GetConnectionInfo(); }
+    std::string& GetClientInfo() { return m_deps->GetClientInfo(); }
+    std::string& GetServerInfo() { return m_deps->GetServerInfo(); }
+
+protected:
+
+private:
+    MySQL_Dependencies* m_deps;
+};
+
+
+//
+// MySQL Class Factory
+//
+// Allows contruction of MySQL_Binding class.
+// This allows us to replace the factory for dependency injection purposes.
+//
+
+class MySQL_Factory
+{
+public:
+    MySQL_Factory() : m_deps(NULL), m_binding(NULL) {}
+    ~MySQL_Factory()
+    {
+        delete m_deps;
+        m_deps = NULL;
+
+        delete m_binding;
+        m_binding = NULL;
+    }
+
+    virtual MySQL_Binding* GetBinding()
+    {
+        if (NULL == m_binding)
+        {
+            m_binding = new MySQL_Binding(GetDependencies());
+        }
+
+        return m_binding;
+    }
+
+    // This returns a unique_ptr to the MySQL_Query class to guarantee destruction
+    //
+    // Use this with code like:
+    //   unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
+    //   pQuery->QueryMethod(...);
+    virtual util::unique_ptr<MySQL_Query>::move_type GetQuery()
+    {
+        util::unique_ptr<MySQL_Query> pQuery (new MySQL_Query(GetDependencies()));
+        return pQuery.move();
+    }
+
+protected:
+    // Production code doesn't need to get dependencies (factory handles this)
+    virtual MySQL_Dependencies* GetDependencies()
+    {
+        if (NULL == m_deps)
+        {
+            m_deps = new MySQL_Dependencies();
+        }
+
+        return m_deps;
+    }
+
+private:
+    MySQL_Dependencies* m_deps;
+    MySQL_Binding* m_binding;
+};
+
+// Define single global copy (intended as a singleton class)
+extern MySQL_Factory* g_pFactory;
+
+
+
+//
+// Map access functions
+//
+
+template <typename T> bool ConvertToUnsigned(const std::string& strNum, T& value)
+{
+    // Stolen shamelessly from stringaid.cpp in the PAL
+    // *TODO* Use PAL code if we can, or remove this comment and add PAL comments
+    std::stringstream ss(strNum);
+    bool conv_result = (ss >> value) != 0;
+    std::stringstream::pos_type s = ss.tellg();
+
+    if ( !conv_result ||
+         ( ss.eof() && (std::string::npos != strNum.find('-'))) ||
+         ( !ss.eof() && (std::string::npos != strNum.substr(0, static_cast<unsigned> (s)).find('-'))))
+    {
+        // *TODO* Logging? Log this or something
+        std::cerr << "Cannot parse unsigned value in: \"" << strNum << "\"" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+// Get Unsigned value from map
+template <typename T> bool GetUValue(const std::map<std::string, std::string>& mymap, const std::string keyName, T& value)
+{
+    std::map<std::string, std::string>::const_iterator it = mymap.find(keyName);
+    if ( mymap.end() == it )
+    {
+        return false;
+    }
+
+    return ConvertToUnsigned(it->second, value);
+}
+
+// Return sum of values in a map starting with a known string (returns number of matches)
+template <typename T> int AddValues(const std::map<std::string, std::string>& mymap, const char* startsWith, T& value)
+{
+    int count = 0;
+    value = 0;
+
+    for (std::map<std::string, std::string>::const_iterator it = mymap.begin(); it != mymap.end(); ++it)
+    {
+        // Does the key begin with what we were passed?
+        if ( 0 == it->first.find(startsWith) )
+        {
+            uint32_t temp;
+
+            if ( ConvertToUnsigned(it->second, temp) )
+            {
+                count++;
+                value += temp;
+            }
+        }
+    }
+
+    return count;
+}
+
+// Get string value from map
+bool GetStrValue(const std::map<std::string, std::string>& mymap, const std::string keyName, std::string& value);
+
+
+
+//
+// Utility functions
+//
+
+bool GetHostname( std::string& hostname );
+
+
+
+//
+// The providers should have an exception handler wrapping all activity.  This
+// helps guarantee that the agent won't crash if there's an unhandled exception.
+// In the Pegasus model, this was done in the base class.  Since we don't have
+// that luxury here, we'll have macros to make it easier.
+//
+// PEX = Provider Exception
+//
+// There's an assumption here that, since this is used in the OMI-generated code,
+// "context" always exists for posting the result to.
+//
+
+#define CIM_PEX_BEGIN \
+    try
+
+#define CIM_PEX_END(module) \
+    catch (std::exception &e) { \
+        /* *TODO* Fix logging once logging location is understood! */ \
+        std::cerr << module << " - Exception occurred! Exception " << e.what() << std::endl; \
+        context.Post(MI_RESULT_FAILED); \
+    } \
+    catch (...) \
+    { \
+        /* *TODO* Fix logging once logging location is understood! */ \
+        std::cerr << module << " - Unknown exception occurred!" << std::endl; \
+        context.Post(MI_RESULT_FAILED); \
+    }
+
+//
+// Have a little function to make it easy to break into a provider (as a debugging aid)
+//
+// The idea here is that we sleep indefinitely; if you break in with a debugger, then
+// you can set f_break to true and then step through the code.
+//
+
+#define CIM_PROVIDER_WAIT_FOR_ATTACH         \
+    {                                        \
+        volatile bool f_break = false;       \
+        while ( !f_break )                   \
+            sleep(1);                        \
+    }
+
+#endif /* SQLBINDING_H */
+
+/*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/

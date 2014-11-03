@@ -49,7 +49,7 @@ typedef struct _MySQL_ServerStatistics /* extends CIM_StatisticalData */
     MI_ConstUint8Field TCacheHitPct;
     MI_ConstUint8Field TableLockContentionPct;
     MI_ConstUint8Field IDB_BP_HitPct;
-    MI_ConstUint8Field IDB_DP_UsePct;
+    MI_ConstUint8Field IDB_BP_UsePct;
     MI_ConstUint8Field FullTableScanPct;
     MI_ConstStringField SlaveStatus;
     MI_ConstUint64Field SlaveLag;
@@ -528,19 +528,19 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_BP_HitPct(
     return MI_RESULT_OK;
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_IDB_DP_UsePct(
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_IDB_BP_UsePct(
     MySQL_ServerStatistics* self,
     MI_Uint8 x)
 {
-    ((MI_Uint8Field*)&self->IDB_DP_UsePct)->value = x;
-    ((MI_Uint8Field*)&self->IDB_DP_UsePct)->exists = 1;
+    ((MI_Uint8Field*)&self->IDB_BP_UsePct)->value = x;
+    ((MI_Uint8Field*)&self->IDB_BP_UsePct)->exists = 1;
     return MI_RESULT_OK;
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_DP_UsePct(
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_BP_UsePct(
     MySQL_ServerStatistics* self)
 {
-    memset((void*)&self->IDB_DP_UsePct, 0, sizeof(self->IDB_DP_UsePct));
+    memset((void*)&self->IDB_BP_UsePct, 0, sizeof(self->IDB_BP_UsePct));
     return MI_RESULT_OK;
 }
 
@@ -1373,42 +1373,42 @@ public:
     }
 
     //
-    // MySQL_ServerStatistics_Class.IDB_DP_UsePct
+    // MySQL_ServerStatistics_Class.IDB_BP_UsePct
     //
     
-    const Field<Uint8>& IDB_DP_UsePct() const
+    const Field<Uint8>& IDB_BP_UsePct() const
     {
-        const size_t n = offsetof(Self, IDB_DP_UsePct);
+        const size_t n = offsetof(Self, IDB_BP_UsePct);
         return GetField<Uint8>(n);
     }
     
-    void IDB_DP_UsePct(const Field<Uint8>& x)
+    void IDB_BP_UsePct(const Field<Uint8>& x)
     {
-        const size_t n = offsetof(Self, IDB_DP_UsePct);
+        const size_t n = offsetof(Self, IDB_BP_UsePct);
         GetField<Uint8>(n) = x;
     }
     
-    const Uint8& IDB_DP_UsePct_value() const
+    const Uint8& IDB_BP_UsePct_value() const
     {
-        const size_t n = offsetof(Self, IDB_DP_UsePct);
+        const size_t n = offsetof(Self, IDB_BP_UsePct);
         return GetField<Uint8>(n).value;
     }
     
-    void IDB_DP_UsePct_value(const Uint8& x)
+    void IDB_BP_UsePct_value(const Uint8& x)
     {
-        const size_t n = offsetof(Self, IDB_DP_UsePct);
+        const size_t n = offsetof(Self, IDB_BP_UsePct);
         GetField<Uint8>(n).Set(x);
     }
     
-    bool IDB_DP_UsePct_exists() const
+    bool IDB_BP_UsePct_exists() const
     {
-        const size_t n = offsetof(Self, IDB_DP_UsePct);
+        const size_t n = offsetof(Self, IDB_BP_UsePct);
         return GetField<Uint8>(n).exists ? true : false;
     }
     
-    void IDB_DP_UsePct_clear()
+    void IDB_BP_UsePct_clear()
     {
-        const size_t n = offsetof(Self, IDB_DP_UsePct);
+        const size_t n = offsetof(Self, IDB_BP_UsePct);
         GetField<Uint8>(n).Clear();
     }
 

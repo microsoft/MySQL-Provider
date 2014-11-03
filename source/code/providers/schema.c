@@ -1327,18 +1327,18 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_IDB_BP_HitPct_prop =
     NULL,
 };
 
-/* property MySQL_ServerStatistics.IDB_DP_UsePct */
-static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_IDB_DP_UsePct_prop =
+/* property MySQL_ServerStatistics.IDB_BP_UsePct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_IDB_BP_UsePct_prop =
 {
     MI_FLAG_PROPERTY, /* flags */
     0x0069740D, /* code */
-    MI_T("IDB_DP_UsePct"), /* name */
+    MI_T("IDB_BP_UsePct"), /* name */
     NULL, /* qualifiers */
     0, /* numQualifiers */
     MI_UINT8, /* type */
     NULL, /* className */
     0, /* subscript */
-    offsetof(MySQL_ServerStatistics, IDB_DP_UsePct), /* offset */
+    offsetof(MySQL_ServerStatistics, IDB_BP_UsePct), /* offset */
     MI_T("MySQL_ServerStatistics"), /* origin */
     MI_T("MySQL_ServerStatistics"), /* propagator */
     NULL,
@@ -1417,7 +1417,7 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_ServerStatistics_props[] =
     &MySQL_ServerStatistics_TCacheHitPct_prop,
     &MySQL_ServerStatistics_TableLockContentionPct_prop,
     &MySQL_ServerStatistics_IDB_BP_HitPct_prop,
-    &MySQL_ServerStatistics_IDB_DP_UsePct_prop,
+    &MySQL_ServerStatistics_IDB_BP_UsePct_prop,
     &MySQL_ServerStatistics_FullTableScanPct_prop,
     &MySQL_ServerStatistics_SlaveStatus_prop,
     &MySQL_ServerStatistics_SlaveLag_prop,

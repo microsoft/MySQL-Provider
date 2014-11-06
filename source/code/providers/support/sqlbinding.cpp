@@ -11,7 +11,6 @@
 */
 /*----------------------------------------------------------------------------*/
 
-#include <iostream>
 #include <vector>
 
 #include "sqlbinding.h"
@@ -19,17 +18,24 @@
 // Define single global copy (intended as a singleton class)
 MySQL_Factory* g_pFactory = NULL;
 
-// *TODO* Derive from SCXException if we can use PAL code in this project
-class SQLError
+class SQLError : public SCXCoreLib::SCXException
 {
 public:
-    SQLError() { m_label = "Generic Error"; }
+    SQLError(const SCXCoreLib::SCXCodeLocation& l)
+        : SCXException(l), m_errorText(L"Generic Error")
+    { }
+    SQLError(const char *errorText, const SCXCoreLib::SCXCodeLocation& l)
+        : SCXException(l), m_errorText(SCXCoreLib::StrFromUTF8(errorText))
+    { }
     ~SQLError() { }
-    SQLError(const char *message) { m_label = message; }
-    inline const char* GetMessage(void) { return m_label.c_str(); }
+
+    std::wstring What() const
+    {
+        return m_errorText;
+    }
 
 private:
-    std::string m_label;
+    std::wstring m_errorText;
 };
 
 
@@ -61,16 +67,15 @@ bool MySQL_Dependencies::Attach()
             0 );
 
         if ( NULL == sqlConnRet )
-            throw SQLError( mysql_error(m_sqlConnection) );
+            throw SQLError( mysql_error(m_sqlConnection), SCXSRCLOCATION );
 
         m_infoConnection = mysql_get_host_info( m_sqlConnection );
         m_infoClient = mysql_get_client_info();
         m_infoServer = mysql_get_server_info( m_sqlConnection );
     }
-    catch ( SQLError e )
+    catch ( SQLError& e )
     {
-        // *TODO* Log Message!
-        std::cerr << e.GetMessage() << std::endl;
+        SCX_LOGERROR(m_log, e.What());
         return false;
     }
 
@@ -109,7 +114,7 @@ bool MySQL_Query::ExecuteQuery( const char* query )
         int sqlStatus = mysql_query( sqlConnection, query );
         if ( sqlStatus )
         {
-            throw SQLError( mysql_error(sqlConnection) );
+            throw SQLError( mysql_error(sqlConnection), SCXSRCLOCATION );
         }
 
         // Get the result set
@@ -151,9 +156,9 @@ bool MySQL_Query::ExecuteQuery( const char* query )
 
         mysql_free_result(sqlResult);
     }
-    catch ( SQLError e )
+    catch ( SQLError& e )
     {
-        m_sqlErrorText = e.GetMessage();
+        m_sqlErrorText = SCXCoreLib::StrToUTF8( e.What() );
         return false;
     }
 
@@ -183,42 +188,6 @@ bool GetStrValue(const std::map<std::string, std::string>& mymap, const std::str
 
     value = it->second;
     return true;
-}
-
-
-
-// Get system host name (via low-level system call)
-//
-// *TODO*
-// Butchered from scxnameresolver.cpp in the PAL; remove this if we include PAL
-
-bool GetHostname( std::string& hostname )
-{
-    bool found = false;
-    hostname.clear();
-
-    // First determine the maximum size of the host name
-
-    size_t size = 257;
-
-    long sysSize = sysconf(_SC_HOST_NAME_MAX);
-    if( (-1 != sysSize) && (size < (size_t)sysSize ) && (sysSize > 0) )
-    {
-        size = sysSize + 1;
-    }
-
-    std::vector<char> buf; 
-    buf.resize(size, 0);
-
-    // *TODO* Log something here if gethostname underlying call fails ...
-    int rc = gethostname(&buf[0], size);
-    if(0 == rc)
-    {
-        hostname = std::string( &buf[0] );
-        found = true;
-    }
-
-    return found;
 }
 
 /*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/

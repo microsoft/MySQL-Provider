@@ -2,6 +2,9 @@
 #include <MI.h>
 #include "MySQL_ServerStatistics_Class_Provider.h"
 
+#include <scxcorelib/scxnameresolver.h>
+
+#include "logstartup.h"
 #include "sqlbinding.h"
 
 // Helper functions to compute a ratio
@@ -54,6 +57,8 @@ MySQL_ServerStatistics_Class_Provider::~MySQL_ServerStatistics_Class_Provider()
 void MySQL_ServerStatistics_Class_Provider::Load(
         Context& context)
 {
+    MySQL::LogStartup();
+
     // Attach to the MySQL instance
     if ( NULL == g_pFactory )
     {
@@ -91,6 +96,8 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
     bool keysOnly,
     const MI_Filter* filter)
 {
+    SCXCoreLib::SCXLogHandle hLog = SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.provider.serverstatistics");
+
     CIM_PEX_BEGIN
     {
         MySQL_ServerStatistics_Class inst;
@@ -110,7 +117,8 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
         if ( !GetStrValue(variables, "hostname", hostname) )
         {
             // Populate hostname here (for MySQL 5.0 systems)
-            GetHostname( hostname );
+            SCXCoreLib::NameResolver nr;
+            hostname = SCXCoreLib::StrToUTF8(nr.GetHostname());
         }
 
         if ( GetStrValue(variables, "port", port) )
@@ -256,7 +264,7 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
         context.Post(inst);
         context.Post(MI_RESULT_OK);
     }
-    CIM_PEX_END( "MySQL_ServerStatistics_Class_Provider::EnumerateInstances" );
+    CIM_PEX_END( L"MySQL_ServerStatistics_Class_Provider::EnumerateInstances" , hLog );
 }
 
 void MySQL_ServerStatistics_Class_Provider::GetInstance(

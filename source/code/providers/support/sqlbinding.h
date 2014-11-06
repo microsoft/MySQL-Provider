@@ -14,15 +14,15 @@
 #ifndef SQLBINDING_H
 #define SQLBINDING_H
 
+#include <scxcorelib/scxcmn.h>
+#include <scxcorelib/scxlog.h>
+#include <util/unique_ptr.h>
+
 #include <map>
 #include <mysql.h>
 #include <sstream>
 #include <stdint.h>
 #include <string>
-
-#include "unique_ptr.h"
-
-#include <iostream>   // *TODO* Only included for CIM_PEX_BEGIN / CIM_PEX_END ; get rid of this once real logging is set up
 
 /*------------------------------------------------------------------------------*/
 /**
@@ -34,7 +34,7 @@ class MySQL_Dependencies
 {
 public:
     MySQL_Dependencies()
-    : m_sqlConnection(NULL)
+    : m_sqlConnection(NULL), m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.binding.dependencies"))
     {}
     virtual ~MySQL_Dependencies();
 
@@ -60,6 +60,7 @@ protected:
 
 private:
     MYSQL *m_sqlConnection;
+    SCXCoreLib::SCXLogHandle m_log;
 
     std::string m_infoConnection;
     std::string m_infoClient;
@@ -206,18 +207,13 @@ extern MySQL_Factory* g_pFactory;
 
 template <typename T> bool ConvertToUnsigned(const std::string& strNum, T& value)
 {
-    // Stolen shamelessly from stringaid.cpp in the PAL
-    // *TODO* Use PAL code if we can, or remove this comment and add PAL comments
-    std::stringstream ss(strNum);
-    bool conv_result = (ss >> value) != 0;
-    std::stringstream::pos_type s = ss.tellg();
-
-    if ( !conv_result ||
-         ( ss.eof() && (std::string::npos != strNum.find('-'))) ||
-         ( !ss.eof() && (std::string::npos != strNum.substr(0, static_cast<unsigned> (s)).find('-'))))
+    try {
+        value = SCXCoreLib::StrToUInt( SCXCoreLib::StrFromUTF8(strNum) );
+    }
+    catch (SCXCoreLib::SCXNotSupportedException& e)
     {
-        // *TODO* Logging? Log this or something
-        std::cerr << "Cannot parse unsigned value in: \"" << strNum << "\"" << std::endl;
+        SCXCoreLib::SCXLogHandle hLog = SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.binding.utils");
+        SCX_LOGERROR(hLog, std::wstring(L"Cannot parse unsigned value - ").append(SCXCoreLib::StrFromUTF8(strNum)));
         return false;
     }
 
@@ -266,14 +262,6 @@ bool GetStrValue(const std::map<std::string, std::string>& mymap, const std::str
 
 
 //
-// Utility functions
-//
-
-bool GetHostname( std::string& hostname );
-
-
-
-//
 // The providers should have an exception handler wrapping all activity.  This
 // helps guarantee that the agent won't crash if there's an unhandled exception.
 // In the Pegasus model, this was done in the base class.  Since we don't have
@@ -288,16 +276,20 @@ bool GetHostname( std::string& hostname );
 #define CIM_PEX_BEGIN \
     try
 
-#define CIM_PEX_END(module) \
+#define CIM_PEX_END(module, log) \
+    catch (const SCXCoreLib::SCXException& e) \
+    { \
+        SCX_LOGWARNING((log), std::wstring(module).append(L" - "). \
+                       append(e.What()).append(L" - ").append(e.Where())); \
+        context.Post(MI_RESULT_FAILED); \
+    } \
     catch (std::exception &e) { \
-        /* *TODO* Fix logging once logging location is understood! */ \
-        std::cerr << module << " - Exception occurred! Exception " << e.what() << std::endl; \
+        SCX_LOGERROR((log), std::wstring(module).append(L" - ").append(SCXCoreLib::DumpString(e))); \
         context.Post(MI_RESULT_FAILED); \
     } \
     catch (...) \
     { \
-        /* *TODO* Fix logging once logging location is understood! */ \
-        std::cerr << module << " - Unknown exception occurred!" << std::endl; \
+        SCX_LOGERROR((log), std::wstring(module).append(L" - Unknown exception")); \
         context.Post(MI_RESULT_FAILED); \
     }
 

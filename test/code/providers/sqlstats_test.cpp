@@ -12,6 +12,7 @@
 
 #include <scxcorelib/scxcmn.h>
 #include <scxcorelib/scxexception.h>
+#include <scxcorelib/scxnameresolver.h>
 #include <scxcorelib/stringaid.h>
 #include <testutils/scxunit.h>
 #include <testutils/providertestutils.h>
@@ -79,9 +80,8 @@ public:
         CPPUNIT_ASSERT_EQUAL(1u, context.Size());
 
         // Verify the InstanceID
-        std::string instanceID;
-        CPPUNIT_ASSERT_EQUAL(true, GetHostname(instanceID) );
-        CPPUNIT_ASSERT_EQUAL(std::wstring(SCXCoreLib::StrFromUTF8(instanceID + ":3306")),
+        SCXCoreLib::NameResolver nr;
+        CPPUNIT_ASSERT_EQUAL(nr.GetHostname() + L":3306",
                              context[0].GetKey(L"InstanceID", CALL_LOCATION(errMsg)));
     }
 
@@ -132,10 +132,9 @@ public:
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, m_keyNames[0], instance.GetKeyName(0, CALL_LOCATION(errMsg)));
 
         // Verify the InstanceID
-        std::string instanceID;
-        CPPUNIT_ASSERT_EQUAL(true, GetHostname(instanceID) );
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, std::wstring(SCXCoreLib::StrFromUTF8(instanceID + ":3306")),
-                             instance.GetKeyValue(0, CALL_LOCATION(errMsg)));
+        SCXCoreLib::NameResolver nr;
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, nr.GetHostname() + L":3306",
+                                     instance.GetKeyValue(0, CALL_LOCATION(errMsg)));
 
         std::wstring tmpExpectedProperties[] = {L"InstanceID",
                                                 L"NumConnections",

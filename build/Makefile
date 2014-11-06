@@ -25,6 +25,7 @@ TEST_DIR := $(BASE_DIR)/test/code
 PROVIDER_DIR := $(SOURCE_DIR)/providers
 PROVIDER_TEST_DIR := $(TEST_DIR)/providers
 PROVIDER_TEST_SUPPORT_DIR := $(PROVIDER_TEST_DIR)/support
+PAL_INCLUDE_DIR := $(SCXPAL_DIR)/source/code/include
 PAL_TESTUTILS_DIR := $(SCXPAL_DIR)/test/code/testutils
 
 TARGET_DIR := $(BASE_DIR)/target/$(BUILD_CONFIGURATION)
@@ -40,7 +41,7 @@ INCLUDE_DEFINES := $(TARGET_DIR)/defines.h
 # Compiler flags
 
 OMI_INCLUDE_FLAGS := -I$(OMI_ROOT)/output/include
-PROVIDER_INCLUDE_FLAGS := -I$(PROVIDER_DIR)/support -I$(TARGET_DIR)
+PROVIDER_INCLUDE_FLAGS := -I$(PROVIDER_DIR)/support -I$(PAL_INCLUDE_DIR) -I$(TARGET_DIR)
 
 PROVIDER_TEST_INCLUDE_FLAGS := -Wmissing-include-dirs -Wno-non-virtual-dtor -I$(SCXPAL_DIR)/source/code/include -I$(TARGET_DIR) -I$(SCXPAL_DIR)/test/ext/include -I$(OMI_ROOT)/output/include -I$(OMI_ROOT) -I$(OMI_ROOT)/common -I$(SCXPAL_DIR)/test/code/include $(PROVIDER_INCLUDE_FLAGS) -I$(PROVIDER_DIR) -I$(PROVIDER_TEST_SUPPORT_DIR)
 
@@ -50,7 +51,7 @@ endif
 
 COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC `mysql_config --cflags`
 
-LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx `mysql_config --libs`
+LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lscxassertabort -lrt `mysql_config --libs`
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
 SHARED_FLAGS := -shared
@@ -62,20 +63,19 @@ STAGING_DIR := $(TARGET_DIR)/staging
 #--------------------------------------------------------------------------------
 # Build targets
 
-all : $(OMI_ROOT)/output $(PROVIDER_LIBRARY)
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(PROVIDER_LIBRARY)
 
 clean :
-	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/target $(PROVIDER_DIR)/support/traits.h $(PROVIDER_DIR)/support/unique_ptr.h $(PROVIDER_TEST_DIR)/providertestutils.cpp
+	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/target $(PROVIDER_TEST_DIR)/providertestutils.cpp
 	-find $(BASE_DIR) -name \*~ -exec rm {} \;
 
 distclean : clean
 	$(RM) $(BASE_DIR)/build/config.mak
 	-make -C $(OMI_ROOT) distclean
-	-make -C $(SCXPAL_DIR)/build clean
+	-make -C $(SCXPAL_DIR)/build distclean
 	-$(RMDIR) $(OMI_ROOT)/output*
 	-$(RM) $(SCXPAL_DIR)/build/config.mak
 	-$(RM) $(SCXPAL_DIR)/build/Makefile.config_cache
-	-$(RMDIR) $(SCXPAL_DIR)/intermediate $(SCXPAL_DIR)/target
 
 # Install the OMI provider for test purposes
 # This assumes that:
@@ -120,14 +120,7 @@ endif
 #
 # Build the PAL (Platform Abstraction Layer)
 #
-# Technically, we should go to build PAL all the time. But I'd rather not spend
-# the time doing it here EVERY TIME, when we never normally change PAL. This is
-# a good tradeoff (build if not built, otherwise assume all is well).
-#
 # Doing a 'make clean' in PAL directory will force us to rebuild.
-#
-# Note: The PAL is only needed for the unit tests, and will only be built (if
-# needed) during the "make test" target.
 
 $(SCXPAL_INTERMEDIATE_DIR) :
 	@echo "========================= Performing Building PAL"
@@ -172,7 +165,7 @@ $(INCLUDE_VERSION) : $(BASE_DIR)/build/Makefile.version
 	@$(call pf_fappend,"/** Build date */                                                               ", $@)
 	@$(call pf_fappend,"const std::string CIMPROV_BUILDVERSION_DATE(\"$(SCX_BUILDVERSION_DATE)\");      ", $@)
 	@$(call pf_fappend,"/** Build status */                                                             ", $@)
-	@$(call pf_fappend,"const std::string CIMPROV_BUILDVERSION_STATUS(\"$(SCX_BUILDVERSION_STATUS)\");  ", $@)
+	@$(call pf_fappend,"const std::wstring CIMPROV_BUILDVERSION_STATUS(L\"$(SCX_BUILDVERSION_STATUS)\");  ", $@)
 	@$(call pf_fappend,"                                                                                ", $@)
 	@$(call pf_fappend,"#endif /* BUILDVERSION_H */                                                     ", $@)
 	@$(call pf_fappend,"/*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/", $@)
@@ -248,14 +241,6 @@ endif
 
 # We can't use the PAL in production code (yet), so copy - we can ship the source if we need to
 
-$(PROVIDER_DIR)/support/traits.h: $(SCXPAL_DIR)/source/code/include/util/traits.h
-	$(RM) $(PROVIDER_DIR)/support/traits.h
-	ln -s $(SCXPAL_DIR)/source/code/include/util/traits.h $(PROVIDER_DIR)/support/traits.h
-
-$(PROVIDER_DIR)/support/unique_ptr.h: $(SCXPAL_DIR)/source/code/include/util/unique_ptr.h
-	$(RM) $(PROVIDER_DIR)/support/unique_ptr.h
-	ln -s $(SCXPAL_DIR)/source/code/include/util/unique_ptr.h $(PROVIDER_DIR)/support/unique_ptr.h
-
 STATIC_PROVIDERLIB_SRCFILES = \
 	$(PROVIDER_DIR)/MySQL_Server_Class_Provider.cpp \
 	$(PROVIDER_DIR)/MySQL_ServerStatistics_Class_Provider.cpp \
@@ -267,17 +252,21 @@ STATIC_PROVIDERLIB_SRCFILES += \
 	$(PROVIDER_DIR)/stubs.cpp
 
 STATIC_PROVIDERLIB_SRCFILES += \
+	$(PROVIDER_DIR)/support/logstartup.cpp \
+	$(PROVIDER_DIR)/support/productdependencies.cpp \
 	$(PROVIDER_DIR)/support/sqlbinding.cpp
 
-PROVIDER_HEADERS = \
-	$(PROVIDER_DIR)/support/sqlbinding.h \
-	$(PROVIDER_DIR)/support/traits.h \
-	$(PROVIDER_DIR)/support/unique_ptr.h
+STATIC_PROVIDERLIB_LOGPOLICY += \
+	$(PROVIDER_DIR)/support/logpolicy.cpp
 
-$(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_SRCFILES) $(INCLUDE_VHOST) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
+PROVIDER_HEADERS = \
+	$(PROVIDER_DIR)/support/logstartup.h \
+	$(PROVIDER_DIR)/support/sqlbinding.h
+
+$(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_VHOST) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
 	@echo "========================= Performing Building provider"
 	$(MKPATH) $(TARGET_DIR)
-	g++ $(COMPILE_FLAGS) $(SHARED_FLAGS) $(OMI_INCLUDE_FLAGS) $(MODULE_INCLUDE_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_SRCFILES) $(LINK_LIBRARIES)
+	g++ $(COMPILE_FLAGS) $(SHARED_FLAGS) $(OMI_INCLUDE_FLAGS) $(MODULE_INCLUDE_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
 
 
 #--------------------------------------------------------------------------------
@@ -299,12 +288,11 @@ STATIC_PROVIDER_UNITFILES_INCLUDE = \
 STATIC_PROVIDER_UNITFILES = \
 	$(PROVIDER_TEST_DIR)/binding_test.cpp \
 	$(PROVIDER_TEST_DIR)/sqlstats_test.cpp \
+	$(PROVIDER_TEST_DIR)/support/testrunnerlogpolicy.cpp \
 	\
 	$(PROVIDER_TEST_DIR)/providertestutils.cpp \
-	$(PROVIDER_TEST_SUPPORT_DIR)/productdependencies.cpp \
 	$(PAL_TESTUTILS_DIR)/scxassert_cppunit.cpp \
-	$(PAL_TESTUTILS_DIR)/testrunner.cpp \
-	$(PAL_TESTUTILS_DIR)/testrunnerlogpolicy.cpp
+	$(PAL_TESTUTILS_DIR)/testrunner.cpp
 
 $(TARGET_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_UNITFILES) $(STATIC_PROVIDERLIB_SRCFILES) $(INCLUDE_VHOST) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS) $(PROVIDER_TEST_DIR)/providertestutils.cpp
 	@echo "========================= Performing Building provider tests"
@@ -315,7 +303,7 @@ testrun : test
 
 test : $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 	@echo "========================= Performing MySQL testrun execution"
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib $(TARGET_DIR)/testrunner
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib cd $(TARGET_DIR); ./testrunner
 
 #--------------------------------------------------------------------------------
 # Build the distribution kit

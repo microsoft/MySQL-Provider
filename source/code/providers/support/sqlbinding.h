@@ -149,7 +149,7 @@ class MySQL_Factory
 {
 public:
     MySQL_Factory() : m_deps(NULL), m_binding(NULL) {}
-    ~MySQL_Factory()
+    virtual ~MySQL_Factory()
     {
         delete m_deps;
         m_deps = NULL;

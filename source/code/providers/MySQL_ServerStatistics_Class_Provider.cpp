@@ -20,7 +20,7 @@ static void ComputeRatio(float numerator, float denominator, uint8_t& ratio, boo
 
     if ( denominator ) // Avoid divide by zero
     {
-        ratio = (numerator / denominator) * 100.0;
+        ratio = static_cast<uint8_t> ((numerator / denominator) * 100.0);
     }
 }
 

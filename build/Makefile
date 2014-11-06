@@ -303,7 +303,7 @@ testrun : test
 
 test : $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 	@echo "========================= Performing MySQL testrun execution"
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib cd $(TARGET_DIR); ./testrunner
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib; cd $(TARGET_DIR); ./testrunner
 
 #--------------------------------------------------------------------------------
 # Build the distribution kit
@@ -418,6 +418,7 @@ endif
 	../installer/bundle/create_bundle.sh $(PF)_$(PF_DISTRO) \
                                              $(TARGET_DIR) \
                                              `cat $(TARGET_DIR)/package_filename`
+	rm $(TARGET_DIR)/package_filename
 
 #
 # The following is all for OMI "bootstrap" stuff (allowing omigen and omireg to run)

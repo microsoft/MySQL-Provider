@@ -33,7 +33,7 @@ public:
     */
     virtual SCXCoreLib::SCXFilePath GetConfigFileName() const
     {
-        return SCXCoreLib::SCXFilePath(L"/etc/opt/microsoft/mysql/conf/mysqllog.conf");
+        return SCXCoreLib::SCXFilePath(L"/etc/opt/microsoft/mysql-cimprov/conf/mysqllog.conf");
     }
 
     /**
@@ -43,7 +43,7 @@ public:
     */
     virtual SCXCoreLib::SCXFilePath GetDefaultLogFileName() const
     {
-        return SCXCoreLib::SCXFilePath(L"/var/opt/microsoft/mysql/log/mysqllog.log");
+        return SCXCoreLib::SCXFilePath(L"/var/opt/microsoft/mysql-cimprov/log/mysqllog.log");
     }
 };
 
@@ -60,4 +60,3 @@ SCXCoreLib::SCXHandle<SCXCoreLib::SCXLogPolicy> CustomLogPolicyFactory()
 }
 
 /*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/
-

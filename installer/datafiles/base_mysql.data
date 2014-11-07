@@ -15,6 +15,7 @@ MAINTAINER:              'Microsoft Corporation'
 %Defines
 
 %Files
+/opt/microsoft/mysql-cimprov/bin/omi_preexec;                           target/${{BUILD_CONFIGURATION}}/omi_preexec; 755; root; root
 /opt/microsoft/omi/lib/libmysqlProvider.${{SHLIB_EXT}};                 target/${{BUILD_CONFIGURATION}}/libmysqlProvider.${{SHLIB_EXT}}; 755; root; root
 
 /etc/opt/microsoft/mysql-cimprov/conf/installinfo.txt;                  installer/conf/installinfo.txt;                                   644; root; root; conffile
@@ -41,6 +42,7 @@ MAINTAINER:              'Microsoft Corporation'
 
 /opt/microsoft;                                         755; root; root
 /opt/microsoft/mysql-cimprov;                           755; root; root
+/opt/microsoft/mysql-cimprov/bin;                       755; root; root
 /opt/microsoft/mysql-cimprov/lib;                       755; root; root
 
 /opt/microsoft;                                         755; root; root
@@ -49,6 +51,8 @@ MAINTAINER:              'Microsoft Corporation'
 
 /var/opt/microsoft;                                     755; root; root
 /var/opt/microsoft/mysql-cimprov;                       755; root; root
+/var/opt/microsoft/mysql-cimprov/lib;                   755; root; root
+/var/opt/microsoft/mysql-cimprov/lib/state;             755; root; root
 /var/opt/microsoft/mysql-cimprov/log;                   755; root; root
 /var/opt/microsoft/mysql-cimprov/run;                   755; root; root
 

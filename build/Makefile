@@ -30,6 +30,8 @@ PAL_TESTUTILS_DIR := $(SCXPAL_DIR)/test/code/testutils
 
 TARGET_DIR := $(BASE_DIR)/target/$(BUILD_CONFIGURATION)
 PROVIDER_LIBRARY := $(TARGET_DIR)/libmysqlProvider.so
+OMI_PREEXEC := $(TARGET_DIR)/omi_preexec
+MYSQL_DELIVERABLES = $(PROVIDER_LIBRARY) $(OMI_PREEXEC)
 
 INSTALLER_TMPDIR := $(TARGET_DIR)/installer_tmp
 
@@ -49,7 +51,8 @@ ifeq ($(ENABLE_DEBUG),1)
 PROV_DEBUG_FLAGS := -g
 endif
 
-COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC `mysql_config --cflags`
+COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
+PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
 
 LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lscxassertabort -lrt `mysql_config --libs`
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
@@ -63,7 +66,11 @@ STAGING_DIR := $(TARGET_DIR)/staging
 #--------------------------------------------------------------------------------
 # Build targets
 
-all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(PROVIDER_LIBRARY)
+ifeq ($(ULINUX),1)
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(MYSQL_DELIVERABLES) kit
+else
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(MYSQL_DELIVERABLES)
+endif
 
 clean :
 	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/target $(PROVIDER_TEST_DIR)/providertestutils.cpp
@@ -239,8 +246,6 @@ endif
 #
 # Build the Provider Library 
 
-# We can't use the PAL in production code (yet), so copy - we can ship the source if we need to
-
 STATIC_PROVIDERLIB_SRCFILES = \
 	$(PROVIDER_DIR)/MySQL_Server_Class_Provider.cpp \
 	$(PROVIDER_DIR)/MySQL_ServerStatistics_Class_Provider.cpp \
@@ -263,11 +268,27 @@ PROVIDER_HEADERS = \
 	$(PROVIDER_DIR)/support/logstartup.h \
 	$(PROVIDER_DIR)/support/sqlbinding.h
 
-$(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_VHOST) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
+$(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
 	@echo "========================= Performing Building provider"
 	$(MKPATH) $(TARGET_DIR)
-	g++ $(COMPILE_FLAGS) $(SHARED_FLAGS) $(OMI_INCLUDE_FLAGS) $(MODULE_INCLUDE_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
+	g++ $(PROVIDER_COMPILE_FLAGS) $(SHARED_FLAGS) $(OMI_INCLUDE_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
 
+#--------------------------------------------------------------------------------
+# MySQL OMI_PREEXEC
+#
+# Build the omi_preexec executable (for PAL logging and state information)
+
+STATIC_OMI_PREEXEC_SRCFILES = \
+	$(SOURCE_DIR)/omi_preexec/directorylist.cpp \
+	$(SOURCE_DIR)/omi_preexec/omi_preexec.cpp
+
+STATIC_OMI_PREEXEC_HEADERS = \
+	$(SOURCE_DIR)/omi_preexec/directorylist.h
+
+$(OMI_PREEXEC): $(STATIC_OMI_PREEXEC_SRCFILES) $(STATIC_OMI_PREEXEC_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
+	@echo "========================= Performing Building OMI preexec executable"
+	$(MKPATH) $(TARGET_DIR)
+	g++ $(COMPILE_FLAGS) -o $@ $(STATIC_OMI_PREEXEC_SRCFILES)
 
 #--------------------------------------------------------------------------------
 # MySQL Provider Unit Tests
@@ -297,7 +318,7 @@ STATIC_PROVIDER_UNITFILES = \
 $(TARGET_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_UNITFILES) $(STATIC_PROVIDERLIB_SRCFILES) $(INCLUDE_VHOST) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS) $(PROVIDER_TEST_DIR)/providertestutils.cpp
 	@echo "========================= Performing Building provider tests"
 	$(MKPATH) $(TARGET_DIR)
-	g++ $(COMPILE_FLAGS) $(PROVIDER_TEST_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDER_UNITFILES) $(STATIC_PROVIDERLIB_SRCFILES) $(LINK_LIBRARIES) $(PROVIDER_TEST_LINK_LIBRARIES)
+	g++ $(PROVIDER_COMPILE_FLAGS) $(PROVIDER_TEST_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDER_UNITFILES) $(STATIC_PROVIDERLIB_SRCFILES) $(LINK_LIBRARIES) $(PROVIDER_TEST_LINK_LIBRARIES)
 
 testrun : test
 
@@ -313,9 +334,7 @@ test : $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 # While the "formal build" only builds ULINUX, we may build something else for DEV purposes.
 # Assume we ALWAYS build RPM, but only build DPKG if --enable-ulinux is speified in configure.
 
-PROVIDER_LIBRARY_TARGETS := $(PROVIDER_LIBRARY)
-
-kit : $(OMI_ROOT)/output $(PROVIDER_LIBRARY)
+kit : $(OMI_ROOT)/output $(MYSQL_DELIVERABLES)
 ifeq ($(ULINUX),1)
 
 	@echo "========================= Performing Building RPM and DPKG packages"

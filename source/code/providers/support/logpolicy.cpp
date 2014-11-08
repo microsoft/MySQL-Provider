@@ -12,7 +12,9 @@
 */
 /*----------------------------------------------------------------------------*/
 
+#include <scxcorelib/scxfilepath.h>
 #include <scxcorelib/scxlogpolicy.h>
+#include <scxcorelib/scxuser.h>
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -43,7 +45,24 @@ public:
     */
     virtual SCXCoreLib::SCXFilePath GetDefaultLogFileName() const
     {
-        return SCXCoreLib::SCXFilePath(L"/var/opt/microsoft/mysql-cimprov/log/mysqllog.log");
+        SCXCoreLib::SCXUser user;
+        SCXCoreLib::SCXFilePath filepath(L"/var/opt/microsoft/mysql-cimprov/log/mysqllog.log");
+
+        if (!user.IsRoot())
+        {
+            filepath.AppendDirectory(user.GetName());
+        }
+
+        return filepath;
+    }
+
+    /**
+       Get the default severity threshold.
+       \returns Default severity threshold.
+    */
+    virtual SCXCoreLib::SCXLogSeverity GetDefaultSeverityThreshold() const
+    {
+        return SCXCoreLib::eWarning;
     }
 };
 

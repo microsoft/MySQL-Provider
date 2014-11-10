@@ -106,7 +106,7 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
         util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
         if ( ! pQuery->ExecuteQuery("show variables") )
         {
-            // *TODO* Log something here!
+            SCX_LOGERROR(hLog, L"Failure executing query \"show variables\" against MySQL engine");
             context.Post(MI_RESULT_FAILED);
             return;
         }
@@ -128,7 +128,7 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
         }
         else
         {
-            // *TODO* Log something here!
+            SCX_LOGERROR(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
             context.Post(MI_RESULT_FAILED);
             return;
         }
@@ -138,7 +138,7 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
             // Execute a query to get the global status
             if ( ! pQuery->ExecuteQuery("show global status") )
             {
-                // *TODO* Log something here!
+                SCX_LOGERROR(hLog, L"Failure executing query \"show global status\" against MySQL engine");
                 context.Post(MI_RESULT_FAILED);
                 return;
             }
@@ -161,17 +161,19 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
             float queries = 0;
             if ( !GetUValue(globals, "queries", uval64) )
             {
+                // Fallback for older MySQL servers that don't return "queries" ...
+
                 float questions, close, reset, prepare;
-                if ( GetUValue(globals, "questions", questions )
-                     && GetUValue(globals, "com_stmt_close", close )
-                     && GetUValue(globals, "com_stmt_reset", reset )
-                     && GetUValue(globals, "com_stmt_prepare", prepare ))
+                if ( GetUValue(globals, "questions", questions, true )
+                     && GetUValue(globals, "com_stmt_close", close, true )
+                     && GetUValue(globals, "com_stmt_reset", reset, true )
+                     && GetUValue(globals, "com_stmt_prepare", prepare, true ) )
                 {
                     queries = questions + close + reset + prepare;
                 }
                 else
                 {
-                    // *TODO* Log some sort of warning here, but fall through
+                    SCX_LOGWARNING(hLog, L"Query \"show global status\" did not return expected value in result set");
                 }
             }
 
@@ -245,13 +247,27 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
                 inst.IDB_BP_UsePct_value( uval8 );
             }
 
-            // *TODO* Rework this, handler_read_*_last may exist but should not be included
-            int numeratorCount = AddValues(globals, "handler_read_rnd", valFloat);
-            int denominatorCount = AddValues(globals, "handler_read_", valFloat2);
-            if ( 2 == numeratorCount && 6 == denominatorCount )
+            // Support for FullTableScanPct
+            //
+            // We can use AddValue() method because handler_read_*_last may exist, but should not be included
+            float read_rnd, read_rnd_next, read_first, read_key, read_next, read_prev;
+
+            if ( GetUValue(globals, "handler_read_rnd", read_rnd, true)
+                 && GetUValue(globals, "handler_read_rnd_next", read_rnd_next, true)
+                 && GetUValue(globals, "handler_read_first", read_first, true)
+                 && GetUValue(globals, "handler_read_key", read_key, true)
+                 && GetUValue(globals, "handler_read_next", read_next, true)
+                 && GetUValue(globals, "handler_read_prev", read_prev, true) )
             {
+                valFloat = read_rnd + read_rnd_next;
+                valFloat2 = read_rnd + read_rnd_next + read_first + read_key + read_next + read_prev;
+
                 ComputeRatio(valFloat, valFloat2, uval8);
                 inst.FullTableScanPct_value( uval8 );
+            }
+            else
+            {
+                SCX_LOGWARNING(hLog, L"Query \"show global status\" did not return expected value in result set");
             }
 
             // *TODO* Need exact rules for what to return, and when; waiting for PM input
@@ -267,6 +283,7 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
     CIM_PEX_END( L"MySQL_ServerStatistics_Class_Provider::EnumerateInstances" , hLog );
 }
 
+// *TODO* Implement GetInstance, implement unit tests for it
 void MySQL_ServerStatistics_Class_Provider::GetInstance(
     Context& context,
     const String& nameSpace,

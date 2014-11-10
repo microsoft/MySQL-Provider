@@ -221,11 +221,16 @@ template <typename T> bool ConvertToUnsigned(const std::string& strNum, T& value
 }
 
 // Get Unsigned value from map
-template <typename T> bool GetUValue(const std::map<std::string, std::string>& mymap, const std::string keyName, T& value)
+template <typename T> bool GetUValue(const std::map<std::string, std::string>& mymap, const std::string keyName, T& value, bool fWarn = false)
 {
     std::map<std::string, std::string>::const_iterator it = mymap.find(keyName);
     if ( mymap.end() == it )
     {
+        if ( fWarn )
+        {
+            SCXCoreLib::SCXLogHandle hLog = SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.provider.support");
+            SCX_LOGWARNING(hLog, "MySQL result set did not contain \"" + keyName + "\" in the result set" );
+        }
         return false;
     }
 

@@ -309,6 +309,7 @@ STATIC_PROVIDER_UNITFILES_INCLUDE = \
 STATIC_PROVIDER_UNITFILES = \
 	$(PROVIDER_TEST_DIR)/binding_test.cpp \
 	$(PROVIDER_TEST_DIR)/sqlstats_test.cpp \
+	$(PROVIDER_TEST_DIR)/sqldatabase_test.cpp \
 	$(PROVIDER_TEST_DIR)/support/testrunnerlogpolicy.cpp \
 	\
 	$(PROVIDER_TEST_DIR)/providertestutils.cpp \

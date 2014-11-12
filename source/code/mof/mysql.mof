@@ -35,6 +35,7 @@ class MySQL_Server : CIM_InstalledProduct {
     ]
     string OperatingStatus;
 
+    // *TODO* We need a port specificaiton here; update on next MOF refresh
     [ Description ( "This function updates the MySQL Server credentials used by the MySQL OMI provider." ) ]
     boolean UpdateCredentials(
         [IN] string Username,
@@ -118,6 +119,7 @@ class MySQL_Server_Database : CIM_CommonDatabase {
     [ Description ( "Number of tables a database contains" ) ]
     uint64 NumberOfTables;
 
+    // *TODO* Database engines are per-table, not per-database; nuke this on next MOF refresh
     [ Description ( "The underlying database engine that this database is using" ) ]
     string DatabaseEngine;
 

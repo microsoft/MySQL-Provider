@@ -28,6 +28,7 @@ PROVIDER_TEST_SUPPORT_DIR := $(PROVIDER_TEST_DIR)/support
 PAL_INCLUDE_DIR := $(SCXPAL_DIR)/source/code/include
 PAL_TESTUTILS_DIR := $(SCXPAL_DIR)/test/code/testutils
 
+INTERMEDIATE_DIR=$(BASE_DIR)/intermediate/$(BUILD_CONFIGURATION)
 TARGET_DIR := $(BASE_DIR)/target/$(BUILD_CONFIGURATION)
 PROVIDER_LIBRARY := $(TARGET_DIR)/libmysqlProvider.so
 OMI_PREEXEC := $(TARGET_DIR)/omi_preexec
@@ -54,7 +55,7 @@ endif
 COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
 PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
 
-LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lscxassertabort -lrt `mysql_config --libs`
+LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
 SHARED_FLAGS := -shared
@@ -62,6 +63,12 @@ SHARED_FLAGS := -shared
 # Support for installbuilder
 
 STAGING_DIR := $(TARGET_DIR)/staging
+
+# Support for src_to_obj handling
+
+INCLUDES = $(OMI_INCLUDE_FLAGS) $(PROVIDER_INCLUDE_FLAGS)
+CFLAGS = $(COMPILE_FLAGS)
+CXXFLAGS = $(COMPILE_FLAGS)
 
 #--------------------------------------------------------------------------------
 # Build targets
@@ -73,7 +80,7 @@ all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(MYSQL_DELIVERABLES)
 endif
 
 clean :
-	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/target $(PROVIDER_TEST_DIR)/providertestutils.cpp
+	$(RMDIR) $(BASE_DIR)/build/cppunit_result.* $(BASE_DIR)/build/scxtestrunner.log $(BASE_DIR)/installer/intermediate $(BASE_DIR)/intermediate $(BASE_DIR)/target $(PROVIDER_TEST_DIR)/providertestutils.cpp
 	-find $(BASE_DIR) -name \*~ -exec rm {} \;
 
 distclean : clean
@@ -241,6 +248,27 @@ endif
 	@$(call pf_fappend,"#endif /* DEFINES_H */                                                          ", $@)
 	@$(call pf_fappend,"/*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/", $@)
 
+#================================================================================
+# Internal functions
+#================================================================================
+
+# Convert a list of src files with absolute paths under BASE_DIR to corresponding
+# object files under intermediate directory 
+# src_to_obj(list_of_cppfiles)
+src_to_obj = $(patsubst $(BASE_DIR)%, $(INTERMEDIATE_DIR)%, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(1))))
+
+# No default rules, please
+.SUFFIX: 
+
+# Rule for compiling cpp files in source tree, ouptut in mirrored intermediate dir
+$(INTERMEDIATE_DIR)/%.o : $(BASE_DIR)/%.cpp  $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
+	$(MKPATH) $(@D)
+	$(CXX) -c $(CXXFLAGS) $(INCLUDES) -I$(<D) -o $@ $<
+
+$(INTERMEDIATE_DIR)/%.o : $(BASE_DIR)/%.c $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
+	$(MKPATH) $(@D)
+	$(CXX) -c $(CFLAGS) $(INCLUDES) -I$(<D) -o $@ $<
+
 #--------------------------------------------------------------------------------
 # MySQL Provider
 #
@@ -259,6 +287,7 @@ STATIC_PROVIDERLIB_SRCFILES += \
 STATIC_PROVIDERLIB_SRCFILES += \
 	$(PROVIDER_DIR)/support/logstartup.cpp \
 	$(PROVIDER_DIR)/support/productdependencies.cpp \
+	$(PROVIDER_DIR)/support/sqlauth.cpp \
 	$(PROVIDER_DIR)/support/sqlbinding.cpp
 
 STATIC_PROVIDERLIB_LOGPOLICY += \
@@ -266,12 +295,19 @@ STATIC_PROVIDERLIB_LOGPOLICY += \
 
 PROVIDER_HEADERS = \
 	$(PROVIDER_DIR)/support/logstartup.h \
+	$(PROVIDER_DIR)/support/sqlauth.h \
 	$(PROVIDER_DIR)/support/sqlbinding.h
 
-$(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
+STATIC_PROVIDERLIB_OBJFILES = $(call src_to_obj,$(STATIC_PROVIDERLIB_SRCFILES))
+
+$(PROVIDER_LIBRARY): INCLUDES += $(PROVIDER_INCLUDE_FLAGS)
+$(PROVIDER_LIBRARY): CFLAGS += $(PROVIDER_COMPILE_FLAGS)
+$(PROVIDER_LIBRARY): CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
+$(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
 	@echo "========================= Performing Building provider"
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
-	g++ $(PROVIDER_COMPILE_FLAGS) $(SHARED_FLAGS) $(OMI_INCLUDE_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_SRCFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
+	g++ $(PROVIDER_COMPILE_FLAGS) $(SHARED_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
 
 #--------------------------------------------------------------------------------
 # MySQL OMI_PREEXEC
@@ -287,6 +323,7 @@ STATIC_OMI_PREEXEC_HEADERS = \
 
 $(OMI_PREEXEC): $(STATIC_OMI_PREEXEC_SRCFILES) $(STATIC_OMI_PREEXEC_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
 	@echo "========================= Performing Building OMI preexec executable"
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
 	g++ $(COMPILE_FLAGS) -o $@ $(STATIC_OMI_PREEXEC_SRCFILES)
 
@@ -307,19 +344,28 @@ STATIC_PROVIDER_UNITFILES_INCLUDE = \
 	$(PROVIDER_TEST_SUPPORT_DIR)/sqlcredentials.h
 
 STATIC_PROVIDER_UNITFILES = \
+	$(PROVIDER_TEST_DIR)/auth_test.cpp \
 	$(PROVIDER_TEST_DIR)/binding_test.cpp \
 	$(PROVIDER_TEST_DIR)/sqlstats_test.cpp \
 	$(PROVIDER_TEST_DIR)/sqldatabase_test.cpp \
 	$(PROVIDER_TEST_DIR)/support/testrunnerlogpolicy.cpp \
 	\
-	$(PROVIDER_TEST_DIR)/providertestutils.cpp \
+	$(PROVIDER_TEST_DIR)/providertestutils.cpp
+
+STATIC_PROVIDER_PAL_UNITFILES = \
 	$(PAL_TESTUTILS_DIR)/scxassert_cppunit.cpp \
 	$(PAL_TESTUTILS_DIR)/testrunner.cpp
 
-$(TARGET_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_UNITFILES) $(STATIC_PROVIDERLIB_SRCFILES) $(INCLUDE_VHOST) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS) $(PROVIDER_TEST_DIR)/providertestutils.cpp
+STATIC_PROVIDER_TEST_OBJFILES = $(call src_to_obj,$(STATIC_PROVIDER_UNITFILES))
+
+$(TARGET_DIR)/testrunner: INCLUDES += $(PROVIDER_TEST_INCLUDE_FLAGS) $(PAL_INCLUDE_DIR) $(PAL_TESTUTILS_DIR)
+$(TARGET_DIR)/testrunner: CFLAGS += $(PROVIDER_COMPILE_FLAGS)
+$(TARGET_DIR)/testrunner: CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
+$(TARGET_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
 	@echo "========================= Performing Building provider tests"
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
-	g++ $(PROVIDER_COMPILE_FLAGS) $(PROVIDER_TEST_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDER_UNITFILES) $(STATIC_PROVIDERLIB_SRCFILES) $(LINK_LIBRARIES) $(PROVIDER_TEST_LINK_LIBRARIES)
+	g++ $(PROVIDER_COMPILE_FLAGS) $(PROVIDER_TEST_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDER_PAL_UNITFILES) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(LINK_LIBRARIES) $(PROVIDER_TEST_LINK_LIBRARIES)
 
 testrun : test
 

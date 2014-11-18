@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
 
     int uid = atoi( argv[1] );
     int gid = atoi( argv[2] );
+    int rc;
 
     // If spawning a non-root process, create subdir for scx log & persist 
     // with new uid as owner, if not already existing, so that we have 
@@ -138,7 +139,6 @@ int main(int argc, char *argv[])
     if (uid != 0)
     {
         std::vector<std::string> dirList;
-        int rc;
 
         // Get the list of directories to create
         GetDirectoryCreationList( dirList );
@@ -150,6 +150,26 @@ int main(int argc, char *argv[])
                 return rc;
             }
         }
+
+        // Hook for non-privileged OMI_PREEXEC functions
+        if ( 0 != (rc = PreExec_NonPrived_Hook(uid, gid)) )
+        {
+            return rc;
+        }
+    }
+    else
+    {
+        // Hook for Privileged OMI_PREEXEC functions
+        if ( 0 != (rc = PreExec_Prived_Hook()) )
+        {
+            return rc;
+        }
+    }
+
+    // Hook for any OMI_PREEXEC functions, regardless of privilege level
+    if ( 0 != (rc = PreExec_Generic_Hook()) )
+    {
+        return rc;
     }
 
     return 0;

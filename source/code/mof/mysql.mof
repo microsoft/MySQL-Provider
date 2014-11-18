@@ -35,11 +35,13 @@ class MySQL_Server : CIM_InstalledProduct {
     ]
     string OperatingStatus;
 
-    // *TODO* We need a port specificaiton here; update on next MOF refresh
+    // *TODO* We need a port specificaiton here, and possibly binding; update on next MOF refresh
     [ Description ( "This function updates the MySQL Server credentials used by the MySQL OMI provider." ) ]
     boolean UpdateCredentials(
         [IN] string Username,
         [IN] string Password);
+
+    // *TODO* Add a DeleteCredentials (takes a port number to delete)
 
 };
 
@@ -95,12 +97,14 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     [ Description ( "Percentage of full tables scans" ) ]
     uint8 FullTableScanPct;
 
+    // *TODO* This is to be cut on next MOF refresh
     [ Description ( "Status of slave server (replicating data from master to slave)" ),
       ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" },
       Values { "Unknown", "None", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode" }
     ]
     string SlaveStatus;
 
+    // *TODO* This is to be cut on next MOF refresh
     [ Description ( "How many seconds between master and slave replication" ) ]
     uint64 SlaveLag;
 

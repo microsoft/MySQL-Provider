@@ -106,7 +106,10 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
         util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
         if ( ! pQuery->ExecuteQuery("show variables") )
         {
-            SCX_LOGERROR(hLog, L"Failure executing query \"show variables\" against MySQL engine");
+            std::stringstream ss;
+            ss << "Failure executing query \"show variables\" against MySQL engine, Error "
+               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+            SCX_LOGERROR(hLog, ss.str());
             context.Post(MI_RESULT_FAILED);
             return;
         }
@@ -138,7 +141,10 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
             // Execute a query to get the global status
             if ( ! pQuery->ExecuteQuery("show global status") )
             {
-                SCX_LOGERROR(hLog, L"Failure executing query \"show global status\" against MySQL engine");
+                std::stringstream ss;
+                ss << "Failure executing query \"show global status\" against MySQL engine, Error "
+                   << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+                SCX_LOGERROR(hLog, ss.str());
                 context.Post(MI_RESULT_FAILED);
                 return;
             }

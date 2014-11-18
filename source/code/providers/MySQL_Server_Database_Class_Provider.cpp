@@ -2,7 +2,9 @@
 #include <MI.h>
 #include "MySQL_Server_Database_Class_Provider.h"
 
+#include <scxcorelib/scxcmn.h>
 #include <scxcorelib/scxnameresolver.h>
+#include <scxcorelib/stringaid.h>
 
 #include "logstartup.h"
 #include "sqlbinding.h"
@@ -83,7 +85,10 @@ void MySQL_Server_Database_Class_Provider::EnumerateInstances(
         util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
         if ( ! pQuery->ExecuteQuery("show variables") )
         {
-            SCX_LOGERROR(hLog, L"Failure executing query \"show variables\" against MySQL engine");
+            std::stringstream ss;
+            ss << "Failure executing query \"show variables\" against MySQL engine, Error "
+               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+            SCX_LOGERROR(hLog, ss.str());
             context.Post(MI_RESULT_FAILED);
             return;
         }
@@ -109,7 +114,10 @@ void MySQL_Server_Database_Class_Provider::EnumerateInstances(
         // Execute a query to get the list of MySQL databases and number of tables per database
         if ( ! pQuery->ExecuteQuery("select b.schema_name as \"Database\", count(a.table_name) as \"Count\" from information_schema.schemata b left join information_schema.tables a on b.schema_name = a.table_schema group by b.schema_name;") )
         {
-            SCX_LOGERROR(hLog, L"Failure executing query to get list of tables/database against MySQL engine");
+            std::stringstream ss;
+            ss << "Failure executing query to get list of tables/database against MySQL engine, error "
+               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+            SCX_LOGERROR(hLog, ss.str());
             context.Post(MI_RESULT_FAILED);
             return;
         }

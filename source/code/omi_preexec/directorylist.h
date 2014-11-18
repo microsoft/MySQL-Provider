@@ -5,8 +5,8 @@
  /**
       \file        directorylist.h
 
-      \brief       Provide list of directories for OMI_PREEXEC program
-                   (allows for common implementation to differ only by directory list)
+      \brief       Provide list of project-specific callouts for OMI_PREEXEC program
+                   (allows for common implementation to differ only by project)
 
       \date        11-06-14
 */
@@ -19,6 +19,9 @@
 #include <vector>
 
 void  GetDirectoryCreationList(std::vector<std::string>& dirList);
+int PreExec_NonPrived_Hook(uid_t uid, gid_t gid);
+int PreExec_Prived_Hook();
+int PreExec_Generic_Hook();
 
 #endif /* DIRECTORY_LIST_H */
 

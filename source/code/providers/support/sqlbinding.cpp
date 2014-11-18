@@ -47,6 +47,10 @@ MySQL_Dependencies::~MySQL_Dependencies()
 
 bool MySQL_Dependencies::Attach()
 {
+    m_sqlState.clear();
+    m_sqlErrorText.clear();
+    m_sqlErrorNum = 0;
+
     if ( NULL == m_sqlConnection )
     {
         m_sqlConnection = mysql_init( NULL );
@@ -67,7 +71,13 @@ bool MySQL_Dependencies::Attach()
             0 );
 
         if ( NULL == sqlConnRet )
+        {
+            m_sqlErrorText = mysql_error(m_sqlConnection);
+            m_sqlState = mysql_sqlstate(m_sqlConnection);
+            m_sqlErrorNum = mysql_errno(m_sqlConnection);
+
             throw SQLError( mysql_error(m_sqlConnection), SCXSRCLOCATION );
+        }
 
         m_infoConnection = mysql_get_host_info( m_sqlConnection );
         m_infoClient = mysql_get_client_info();
@@ -100,6 +110,8 @@ bool MySQL_Query::ExecuteQuery( const char* query )
     // Clear the prior results, if any
     m_queryResults.clear();
     m_sqlErrorText.clear();
+    m_sqlState.clear();
+    m_sqlErrorNum = 0;
 
     try
     {
@@ -114,6 +126,10 @@ bool MySQL_Query::ExecuteQuery( const char* query )
         int sqlStatus = mysql_query( sqlConnection, query );
         if ( sqlStatus )
         {
+            m_sqlErrorText = mysql_error(sqlConnection);
+            m_sqlState = mysql_sqlstate(sqlConnection);
+            m_sqlErrorNum = mysql_errno(sqlConnection);
+
             throw SQLError( mysql_error(sqlConnection), SCXSRCLOCATION );
         }
 

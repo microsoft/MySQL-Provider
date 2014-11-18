@@ -14,6 +14,9 @@
 #include <testutils/scxunit.h>
 #include <testutils/providertestutils.h>
 
+#include "errmsg.h"
+#include "mysqld_error.h"
+
 #include <iostream> // for cout
 
 #include "sqlbinding.h"
@@ -82,19 +85,29 @@ public:
     void testSQL_Connect_No_Credentials()
     {
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
-        CPPUNIT_ASSERT( pBinding->Attach() );
+        bool fSuccess = pBinding->Attach();
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 
     void testSQL_Connect_With_Credentials()
     {
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
-        CPPUNIT_ASSERT( pBinding->Attach(sqlHostname, sqlUsername, sqlPassword) );
+        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 
     void testSQL_Connect_With_Bad_Credentials()
     {
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
-        CPPUNIT_ASSERT( !pBinding->Attach(sqlHostname, sqlUsername, "BadPassword") );
+        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, "BadPassword");
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), !fSuccess );
+
+        // Verify error functions
+        CPPUNIT_ASSERT_MESSAGE(std::string("Actual SQL Error message: \"") + pBinding->GetErrorText() + "\"",
+                               0 == pBinding->GetErrorText().find("Access denied for user"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned int>(ER_ACCESS_DENIED_ERROR), pBinding->GetErrorNum());
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned int>(1045), pBinding->GetErrorNum());
+        CPPUNIT_ASSERT_EQUAL(std::string("28000"), pBinding->GetErrorState());
     }
 
     void testSQLQuery_With_No_Attach()
@@ -111,9 +124,21 @@ public:
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        CPPUNIT_ASSERT( !pBinding->Attach(sqlHostname, sqlUsername, "BadPassword") );
+        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, "BadPassword");
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), !fSuccess );
+
+        // Verify error functions
+        CPPUNIT_ASSERT_MESSAGE(std::string("Actual SQL Error message: \"") + pBinding->GetErrorText() + "\"",
+                               0 == pBinding->GetErrorText().find("Access denied for user"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned int>(ER_ACCESS_DENIED_ERROR), pBinding->GetErrorNum());
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned int>(1045), pBinding->GetErrorNum());
+        CPPUNIT_ASSERT_EQUAL(std::string("28000"), pBinding->GetErrorState());
+
+        // We didn't attach, but do the query anyway and make sure we get what we anticipated
         CPPUNIT_ASSERT( !pQuery->ExecuteQuery("show global status") );
         CPPUNIT_ASSERT_EQUAL(std::string("MySQL server has gone away"), pQuery->GetErrorText());
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned int>(CR_SERVER_GONE_ERROR), pQuery->GetErrorNum());
+        CPPUNIT_ASSERT_EQUAL(std::string("HY000"), pQuery->GetErrorState());
     }
 
     void testSQLQuery_With_Bad_Query()
@@ -121,7 +146,8 @@ public:
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        CPPUNIT_ASSERT( pBinding->Attach() );
+        bool fSuccess = pBinding->Attach();
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
         CPPUNIT_ASSERT( !pQuery->ExecuteQuery("this is a bogus MySQL query") );
         CPPUNIT_ASSERT_MESSAGE(std::string("Actual SQL Error message: \"") + pQuery->GetErrorText() + "\"",
                                std::string::npos != pQuery->GetErrorText().find("error in your SQL syntax"));
@@ -132,7 +158,8 @@ public:
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        CPPUNIT_ASSERT( pBinding->Attach() );
+        bool fSuccess = pBinding->Attach();
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
         CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") );
 
         std::map<std::string, std::string> status = pQuery->GetResults();
@@ -155,7 +182,8 @@ public:
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        CPPUNIT_ASSERT( pBinding->Attach() );
+        bool fSuccess = pBinding->Attach();
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
         CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") );
 
         std::map<std::string, std::string> status = pQuery->GetResults();
@@ -174,7 +202,8 @@ public:
         MySQL_Binding* pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        CPPUNIT_ASSERT( pBinding->Attach(sqlHostname, sqlUsername, sqlPassword) );
+        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
         CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") );
 
         std::map<std::string, std::string> status = pQuery->GetResults();

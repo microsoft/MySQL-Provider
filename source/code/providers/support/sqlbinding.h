@@ -34,7 +34,9 @@ class MySQL_Dependencies
 {
 public:
     MySQL_Dependencies()
-    : m_sqlConnection(NULL), m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.binding.dependencies"))
+    : m_sqlConnection(NULL),
+      m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.binding.dependencies")),
+      m_sqlErrorNum(0)
     {}
     virtual ~MySQL_Dependencies();
 
@@ -49,9 +51,13 @@ public:
     bool Attach();
     bool Detach();
 
-    std::string& GetConnectionInfo() { return m_infoConnection; }
-    std::string& GetClientInfo() { return m_infoClient; }
-    std::string& GetServerInfo() { return m_infoServer; }
+    const std::string& GetErrorText() { return m_sqlErrorText; }
+    const std::string& GetErrorState() { return m_sqlState; }
+    unsigned int GetErrorNum() { return m_sqlErrorNum; }
+
+    const std::string& GetConnectionInfo() { return m_infoConnection; }
+    const std::string& GetClientInfo() { return m_infoClient; }
+    const std::string& GetServerInfo() { return m_infoServer; }
 
 protected:
     std::string m_sqlHostName;
@@ -61,6 +67,10 @@ protected:
 private:
     MYSQL *m_sqlConnection;
     SCXCoreLib::SCXLogHandle m_log;
+
+    std::string m_sqlErrorText;
+    std::string m_sqlState;
+    unsigned int m_sqlErrorNum;
 
     std::string m_infoConnection;
     std::string m_infoClient;
@@ -89,17 +99,23 @@ class MySQL_Query
 {
 public:
     explicit MySQL_Query(MySQL_Dependencies* deps)
-    : m_deps(deps)
+    : m_sqlErrorNum(0), m_deps(deps)
     { }
     virtual ~MySQL_Query() {}
 
     virtual bool ExecuteQuery( const char* query );
-    virtual const std::string& GetErrorText() { return m_sqlErrorText; }
+
     virtual std::map<std::string, std::string>& GetResults() { return m_queryResults; }
+
+    virtual const std::string& GetErrorText() { return m_sqlErrorText; }
+    virtual const std::string& GetErrorState() { return m_sqlState; }
+    virtual unsigned int GetErrorNum() { return m_sqlErrorNum; }
 
 private:
     std::map<std::string, std::string> m_queryResults;
     std::string m_sqlErrorText;
+    std::string m_sqlState;
+    unsigned int m_sqlErrorNum;
 
     MySQL_Dependencies* m_deps;
 };
@@ -127,15 +143,20 @@ public:
     bool AttachUsingStoredCredentials() { return m_deps->Attach(); }
     bool Detach() { return m_deps->Detach(); }
 
-    std::string& GetConnectionInfo() { return m_deps->GetConnectionInfo(); }
-    std::string& GetClientInfo() { return m_deps->GetClientInfo(); }
-    std::string& GetServerInfo() { return m_deps->GetServerInfo(); }
+    const std::string& GetErrorText() { return m_deps->GetErrorText(); }
+    const std::string& GetErrorState() { return m_deps->GetErrorState(); }
+    unsigned int GetErrorNum() { return m_deps->GetErrorNum(); }
+
+    const std::string& GetConnectionInfo() { return m_deps->GetConnectionInfo(); }
+    const std::string& GetClientInfo() { return m_deps->GetClientInfo(); }
+    const std::string& GetServerInfo() { return m_deps->GetServerInfo(); }
 
 protected:
 
 private:
     MySQL_Dependencies* m_deps;
 };
+
 
 
 //

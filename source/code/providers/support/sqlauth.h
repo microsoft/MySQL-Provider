@@ -129,6 +129,7 @@ public:
 
 private:
     std::wstring FormatPortSpecification(const std::string& binding, const std::string& user, const std::string& password);
+    void ValidateDefaultRecordUpdate(const std::string& binding, const std::string& username, const std::string& password);
 
     SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> m_deps;
     SCXCoreLib::SCXConfigFile m_config;

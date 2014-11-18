@@ -65,6 +65,9 @@ class Authentication_Test : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testAuth_AddCred_NoBinding_With_Default );
     CPPUNIT_TEST( testAuth_AddCred_NoUsernamePassword_With_Default );
     CPPUNIT_TEST( testAuth_AddCred_All_With_Default );
+    CPPUNIT_TEST( testAuth_AddCred_Allows_Updates );
+    CPPUNIT_TEST( testAuth_AddCred_UpdateToDefaultSucceedsIfNotNeeded );
+    CPPUNIT_TEST( testAuth_AddCred_UpdateToDefaultFailsIfNeeded );
     CPPUNIT_TEST( testAuth_DelCred_Default_Binding_Fails );
     CPPUNIT_TEST( testAuth_DelCred_Default_UsernamePassword_Fails );
     CPPUNIT_TEST( testAuth_DelCred_Default_Only );
@@ -488,6 +491,46 @@ public:
         CPPUNIT_ASSERT_EQUAL( static_cast<size_t>(2), lines.size() );
         CPPUNIT_ASSERT_EQUAL( std::wstring(L"0=127.0.0.1, randomUser, QXV0aGVudGljYXRlTWUh"), lines[0] );
         CPPUNIT_ASSERT_EQUAL( std::wstring(L"3306=localhost, anewworld, d2FzIGZvdW5kIGJ5IENocmlzdG9waGVy"), lines[1] );
+    }
+
+    void testAuth_AddCred_Allows_Updates()
+    {
+        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        auth.Load();
+        auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
+        auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
+
+        // Now update existing entry and verify that we got the correct information
+        auth.AddCredentialSet(3306, "localhost", "", "");
+
+        MySQL_AuthenticationEntry authEntry;
+        auth.GetEntry( 3306, authEntry );
+
+        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
+        CPPUNIT_ASSERT_EQUAL( std::string("localhost"), authEntry.binding );
+        CPPUNIT_ASSERT_EQUAL( std::string("randomUser"), authEntry.username );
+        CPPUNIT_ASSERT_EQUAL( std::string("AuthenticateMe!"), authEntry.password );
+    }
+
+    void testAuth_AddCred_UpdateToDefaultSucceedsIfNotNeeded()
+    {
+        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        auth.Load();
+        auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
+        auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
+
+        CPPUNIT_ASSERT_NO_THROW( auth.AddCredentialSet(0, "172.0.0.1", "", "") );
+    }
+
+    void testAuth_AddCred_UpdateToDefaultFailsIfNeeded()
+    {
+        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        auth.Load();
+        auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
+        auth.AddCredentialSet(3306, "", "anewworld", "was found by Christopher");
+
+        SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.AddCredentialSet(0, "", "randomUser", "AuthenticateMe!"),
+                                        MySQL_Auth::InvalidAuthentication, L"is required");
     }
 
     void testAuth_DelCred_Default_Binding_Fails()

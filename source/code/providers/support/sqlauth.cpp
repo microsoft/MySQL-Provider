@@ -71,6 +71,9 @@ void MySQL_Authentication::AddCredentialSet(unsigned int port, const std::string
 
     if ( 0 == port )
     {
+        // Be sure that an update of default record doesn't create dependency conflicts
+        ValidateDefaultRecordUpdate( binding, username, password );
+
         // Special behavior for default: Allow only binding, or only username/password, or both
 
         m_config.SetValue(L"0", FormatPortSpecification(binding, username, password));
@@ -115,40 +118,8 @@ void MySQL_Authentication::DeleteCredentialSet(unsigned int port)
 
     if ( 0 == port && (! m_default.binding.empty() || ! m_default.username.empty() || ! m_default.password.empty()) )
     {
-        // Check if default record required for anything
-        for (std::map<std::wstring,std::wstring>::const_iterator it = m_config.begin(); it != m_config.end(); ++it)
-        {
-            // Skip keys that aren't port numbers - and skip the default port too
-            if ( it->first == L"0" || std::string::npos != it->first.find_first_not_of(L"0123456789") )
-            {
-                continue;
-            }
-
-            // Convert the value to something meaningful (don't bother decoding the password)
-            MySQL_AuthenticationEntry entry;
-            std::vector<std::wstring> elements;
-            StrTokenize( it->second, elements, L",", true, true );
-            if ( elements.size() != 3 )
-            {
-                std::wstringstream ss;
-                ss << L"Corrupt configuration, invalid value for port " << it->first << L": " << it->second;
-                throw MySQL_Auth::InvalidAuthentication(ss.str(), SCXSRCLOCATION);
-            }
-
-            entry.port = StrToUInt(it->first);
-            entry.binding = StrToUTF8( elements[0] );
-            entry.username = StrToUTF8( elements[1] );
-            entry.password = StrToUTF8( elements[2] );
-
-            // Is the default record required for this entry?
-            if ( (entry.binding.empty() && ! m_default.binding.empty())
-                 || (entry.username.empty() && ! m_default.username.empty())
-                 || (entry.password.empty() && ! m_default.password.empty()) )
-            {
-                throw MySQL_Auth::InvalidAuthentication(L"Default record is required for port " + it->first,
-                                                        SCXSRCLOCATION);
-            }
-        }
+        // Removal of default record effectively means that all fields are blank
+        ValidateDefaultRecordUpdate( "", "", "" );
     }
 
     m_config.DeleteEntry( StrFrom(port) );
@@ -269,6 +240,50 @@ std::wstring MySQL_Authentication::FormatPortSpecification(
     util::Base64Helper::Encode(password, b64Password);
 
     return StrFromUTF8(binding + ", " + user + ", " + b64Password);
+}
+
+void MySQL_Authentication::ValidateDefaultRecordUpdate(
+    const std::string& binding,
+    const std::string& username,
+    const std::string& password)
+{
+    if ( ! m_default.binding.empty() || ! m_default.username.empty() || ! m_default.password.empty() )
+    {
+        // Check if default record required for anything
+        for (std::map<std::wstring,std::wstring>::const_iterator it = m_config.begin(); it != m_config.end(); ++it)
+        {
+            // Skip keys that aren't port numbers - and skip the default port too
+            if ( it->first == L"0" || std::string::npos != it->first.find_first_not_of(L"0123456789") )
+            {
+                continue;
+            }
+
+            // Convert the value to something meaningful (don't bother decoding the password)
+            MySQL_AuthenticationEntry entry;
+            std::vector<std::wstring> elements;
+            StrTokenize( it->second, elements, L",", true, true );
+            if ( elements.size() != 3 )
+            {
+                std::wstringstream ss;
+                ss << L"Corrupt configuration, invalid value for port " << it->first << L": " << it->second;
+                throw MySQL_Auth::InvalidAuthentication(ss.str(), SCXSRCLOCATION);
+            }
+
+            entry.port = StrToUInt( it->first );
+            entry.binding = StrToUTF8( elements[0] );
+            entry.username = StrToUTF8( elements[1] );
+            entry.password = StrToUTF8( elements[2] );
+
+            // Is the default record required for this entry?
+            if ( (entry.binding.empty() && binding.empty())
+                 || (entry.username.empty() && username.empty())
+                 || (entry.password.empty() && password.empty()) )
+            {
+                throw MySQL_Auth::InvalidAuthentication(L"Default record is required for port " + it->first,
+                                                        SCXSRCLOCATION);
+            }
+        }
+    }
 }
 
 

@@ -150,6 +150,23 @@ MI_EXTERN_C void MI_CALL MySQL_Server_Invoke_UpdateCredentials(
     cxxSelf->Invoke_UpdateCredentials(cxxContext, nameSpace, instance, param);
 }
 
+MI_EXTERN_C void MI_CALL MySQL_Server_Invoke_DeleteCredentials(
+    MySQL_Server_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MI_Char* methodName,
+    const MySQL_Server* instanceName,
+    const MySQL_Server_DeleteCredentials* in)
+{
+    MySQL_Server_Class_Provider* cxxSelf =((MySQL_Server_Class_Provider*)self);
+    MySQL_Server_Class instance(instanceName, false);
+    Context  cxxContext(context);
+    MySQL_Server_DeleteCredentials_Class param(in, false);
+
+    cxxSelf->Invoke_DeleteCredentials(cxxContext, nameSpace, instance, param);
+}
+
 MI_EXTERN_C void MI_CALL MySQL_ServerStatistics_Load(
     MySQL_ServerStatistics_Self** self,
     MI_Module_Self* selfModule,

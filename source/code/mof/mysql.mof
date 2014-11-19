@@ -17,31 +17,37 @@ class MySQL_Server : CIM_InstalledProduct {
     [ Description ( "Log file containing all errors output from MySQL" ) ]
     string ErrorLogFile;
 
-    [ Description ( "Server name" ) ]
-    string ServerName;
+    [ Description ( "Server hostname" ) ]
+    string Hostname;
+
+    [ Description ( "Bind Address that MySQL is listening on" ) ]
+    string BindAddress;
+
+    [ Description ( "Port that MySQL is listening on" ) ]
+    uint16 Port;
 
     [ Description ( "Socket file used to connect to the MySQL instance" ) ]
     string SocketFile;
-
-    [ Description ( "Port MySQL is listening on" ) ]
-    uint16 Port;
 
     [ Description ( "Directory where MySQL is storing all data" ) ]
     string DataDirectory;
 
     [ Description ( "Current operating status for the MySQL instance" ),
-      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18" },
-      Values { "Unknown", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode" }
+      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" },
+      Values { "Unknown", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode", "Insufficient Privileges" }
     ]
     string OperatingStatus;
 
-    // *TODO* We need a port specificaiton here, and possibly binding; update on next MOF refresh
     [ Description ( "This function updates the MySQL Server credentials used by the MySQL OMI provider." ) ]
     boolean UpdateCredentials(
+        [IN] uint16 Port,
+        [IN] string BindAddress,
         [IN] string Username,
         [IN] string Password);
 
-    // *TODO* Add a DeleteCredentials (takes a port number to delete)
+    [ Description ( "This function deletes the MySQL Server credentials used by the MySQL OMI provider." ) ]
+    boolean DeleteCredentials(
+        [IN] uint16 Port);
 
 };
 
@@ -97,17 +103,6 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     [ Description ( "Percentage of full tables scans" ) ]
     uint8 FullTableScanPct;
 
-    // *TODO* This is to be cut on next MOF refresh
-    [ Description ( "Status of slave server (replicating data from master to slave)" ),
-      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" },
-      Values { "Unknown", "None", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode" }
-    ]
-    string SlaveStatus;
-
-    // *TODO* This is to be cut on next MOF refresh
-    [ Description ( "How many seconds between master and slave replication" ) ]
-    uint64 SlaveLag;
-
 };
 
 // MySQL_Server_Database
@@ -122,10 +117,6 @@ class MySQL_Server_Database : CIM_CommonDatabase {
 
     [ Description ( "Number of tables a database contains" ) ]
     uint64 NumberOfTables;
-
-    // *TODO* Database engines are per-table, not per-database; nuke this on next MOF refresh
-    [ Description ( "The underlying database engine that this database is using" ) ]
-    string DatabaseEngine;
 
     [ Description ( "How much space (in bytes) a database in MySQL is using" ) ]
     uint64 DiskSpaceInBytes;

@@ -48,9 +48,10 @@ typedef struct _MySQL_Server /* extends CIM_InstalledProduct */
     /* MySQL_Server properties */
     MI_ConstStringField ConfigurationFile;
     MI_ConstStringField ErrorLogFile;
-    MI_ConstStringField ServerName;
-    MI_ConstStringField SocketFile;
+    MI_ConstStringField Hostname;
+    MI_ConstStringField BindAddress;
     MI_ConstUint16Field Port;
+    MI_ConstStringField SocketFile;
     MI_ConstStringField DataDirectory;
     MI_ConstStringField OperatingStatus;
 }
@@ -560,7 +561,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_ErrorLogFile(
         12);
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_Set_ServerName(
+MI_INLINE MI_Result MI_CALL MySQL_Server_Set_Hostname(
     MySQL_Server* self,
     const MI_Char* str)
 {
@@ -572,7 +573,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Set_ServerName(
         0);
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_ServerName(
+MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_Hostname(
     MySQL_Server* self,
     const MI_Char* str)
 {
@@ -584,7 +585,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_ServerName(
         MI_FLAG_BORROW);
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_ServerName(
+MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_Hostname(
     MySQL_Server* self)
 {
     return self->__instance.ft->ClearElementAt(
@@ -592,7 +593,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_ServerName(
         13);
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_Set_SocketFile(
+MI_INLINE MI_Result MI_CALL MySQL_Server_Set_BindAddress(
     MySQL_Server* self,
     const MI_Char* str)
 {
@@ -604,7 +605,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Set_SocketFile(
         0);
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_SocketFile(
+MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_BindAddress(
     MySQL_Server* self,
     const MI_Char* str)
 {
@@ -616,7 +617,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_SocketFile(
         MI_FLAG_BORROW);
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_SocketFile(
+MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_BindAddress(
     MySQL_Server* self)
 {
     return self->__instance.ft->ClearElementAt(
@@ -640,13 +641,45 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_Port(
     return MI_RESULT_OK;
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_Set_DataDirectory(
+MI_INLINE MI_Result MI_CALL MySQL_Server_Set_SocketFile(
     MySQL_Server* self,
     const MI_Char* str)
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
         16,
+        (MI_Value*)&str,
+        MI_STRING,
+        0);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_SocketFile(
+    MySQL_Server* self,
+    const MI_Char* str)
+{
+    return self->__instance.ft->SetElementAt(
+        (MI_Instance*)&self->__instance,
+        16,
+        (MI_Value*)&str,
+        MI_STRING,
+        MI_FLAG_BORROW);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_SocketFile(
+    MySQL_Server* self)
+{
+    return self->__instance.ft->ClearElementAt(
+        (MI_Instance*)&self->__instance,
+        16);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_Set_DataDirectory(
+    MySQL_Server* self,
+    const MI_Char* str)
+{
+    return self->__instance.ft->SetElementAt(
+        (MI_Instance*)&self->__instance,
+        17,
         (MI_Value*)&str,
         MI_STRING,
         0);
@@ -658,7 +691,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_DataDirectory(
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        16,
+        17,
         (MI_Value*)&str,
         MI_STRING,
         MI_FLAG_BORROW);
@@ -669,7 +702,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_DataDirectory(
 {
     return self->__instance.ft->ClearElementAt(
         (MI_Instance*)&self->__instance,
-        16);
+        17);
 }
 
 MI_INLINE MI_Result MI_CALL MySQL_Server_Set_OperatingStatus(
@@ -678,7 +711,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Set_OperatingStatus(
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        17,
+        18,
         (MI_Value*)&str,
         MI_STRING,
         0);
@@ -690,7 +723,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_SetPtr_OperatingStatus(
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        17,
+        18,
         (MI_Value*)&str,
         MI_STRING,
         MI_FLAG_BORROW);
@@ -701,7 +734,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Clear_OperatingStatus(
 {
     return self->__instance.ft->ClearElementAt(
         (MI_Instance*)&self->__instance,
-        17);
+        18);
 }
 
 /*
@@ -716,6 +749,8 @@ typedef struct _MySQL_Server_UpdateCredentials
 {
     MI_Instance __instance;
     /*OUT*/ MI_ConstBooleanField MIReturn;
+    /*IN*/ MI_ConstUint16Field Port;
+    /*IN*/ MI_ConstStringField BindAddress;
     /*IN*/ MI_ConstStringField Username;
     /*IN*/ MI_ConstStringField Password;
 }
@@ -774,13 +809,61 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_MIReturn(
     return MI_RESULT_OK;
 }
 
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Set_Port(
+    MySQL_Server_UpdateCredentials* self,
+    MI_Uint16 x)
+{
+    ((MI_Uint16Field*)&self->Port)->value = x;
+    ((MI_Uint16Field*)&self->Port)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_Port(
+    MySQL_Server_UpdateCredentials* self)
+{
+    memset((void*)&self->Port, 0, sizeof(self->Port));
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Set_BindAddress(
+    MySQL_Server_UpdateCredentials* self,
+    const MI_Char* str)
+{
+    return self->__instance.ft->SetElementAt(
+        (MI_Instance*)&self->__instance,
+        2,
+        (MI_Value*)&str,
+        MI_STRING,
+        0);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_SetPtr_BindAddress(
+    MySQL_Server_UpdateCredentials* self,
+    const MI_Char* str)
+{
+    return self->__instance.ft->SetElementAt(
+        (MI_Instance*)&self->__instance,
+        2,
+        (MI_Value*)&str,
+        MI_STRING,
+        MI_FLAG_BORROW);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_BindAddress(
+    MySQL_Server_UpdateCredentials* self)
+{
+    return self->__instance.ft->ClearElementAt(
+        (MI_Instance*)&self->__instance,
+        2);
+}
+
 MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Set_Username(
     MySQL_Server_UpdateCredentials* self,
     const MI_Char* str)
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        1,
+        3,
         (MI_Value*)&str,
         MI_STRING,
         0);
@@ -792,7 +875,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_SetPtr_Username(
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        1,
+        3,
         (MI_Value*)&str,
         MI_STRING,
         MI_FLAG_BORROW);
@@ -803,7 +886,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_Username(
 {
     return self->__instance.ft->ClearElementAt(
         (MI_Instance*)&self->__instance,
-        1);
+        3);
 }
 
 MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Set_Password(
@@ -812,7 +895,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Set_Password(
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        2,
+        4,
         (MI_Value*)&str,
         MI_STRING,
         0);
@@ -824,7 +907,7 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_SetPtr_Password(
 {
     return self->__instance.ft->SetElementAt(
         (MI_Instance*)&self->__instance,
-        2,
+        4,
         (MI_Value*)&str,
         MI_STRING,
         MI_FLAG_BORROW);
@@ -835,7 +918,92 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_Password(
 {
     return self->__instance.ft->ClearElementAt(
         (MI_Instance*)&self->__instance,
-        2);
+        4);
+}
+
+/*
+**==============================================================================
+**
+** MySQL_Server.DeleteCredentials()
+**
+**==============================================================================
+*/
+
+typedef struct _MySQL_Server_DeleteCredentials
+{
+    MI_Instance __instance;
+    /*OUT*/ MI_ConstBooleanField MIReturn;
+    /*IN*/ MI_ConstUint16Field Port;
+}
+MySQL_Server_DeleteCredentials;
+
+MI_EXTERN_C MI_CONST MI_MethodDecl MySQL_Server_DeleteCredentials_rtti;
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Construct(
+    MySQL_Server_DeleteCredentials* self,
+    MI_Context* context)
+{
+    return MI_ConstructParameters(context, &MySQL_Server_DeleteCredentials_rtti,
+        (MI_Instance*)&self->__instance);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Clone(
+    const MySQL_Server_DeleteCredentials* self,
+    MySQL_Server_DeleteCredentials** newInstance)
+{
+    return MI_Instance_Clone(
+        &self->__instance, (MI_Instance**)newInstance);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Destruct(
+    MySQL_Server_DeleteCredentials* self)
+{
+    return MI_Instance_Destruct(&self->__instance);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Delete(
+    MySQL_Server_DeleteCredentials* self)
+{
+    return MI_Instance_Delete(&self->__instance);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Post(
+    const MySQL_Server_DeleteCredentials* self,
+    MI_Context* context)
+{
+    return MI_PostInstance(context, &self->__instance);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Set_MIReturn(
+    MySQL_Server_DeleteCredentials* self,
+    MI_Boolean x)
+{
+    ((MI_BooleanField*)&self->MIReturn)->value = x;
+    ((MI_BooleanField*)&self->MIReturn)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Clear_MIReturn(
+    MySQL_Server_DeleteCredentials* self)
+{
+    memset((void*)&self->MIReturn, 0, sizeof(self->MIReturn));
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Set_Port(
+    MySQL_Server_DeleteCredentials* self,
+    MI_Uint16 x)
+{
+    ((MI_Uint16Field*)&self->Port)->value = x;
+    ((MI_Uint16Field*)&self->Port)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_DeleteCredentials_Clear_Port(
+    MySQL_Server_DeleteCredentials* self)
+{
+    memset((void*)&self->Port, 0, sizeof(self->Port));
+    return MI_RESULT_OK;
 }
 
 /*
@@ -905,6 +1073,15 @@ MI_EXTERN_C void MI_CALL MySQL_Server_Invoke_UpdateCredentials(
     const MI_Char* methodName,
     const MySQL_Server* instanceName,
     const MySQL_Server_UpdateCredentials* in);
+
+MI_EXTERN_C void MI_CALL MySQL_Server_Invoke_DeleteCredentials(
+    MySQL_Server_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MI_Char* methodName,
+    const MySQL_Server* instanceName,
+    const MySQL_Server_DeleteCredentials* in);
 
 
 /*
@@ -1054,82 +1231,82 @@ public:
     }
 
     //
-    // MySQL_Server_Class.ServerName
+    // MySQL_Server_Class.Hostname
     //
     
-    const Field<String>& ServerName() const
+    const Field<String>& Hostname() const
     {
-        const size_t n = offsetof(Self, ServerName);
+        const size_t n = offsetof(Self, Hostname);
         return GetField<String>(n);
     }
     
-    void ServerName(const Field<String>& x)
+    void Hostname(const Field<String>& x)
     {
-        const size_t n = offsetof(Self, ServerName);
+        const size_t n = offsetof(Self, Hostname);
         GetField<String>(n) = x;
     }
     
-    const String& ServerName_value() const
+    const String& Hostname_value() const
     {
-        const size_t n = offsetof(Self, ServerName);
+        const size_t n = offsetof(Self, Hostname);
         return GetField<String>(n).value;
     }
     
-    void ServerName_value(const String& x)
+    void Hostname_value(const String& x)
     {
-        const size_t n = offsetof(Self, ServerName);
+        const size_t n = offsetof(Self, Hostname);
         GetField<String>(n).Set(x);
     }
     
-    bool ServerName_exists() const
+    bool Hostname_exists() const
     {
-        const size_t n = offsetof(Self, ServerName);
+        const size_t n = offsetof(Self, Hostname);
         return GetField<String>(n).exists ? true : false;
     }
     
-    void ServerName_clear()
+    void Hostname_clear()
     {
-        const size_t n = offsetof(Self, ServerName);
+        const size_t n = offsetof(Self, Hostname);
         GetField<String>(n).Clear();
     }
 
     //
-    // MySQL_Server_Class.SocketFile
+    // MySQL_Server_Class.BindAddress
     //
     
-    const Field<String>& SocketFile() const
+    const Field<String>& BindAddress() const
     {
-        const size_t n = offsetof(Self, SocketFile);
+        const size_t n = offsetof(Self, BindAddress);
         return GetField<String>(n);
     }
     
-    void SocketFile(const Field<String>& x)
+    void BindAddress(const Field<String>& x)
     {
-        const size_t n = offsetof(Self, SocketFile);
+        const size_t n = offsetof(Self, BindAddress);
         GetField<String>(n) = x;
     }
     
-    const String& SocketFile_value() const
+    const String& BindAddress_value() const
     {
-        const size_t n = offsetof(Self, SocketFile);
+        const size_t n = offsetof(Self, BindAddress);
         return GetField<String>(n).value;
     }
     
-    void SocketFile_value(const String& x)
+    void BindAddress_value(const String& x)
     {
-        const size_t n = offsetof(Self, SocketFile);
+        const size_t n = offsetof(Self, BindAddress);
         GetField<String>(n).Set(x);
     }
     
-    bool SocketFile_exists() const
+    bool BindAddress_exists() const
     {
-        const size_t n = offsetof(Self, SocketFile);
+        const size_t n = offsetof(Self, BindAddress);
         return GetField<String>(n).exists ? true : false;
     }
     
-    void SocketFile_clear()
+    void BindAddress_clear()
     {
-        const size_t n = offsetof(Self, SocketFile);
+        const size_t n = offsetof(Self, BindAddress);
         GetField<String>(n).Clear();
     }
 
@@ -1171,6 +1348,46 @@ public:
     {
         const size_t n = offsetof(Self, Port);
         GetField<Uint16>(n).Clear();
+    }
+
+    //
+    // MySQL_Server_Class.SocketFile
+    //
+    
+    const Field<String>& SocketFile() const
+    {
+        const size_t n = offsetof(Self, SocketFile);
+        return GetField<String>(n);
+    }
+    
+    void SocketFile(const Field<String>& x)
+    {
+        const size_t n = offsetof(Self, SocketFile);
+        GetField<String>(n) = x;
+    }
+    
+    const String& SocketFile_value() const
+    {
+        const size_t n = offsetof(Self, SocketFile);
+        return GetField<String>(n).value;
+    }
+    
+    void SocketFile_value(const String& x)
+    {
+        const size_t n = offsetof(Self, SocketFile);
+        GetField<String>(n).Set(x);
+    }
+    
+    bool SocketFile_exists() const
+    {
+        const size_t n = offsetof(Self, SocketFile);
+        return GetField<String>(n).exists ? true : false;
+    }
+    
+    void SocketFile_clear()
+    {
+        const size_t n = offsetof(Self, SocketFile);
+        GetField<String>(n).Clear();
     }
 
     //
@@ -1345,6 +1562,86 @@ public:
     }
 
     //
+    // MySQL_Server_UpdateCredentials_Class.Port
+    //
+    
+    const Field<Uint16>& Port() const
+    {
+        const size_t n = offsetof(Self, Port);
+        return GetField<Uint16>(n);
+    }
+    
+    void Port(const Field<Uint16>& x)
+    {
+        const size_t n = offsetof(Self, Port);
+        GetField<Uint16>(n) = x;
+    }
+    
+    const Uint16& Port_value() const
+    {
+        const size_t n = offsetof(Self, Port);
+        return GetField<Uint16>(n).value;
+    }
+    
+    void Port_value(const Uint16& x)
+    {
+        const size_t n = offsetof(Self, Port);
+        GetField<Uint16>(n).Set(x);
+    }
+    
+    bool Port_exists() const
+    {
+        const size_t n = offsetof(Self, Port);
+        return GetField<Uint16>(n).exists ? true : false;
+    }
+    
+    void Port_clear()
+    {
+        const size_t n = offsetof(Self, Port);
+        GetField<Uint16>(n).Clear();
+    }
+
+    //
+    // MySQL_Server_UpdateCredentials_Class.BindAddress
+    //
+    
+    const Field<String>& BindAddress() const
+    {
+        const size_t n = offsetof(Self, BindAddress);
+        return GetField<String>(n);
+    }
+    
+    void BindAddress(const Field<String>& x)
+    {
+        const size_t n = offsetof(Self, BindAddress);
+        GetField<String>(n) = x;
+    }
+    
+    const String& BindAddress_value() const
+    {
+        const size_t n = offsetof(Self, BindAddress);
+        return GetField<String>(n).value;
+    }
+    
+    void BindAddress_value(const String& x)
+    {
+        const size_t n = offsetof(Self, BindAddress);
+        GetField<String>(n).Set(x);
+    }
+    
+    bool BindAddress_exists() const
+    {
+        const size_t n = offsetof(Self, BindAddress);
+        return GetField<String>(n).exists ? true : false;
+    }
+    
+    void BindAddress_clear()
+    {
+        const size_t n = offsetof(Self, BindAddress);
+        GetField<String>(n).Clear();
+    }
+
+    //
     // MySQL_Server_UpdateCredentials_Class.Username
     //
     
@@ -1426,6 +1723,137 @@ public:
 };
 
 typedef Array<MySQL_Server_UpdateCredentials_Class> MySQL_Server_UpdateCredentials_ClassA;
+
+class MySQL_Server_DeleteCredentials_Class : public Instance
+{
+public:
+    
+    typedef MySQL_Server_DeleteCredentials Self;
+    
+    MySQL_Server_DeleteCredentials_Class() :
+        Instance(&MySQL_Server_DeleteCredentials_rtti)
+    {
+    }
+    
+    MySQL_Server_DeleteCredentials_Class(
+        const MySQL_Server_DeleteCredentials* instanceName,
+        bool keysOnly) :
+        Instance(
+            &MySQL_Server_DeleteCredentials_rtti,
+            &instanceName->__instance,
+            keysOnly)
+    {
+    }
+    
+    MySQL_Server_DeleteCredentials_Class(
+        const MI_ClassDecl* clDecl,
+        const MI_Instance* instance,
+        bool keysOnly) :
+        Instance(clDecl, instance, keysOnly)
+    {
+    }
+    
+    MySQL_Server_DeleteCredentials_Class(
+        const MI_ClassDecl* clDecl) :
+        Instance(clDecl)
+    {
+    }
+    
+    MySQL_Server_DeleteCredentials_Class& operator=(
+        const MySQL_Server_DeleteCredentials_Class& x)
+    {
+        CopyRef(x);
+        return *this;
+    }
+    
+    MySQL_Server_DeleteCredentials_Class(
+        const MySQL_Server_DeleteCredentials_Class& x) :
+        Instance(x)
+    {
+    }
+
+    //
+    // MySQL_Server_DeleteCredentials_Class.MIReturn
+    //
+    
+    const Field<Boolean>& MIReturn() const
+    {
+        const size_t n = offsetof(Self, MIReturn);
+        return GetField<Boolean>(n);
+    }
+    
+    void MIReturn(const Field<Boolean>& x)
+    {
+        const size_t n = offsetof(Self, MIReturn);
+        GetField<Boolean>(n) = x;
+    }
+    
+    const Boolean& MIReturn_value() const
+    {
+        const size_t n = offsetof(Self, MIReturn);
+        return GetField<Boolean>(n).value;
+    }
+    
+    void MIReturn_value(const Boolean& x)
+    {
+        const size_t n = offsetof(Self, MIReturn);
+        GetField<Boolean>(n).Set(x);
+    }
+    
+    bool MIReturn_exists() const
+    {
+        const size_t n = offsetof(Self, MIReturn);
+        return GetField<Boolean>(n).exists ? true : false;
+    }
+    
+    void MIReturn_clear()
+    {
+        const size_t n = offsetof(Self, MIReturn);
+        GetField<Boolean>(n).Clear();
+    }
+
+    //
+    // MySQL_Server_DeleteCredentials_Class.Port
+    //
+    
+    const Field<Uint16>& Port() const
+    {
+        const size_t n = offsetof(Self, Port);
+        return GetField<Uint16>(n);
+    }
+    
+    void Port(const Field<Uint16>& x)
+    {
+        const size_t n = offsetof(Self, Port);
+        GetField<Uint16>(n) = x;
+    }
+    
+    const Uint16& Port_value() const
+    {
+        const size_t n = offsetof(Self, Port);
+        return GetField<Uint16>(n).value;
+    }
+    
+    void Port_value(const Uint16& x)
+    {
+        const size_t n = offsetof(Self, Port);
+        GetField<Uint16>(n).Set(x);
+    }
+    
+    bool Port_exists() const
+    {
+        const size_t n = offsetof(Self, Port);
+        return GetField<Uint16>(n).exists ? true : false;
+    }
+    
+    void Port_clear()
+    {
+        const size_t n = offsetof(Self, Port);
+        GetField<Uint16>(n).Clear();
+    }
+};
+
+typedef Array<MySQL_Server_DeleteCredentials_Class> MySQL_Server_DeleteCredentials_ClassA;
 
 MI_END_NAMESPACE
 

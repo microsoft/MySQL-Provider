@@ -79,5 +79,14 @@ void MySQL_Server_Class_Provider::Invoke_UpdateCredentials(
     context.Post(MI_RESULT_NOT_SUPPORTED);
 }
 
+void MySQL_Server_Class_Provider::Invoke_DeleteCredentials(
+    Context& context,
+    const String& nameSpace,
+    const MySQL_Server_Class& instanceName,
+    const MySQL_Server_DeleteCredentials_Class& in)
+{
+    context.Post(MI_RESULT_NOT_SUPPORTED);
+}
+
 
 MI_END_NAMESPACE

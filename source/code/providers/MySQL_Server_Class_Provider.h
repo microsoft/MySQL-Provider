@@ -70,6 +70,12 @@ public:
         const MySQL_Server_Class& instanceName,
         const MySQL_Server_UpdateCredentials_Class& in);
 
+    void Invoke_DeleteCredentials(
+        Context& context,
+        const String& nameSpace,
+        const MySQL_Server_Class& instanceName,
+        const MySQL_Server_DeleteCredentials_Class& in);
+
 /* @MIGEN.END@ CAUTION: PLEASE DO NOT EDIT OR DELETE THIS LINE. */
 };
 

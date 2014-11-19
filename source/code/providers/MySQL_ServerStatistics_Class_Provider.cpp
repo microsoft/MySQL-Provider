@@ -275,12 +275,6 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
             {
                 SCX_LOGWARNING(hLog, L"Query \"show global status\" did not return expected value in result set");
             }
-
-            // *TODO* Need exact rules for what to return, and when; waiting for PM input
-            inst.SlaveStatus_value( "Unknown" );
-
-            // *TODO* Waiting for PM input; not clear how to pull this right now
-            inst.SlaveLag_value( 0 );
         }
 
         context.Post(inst);

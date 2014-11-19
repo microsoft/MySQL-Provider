@@ -151,9 +151,7 @@ public:
                                                 L"TableLockContentionPct",
                                                 L"IDB_BP_HitPct",
                                                 L"IDB_BP_UsePct",
-                                                L"FullTableScanPct",
-                                                L"SlaveStatus",
-                                                L"SlaveLag"};
+                                                L"FullTableScanPct"};
 
         const size_t numprops = sizeof(tmpExpectedProperties) / sizeof(tmpExpectedProperties[0]);
         VerifyInstancePropertyNames(instance, tmpExpectedProperties, numprops, CALL_LOCATION(errMsg));

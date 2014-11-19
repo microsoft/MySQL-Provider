@@ -60,7 +60,6 @@ typedef struct _MySQL_Server_Database /* extends CIM_CommonDatabase */
     /* MySQL_Server_Database properties */
     MI_ConstStringField DatabaseName;
     MI_ConstUint64Field NumberOfTables;
-    MI_ConstStringField DatabaseEngine;
     MI_ConstUint64Field DiskSpaceInBytes;
 }
 MySQL_Server_Database;
@@ -801,38 +800,6 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_Database_Clear_NumberOfTables(
     return MI_RESULT_OK;
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_Server_Database_Set_DatabaseEngine(
-    MySQL_Server_Database* self,
-    const MI_Char* str)
-{
-    return self->__instance.ft->SetElementAt(
-        (MI_Instance*)&self->__instance,
-        27,
-        (MI_Value*)&str,
-        MI_STRING,
-        0);
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_Server_Database_SetPtr_DatabaseEngine(
-    MySQL_Server_Database* self,
-    const MI_Char* str)
-{
-    return self->__instance.ft->SetElementAt(
-        (MI_Instance*)&self->__instance,
-        27,
-        (MI_Value*)&str,
-        MI_STRING,
-        MI_FLAG_BORROW);
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_Server_Database_Clear_DatabaseEngine(
-    MySQL_Server_Database* self)
-{
-    return self->__instance.ft->ClearElementAt(
-        (MI_Instance*)&self->__instance,
-        27);
-}
-
 MI_INLINE MI_Result MI_CALL MySQL_Server_Database_Set_DiskSpaceInBytes(
     MySQL_Server_Database* self,
     MI_Uint64 x)
@@ -1197,46 +1164,6 @@ public:
     {
         const size_t n = offsetof(Self, NumberOfTables);
         GetField<Uint64>(n).Clear();
-    }
-
-    //
-    // MySQL_Server_Database_Class.DatabaseEngine
-    //
-    
-    const Field<String>& DatabaseEngine() const
-    {
-        const size_t n = offsetof(Self, DatabaseEngine);
-        return GetField<String>(n);
-    }
-    
-    void DatabaseEngine(const Field<String>& x)
-    {
-        const size_t n = offsetof(Self, DatabaseEngine);
-        GetField<String>(n) = x;
-    }
-    
-    const String& DatabaseEngine_value() const
-    {
-        const size_t n = offsetof(Self, DatabaseEngine);
-        return GetField<String>(n).value;
-    }
-    
-    void DatabaseEngine_value(const String& x)
-    {
-        const size_t n = offsetof(Self, DatabaseEngine);
-        GetField<String>(n).Set(x);
-    }
-    
-    bool DatabaseEngine_exists() const
-    {
-        const size_t n = offsetof(Self, DatabaseEngine);
-        return GetField<String>(n).exists ? true : false;
-    }
-    
-    void DatabaseEngine_clear()
-    {
-        const size_t n = offsetof(Self, DatabaseEngine);
-        GetField<String>(n).Clear();
     }
 
     //

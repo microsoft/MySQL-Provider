@@ -616,35 +616,35 @@ static MI_CONST MI_PropertyDecl MySQL_Server_ErrorLogFile_prop =
     NULL,
 };
 
-/* property MySQL_Server.ServerName */
-static MI_CONST MI_PropertyDecl MySQL_Server_ServerName_prop =
+/* property MySQL_Server.Hostname */
+static MI_CONST MI_PropertyDecl MySQL_Server_Hostname_prop =
 {
     MI_FLAG_PROPERTY, /* flags */
-    0x0073650A, /* code */
-    MI_T("ServerName"), /* name */
+    0x00686508, /* code */
+    MI_T("Hostname"), /* name */
     NULL, /* qualifiers */
     0, /* numQualifiers */
     MI_STRING, /* type */
     NULL, /* className */
     0, /* subscript */
-    offsetof(MySQL_Server, ServerName), /* offset */
+    offsetof(MySQL_Server, Hostname), /* offset */
     MI_T("MySQL_Server"), /* origin */
     MI_T("MySQL_Server"), /* propagator */
     NULL,
 };
 
-/* property MySQL_Server.SocketFile */
-static MI_CONST MI_PropertyDecl MySQL_Server_SocketFile_prop =
+/* property MySQL_Server.BindAddress */
+static MI_CONST MI_PropertyDecl MySQL_Server_BindAddress_prop =
 {
     MI_FLAG_PROPERTY, /* flags */
-    0x0073650A, /* code */
-    MI_T("SocketFile"), /* name */
+    0x0062730B, /* code */
+    MI_T("BindAddress"), /* name */
     NULL, /* qualifiers */
     0, /* numQualifiers */
     MI_STRING, /* type */
     NULL, /* className */
     0, /* subscript */
-    offsetof(MySQL_Server, SocketFile), /* offset */
+    offsetof(MySQL_Server, BindAddress), /* offset */
     MI_T("MySQL_Server"), /* origin */
     MI_T("MySQL_Server"), /* propagator */
     NULL,
@@ -662,6 +662,23 @@ static MI_CONST MI_PropertyDecl MySQL_Server_Port_prop =
     NULL, /* className */
     0, /* subscript */
     offsetof(MySQL_Server, Port), /* offset */
+    MI_T("MySQL_Server"), /* origin */
+    MI_T("MySQL_Server"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_Server.SocketFile */
+static MI_CONST MI_PropertyDecl MySQL_Server_SocketFile_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x0073650A, /* code */
+    MI_T("SocketFile"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_Server, SocketFile), /* offset */
     MI_T("MySQL_Server"), /* origin */
     MI_T("MySQL_Server"), /* propagator */
     NULL,
@@ -716,11 +733,40 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_Server_props[] =
     &CIM_InstalledProduct_Name_prop,
     &MySQL_Server_ConfigurationFile_prop,
     &MySQL_Server_ErrorLogFile_prop,
-    &MySQL_Server_ServerName_prop,
-    &MySQL_Server_SocketFile_prop,
+    &MySQL_Server_Hostname_prop,
+    &MySQL_Server_BindAddress_prop,
     &MySQL_Server_Port_prop,
+    &MySQL_Server_SocketFile_prop,
     &MySQL_Server_DataDirectory_prop,
     &MySQL_Server_OperatingStatus_prop,
+};
+
+/* parameter MySQL_Server.UpdateCredentials(): Port */
+static MI_CONST MI_ParameterDecl MySQL_Server_UpdateCredentials_Port_param =
+{
+    MI_FLAG_PARAMETER|MI_FLAG_IN, /* flags */
+    0x00707404, /* code */
+    MI_T("Port"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT16, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_Server_UpdateCredentials, Port), /* offset */
+};
+
+/* parameter MySQL_Server.UpdateCredentials(): BindAddress */
+static MI_CONST MI_ParameterDecl MySQL_Server_UpdateCredentials_BindAddress_param =
+{
+    MI_FLAG_PARAMETER|MI_FLAG_IN, /* flags */
+    0x0062730B, /* code */
+    MI_T("BindAddress"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_Server_UpdateCredentials, BindAddress), /* offset */
 };
 
 /* parameter MySQL_Server.UpdateCredentials(): Username */
@@ -768,6 +814,8 @@ static MI_CONST MI_ParameterDecl MySQL_Server_UpdateCredentials_MIReturn_param =
 static MI_ParameterDecl MI_CONST* MI_CONST MySQL_Server_UpdateCredentials_params[] =
 {
     &MySQL_Server_UpdateCredentials_MIReturn_param,
+    &MySQL_Server_UpdateCredentials_Port_param,
+    &MySQL_Server_UpdateCredentials_BindAddress_param,
     &MySQL_Server_UpdateCredentials_Username_param,
     &MySQL_Server_UpdateCredentials_Password_param,
 };
@@ -790,9 +838,62 @@ MI_CONST MI_MethodDecl MySQL_Server_UpdateCredentials_rtti =
     (MI_ProviderFT_Invoke)MySQL_Server_Invoke_UpdateCredentials, /* method */
 };
 
+/* parameter MySQL_Server.DeleteCredentials(): Port */
+static MI_CONST MI_ParameterDecl MySQL_Server_DeleteCredentials_Port_param =
+{
+    MI_FLAG_PARAMETER|MI_FLAG_IN, /* flags */
+    0x00707404, /* code */
+    MI_T("Port"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT16, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_Server_DeleteCredentials, Port), /* offset */
+};
+
+/* parameter MySQL_Server.DeleteCredentials(): MIReturn */
+static MI_CONST MI_ParameterDecl MySQL_Server_DeleteCredentials_MIReturn_param =
+{
+    MI_FLAG_PARAMETER|MI_FLAG_OUT, /* flags */
+    0x006D6E08, /* code */
+    MI_T("MIReturn"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_BOOLEAN, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_Server_DeleteCredentials, MIReturn), /* offset */
+};
+
+static MI_ParameterDecl MI_CONST* MI_CONST MySQL_Server_DeleteCredentials_params[] =
+{
+    &MySQL_Server_DeleteCredentials_MIReturn_param,
+    &MySQL_Server_DeleteCredentials_Port_param,
+};
+
+/* method MySQL_Server.DeleteCredentials() */
+MI_CONST MI_MethodDecl MySQL_Server_DeleteCredentials_rtti =
+{
+    MI_FLAG_METHOD, /* flags */
+    0x00647311, /* code */
+    MI_T("DeleteCredentials"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MySQL_Server_DeleteCredentials_params, /* parameters */
+    MI_COUNT(MySQL_Server_DeleteCredentials_params), /* numParameters */
+    sizeof(MySQL_Server_DeleteCredentials), /* size */
+    MI_BOOLEAN, /* returnType */
+    MI_T("MySQL_Server"), /* origin */
+    MI_T("MySQL_Server"), /* propagator */
+    &schemaDecl, /* schema */
+    (MI_ProviderFT_Invoke)MySQL_Server_Invoke_DeleteCredentials, /* method */
+};
+
 static MI_MethodDecl MI_CONST* MI_CONST MySQL_Server_meths[] =
 {
     &MySQL_Server_UpdateCredentials_rtti,
+    &MySQL_Server_DeleteCredentials_rtti,
 };
 
 static MI_CONST MI_ProviderFT MySQL_Server_funcs =
@@ -1361,40 +1462,6 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_FullTableScanPct_prop =
     NULL,
 };
 
-/* property MySQL_ServerStatistics.SlaveStatus */
-static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_SlaveStatus_prop =
-{
-    MI_FLAG_PROPERTY, /* flags */
-    0x0073730B, /* code */
-    MI_T("SlaveStatus"), /* name */
-    NULL, /* qualifiers */
-    0, /* numQualifiers */
-    MI_STRING, /* type */
-    NULL, /* className */
-    0, /* subscript */
-    offsetof(MySQL_ServerStatistics, SlaveStatus), /* offset */
-    MI_T("MySQL_ServerStatistics"), /* origin */
-    MI_T("MySQL_ServerStatistics"), /* propagator */
-    NULL,
-};
-
-/* property MySQL_ServerStatistics.SlaveLag */
-static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_SlaveLag_prop =
-{
-    MI_FLAG_PROPERTY, /* flags */
-    0x00736708, /* code */
-    MI_T("SlaveLag"), /* name */
-    NULL, /* qualifiers */
-    0, /* numQualifiers */
-    MI_UINT64, /* type */
-    NULL, /* className */
-    0, /* subscript */
-    offsetof(MySQL_ServerStatistics, SlaveLag), /* offset */
-    MI_T("MySQL_ServerStatistics"), /* origin */
-    MI_T("MySQL_ServerStatistics"), /* propagator */
-    NULL,
-};
-
 static MI_PropertyDecl MI_CONST* MI_CONST MySQL_ServerStatistics_props[] =
 {
     &CIM_StatisticalData_InstanceID_prop,
@@ -1419,8 +1486,6 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_ServerStatistics_props[] =
     &MySQL_ServerStatistics_IDB_BP_HitPct_prop,
     &MySQL_ServerStatistics_IDB_BP_UsePct_prop,
     &MySQL_ServerStatistics_FullTableScanPct_prop,
-    &MySQL_ServerStatistics_SlaveStatus_prop,
-    &MySQL_ServerStatistics_SlaveLag_prop,
 };
 
 /* parameter MySQL_ServerStatistics.ResetSelectedStats(): SelectedStatistics */
@@ -3950,23 +4015,6 @@ static MI_CONST MI_PropertyDecl MySQL_Server_Database_NumberOfTables_prop =
     NULL,
 };
 
-/* property MySQL_Server_Database.DatabaseEngine */
-static MI_CONST MI_PropertyDecl MySQL_Server_Database_DatabaseEngine_prop =
-{
-    MI_FLAG_PROPERTY, /* flags */
-    0x0064650E, /* code */
-    MI_T("DatabaseEngine"), /* name */
-    NULL, /* qualifiers */
-    0, /* numQualifiers */
-    MI_STRING, /* type */
-    NULL, /* className */
-    0, /* subscript */
-    offsetof(MySQL_Server_Database, DatabaseEngine), /* offset */
-    MI_T("MySQL_Server_Database"), /* origin */
-    MI_T("MySQL_Server_Database"), /* propagator */
-    NULL,
-};
-
 /* property MySQL_Server_Database.DiskSpaceInBytes */
 static MI_CONST MI_PropertyDecl MySQL_Server_Database_DiskSpaceInBytes_prop =
 {
@@ -4013,7 +4061,6 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_Server_Database_props[] =
     &CIM_CommonDatabase_SizeUnits_prop,
     &MySQL_Server_Database_DatabaseName_prop,
     &MySQL_Server_Database_NumberOfTables_prop,
-    &MySQL_Server_Database_DatabaseEngine_prop,
     &MySQL_Server_Database_DiskSpaceInBytes_prop,
 };
 

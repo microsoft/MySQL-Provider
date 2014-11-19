@@ -51,8 +51,6 @@ typedef struct _MySQL_ServerStatistics /* extends CIM_StatisticalData */
     MI_ConstUint8Field IDB_BP_HitPct;
     MI_ConstUint8Field IDB_BP_UsePct;
     MI_ConstUint8Field FullTableScanPct;
-    MI_ConstStringField SlaveStatus;
-    MI_ConstUint64Field SlaveLag;
 }
 MySQL_ServerStatistics;
 
@@ -557,54 +555,6 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_FullTableScanPct(
     MySQL_ServerStatistics* self)
 {
     memset((void*)&self->FullTableScanPct, 0, sizeof(self->FullTableScanPct));
-    return MI_RESULT_OK;
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_SlaveStatus(
-    MySQL_ServerStatistics* self,
-    const MI_Char* str)
-{
-    return self->__instance.ft->SetElementAt(
-        (MI_Instance*)&self->__instance,
-        22,
-        (MI_Value*)&str,
-        MI_STRING,
-        0);
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_SetPtr_SlaveStatus(
-    MySQL_ServerStatistics* self,
-    const MI_Char* str)
-{
-    return self->__instance.ft->SetElementAt(
-        (MI_Instance*)&self->__instance,
-        22,
-        (MI_Value*)&str,
-        MI_STRING,
-        MI_FLAG_BORROW);
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_SlaveStatus(
-    MySQL_ServerStatistics* self)
-{
-    return self->__instance.ft->ClearElementAt(
-        (MI_Instance*)&self->__instance,
-        22);
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_SlaveLag(
-    MySQL_ServerStatistics* self,
-    MI_Uint64 x)
-{
-    ((MI_Uint64Field*)&self->SlaveLag)->value = x;
-    ((MI_Uint64Field*)&self->SlaveLag)->exists = 1;
-    return MI_RESULT_OK;
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_SlaveLag(
-    MySQL_ServerStatistics* self)
-{
-    memset((void*)&self->SlaveLag, 0, sizeof(self->SlaveLag));
     return MI_RESULT_OK;
 }
 
@@ -1450,86 +1400,6 @@ public:
     {
         const size_t n = offsetof(Self, FullTableScanPct);
         GetField<Uint8>(n).Clear();
-    }
-
-    //
-    // MySQL_ServerStatistics_Class.SlaveStatus
-    //
-    
-    const Field<String>& SlaveStatus() const
-    {
-        const size_t n = offsetof(Self, SlaveStatus);
-        return GetField<String>(n);
-    }
-    
-    void SlaveStatus(const Field<String>& x)
-    {
-        const size_t n = offsetof(Self, SlaveStatus);
-        GetField<String>(n) = x;
-    }
-    
-    const String& SlaveStatus_value() const
-    {
-        const size_t n = offsetof(Self, SlaveStatus);
-        return GetField<String>(n).value;
-    }
-    
-    void SlaveStatus_value(const String& x)
-    {
-        const size_t n = offsetof(Self, SlaveStatus);
-        GetField<String>(n).Set(x);
-    }
-    
-    bool SlaveStatus_exists() const
-    {
-        const size_t n = offsetof(Self, SlaveStatus);
-        return GetField<String>(n).exists ? true : false;
-    }
-    
-    void SlaveStatus_clear()
-    {
-        const size_t n = offsetof(Self, SlaveStatus);
-        GetField<String>(n).Clear();
-    }
-
-    //
-    // MySQL_ServerStatistics_Class.SlaveLag
-    //
-    
-    const Field<Uint64>& SlaveLag() const
-    {
-        const size_t n = offsetof(Self, SlaveLag);
-        return GetField<Uint64>(n);
-    }
-    
-    void SlaveLag(const Field<Uint64>& x)
-    {
-        const size_t n = offsetof(Self, SlaveLag);
-        GetField<Uint64>(n) = x;
-    }
-    
-    const Uint64& SlaveLag_value() const
-    {
-        const size_t n = offsetof(Self, SlaveLag);
-        return GetField<Uint64>(n).value;
-    }
-    
-    void SlaveLag_value(const Uint64& x)
-    {
-        const size_t n = offsetof(Self, SlaveLag);
-        GetField<Uint64>(n).Set(x);
-    }
-    
-    bool SlaveLag_exists() const
-    {
-        const size_t n = offsetof(Self, SlaveLag);
-        return GetField<Uint64>(n).exists ? true : false;
-    }
-    
-    void SlaveLag_clear()
-    {
-        const size_t n = offsetof(Self, SlaveLag);
-        GetField<Uint64>(n).Clear();
     }
 };
 

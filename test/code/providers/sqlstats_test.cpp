@@ -177,7 +177,7 @@ public:
 
         // Due to built in schema, minimim disk used appears to be 650155
         uint64_t diskUsed = instance.GetProperty(L"ServerDiskUseInBytes", CALL_LOCATION(errMsg)).GetValue_MIUint64(CALL_LOCATION(errMsg));
-        CPPUNIT_ASSERT_MESSAGE(StrToUTF8(StrAppend(L"Disk space used: ", diskUsed)), diskUsed > 650000);
+        CPPUNIT_ASSERT_MESSAGE(StrToUTF8(StrAppend(L"Disk space used: ", diskUsed)), diskUsed > 430000);
 
         ValidateRatio(instance, L"SlowQueryPct", errMsg);
         ValidateRatio(instance, L"KeyCacheHitPct", errMsg);

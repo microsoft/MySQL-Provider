@@ -275,7 +275,7 @@ void MySQL_Server_Database_Class_Provider::GetInstance(
                                    "SUM(a.data_length) + SUM(a.index_length) as \"Size (Bytes)\""
                                " from information_schema.schemata b"
                                " left join information_schema.tables a on b.schema_name = a.table_schema"
-                               " where b.schema_name = \"" + database + "\"";
+                               " where b.schema_name = \"" + database + "\" group by b.schema_name";
         MySQL_QueryResults databases;
         if ( ! pQuery->ExecuteQuery(strQuery.c_str()) || ! pQuery->GetMultiColumnResults(databases) )
         {

@@ -753,6 +753,7 @@ typedef struct _MySQL_Server_UpdateCredentials
     /*IN*/ MI_ConstStringField BindAddress;
     /*IN*/ MI_ConstStringField Username;
     /*IN*/ MI_ConstStringField Password;
+    /*IN*/ MI_ConstBooleanField B64Encoded;
 }
 MySQL_Server_UpdateCredentials;
 
@@ -919,6 +920,22 @@ MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_Password(
     return self->__instance.ft->ClearElementAt(
         (MI_Instance*)&self->__instance,
         4);
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Set_B64Encoded(
+    MySQL_Server_UpdateCredentials* self,
+    MI_Boolean x)
+{
+    ((MI_BooleanField*)&self->B64Encoded)->value = x;
+    ((MI_BooleanField*)&self->B64Encoded)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_Server_UpdateCredentials_Clear_B64Encoded(
+    MySQL_Server_UpdateCredentials* self)
+{
+    memset((void*)&self->B64Encoded, 0, sizeof(self->B64Encoded));
+    return MI_RESULT_OK;
 }
 
 /*
@@ -1719,6 +1736,46 @@ public:
     {
         const size_t n = offsetof(Self, Password);
         GetField<String>(n).Clear();
+    }
+
+    //
+    // MySQL_Server_UpdateCredentials_Class.B64Encoded
+    //
+    
+    const Field<Boolean>& B64Encoded() const
+    {
+        const size_t n = offsetof(Self, B64Encoded);
+        return GetField<Boolean>(n);
+    }
+    
+    void B64Encoded(const Field<Boolean>& x)
+    {
+        const size_t n = offsetof(Self, B64Encoded);
+        GetField<Boolean>(n) = x;
+    }
+    
+    const Boolean& B64Encoded_value() const
+    {
+        const size_t n = offsetof(Self, B64Encoded);
+        return GetField<Boolean>(n).value;
+    }
+    
+    void B64Encoded_value(const Boolean& x)
+    {
+        const size_t n = offsetof(Self, B64Encoded);
+        GetField<Boolean>(n).Set(x);
+    }
+    
+    bool B64Encoded_exists() const
+    {
+        const size_t n = offsetof(Self, B64Encoded);
+        return GetField<Boolean>(n).exists ? true : false;
+    }
+    
+    void B64Encoded_clear()
+    {
+        const size_t n = offsetof(Self, B64Encoded);
+        GetField<Boolean>(n).Clear();
     }
 };
 

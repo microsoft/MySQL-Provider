@@ -21,7 +21,7 @@
 
 using namespace SCXCoreLib;
 
-MySQL_Authentication::MySQL_Authentication(MySQL_AuthenticationDependencies* deps /* = new MySQL_AuthenticationDependencies() */)
+MySQL_Authentication::MySQL_Authentication(SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> deps /* = SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()) */)
     : m_deps(deps),
       m_config(deps->GetDefaultAuthFileName()),
       m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.authentication"))
@@ -47,6 +47,12 @@ void MySQL_Authentication::Load()
 
 void MySQL_Authentication::Save()
 {
+    // Force the AutoUpdate flag to be written (for clarity if examined by customers)
+    if ( ! m_config.KeyExists(L"AutoUpdate") && m_deps->Force_AutoUpdate_Flag() )
+    {
+        AllowAutomaticUpdates(true);
+    }
+
     m_config.SaveConfig();
 }
 
@@ -61,12 +67,12 @@ void MySQL_Authentication::AddCredentialSet(unsigned int port, const std::string
 {
     if ( ! username.empty() && password.empty() )
     {
-        throw SCXInvalidArgumentException(L"user", L"no password specified with a username", SCXSRCLOCATION);
+        throw MySQL_Auth::InvalidArgumentException(L"user", L"no password specified with a username", SCXSRCLOCATION);
     }
 
     if ( username.empty() && ! password.empty() )
     {
-        throw SCXInvalidArgumentException(L"password", L"no username specified with a password", SCXSRCLOCATION);
+        throw MySQL_Auth::InvalidArgumentException(L"password", L"no username specified with a password", SCXSRCLOCATION);
     }
 
     if ( 0 == port )
@@ -110,7 +116,8 @@ void MySQL_Authentication::DeleteCredentialSet(unsigned int port)
     // Does this port even exist in our configuration?
     if ( ! m_config.KeyExists(StrFrom(port)) )
     {
-        throw SCXInvalidArgumentException(L"port", L"specified port does not exist in configuration", SCXSRCLOCATION);
+        throw MySQL_Auth::InvalidArgumentException(L"port", L"specified port does not exist in configuration",
+                                                   SCXSRCLOCATION);
     }
 
     // If there even is a default record and we're trying to delete it, then check all of

@@ -16,7 +16,8 @@
 
 #include <string>
 
-const std::string sqlHostname("localhost");
+const unsigned int sqlPort(3306);
+const std::string sqlHostname("127.0.0.1");
 const std::string sqlUsername("root");
 const std::string sqlPassword("root");
 

@@ -19,6 +19,7 @@
 
 #include <iostream> // for cout
 
+#include "sqlauth.h"
 #include "sqlbinding.h"
 #include "sqlcredentials.h"
 
@@ -30,12 +31,18 @@ class Binding_Test : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testSQL_Connect_No_Credentials );
     CPPUNIT_TEST( testSQL_Connect_With_Credentials );
     CPPUNIT_TEST( testSQL_Connect_With_Bad_Credentials );
+    CPPUNIT_TEST( testSQL_Connect_Will_Reuse_Connection );
+    CPPUNIT_TEST( testSQL_Connect_With_Stored_Credentials );
+    CPPUNIT_TEST( testSQL_Stored_Credentials_Fails_With_Bad_Port );
+    CPPUNIT_TEST( testSQL_GetConfigurationFilePaths );
     CPPUNIT_TEST( testSQLQuery_With_No_Attach );
     CPPUNIT_TEST( testSQLQuery_With_Bad_Credentials );
     CPPUNIT_TEST( testSQLQuery_With_Bad_Query );
     CPPUNIT_TEST( testSQLQuery_ShowGlobal_Status );
     CPPUNIT_TEST( testSQLQuery_ShowGlobal_Status_Handler_read );
     CPPUNIT_TEST( testSQLQuery_ShowGlobal_Status_With_Credentials );
+    CPPUNIT_TEST( testSQLQuery_With_Multiple_Columns );
+    CPPUNIT_TEST( testSQLAuthentication_Construction );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -84,22 +91,22 @@ public:
 
     void testSQL_Connect_No_Credentials()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         bool fSuccess = pBinding->Attach();
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 
     void testSQL_Connect_With_Credentials()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
-        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, sqlPassword);
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 
     void testSQL_Connect_With_Bad_Credentials()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
-        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, "BadPassword");
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, "BadPassword");
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), !fSuccess );
 
         // Verify error functions
@@ -110,9 +117,58 @@ public:
         CPPUNIT_ASSERT_EQUAL(std::string("28000"), pBinding->GetErrorState());
     }
 
+    void testSQL_Connect_Will_Reuse_Connection()
+    {
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+
+        fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+    }
+
+    void testSQL_Connect_With_Stored_Credentials()
+    {
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
+
+        bool fSuccess = pBinding->AttachUsingStoredCredentials(sqlPort, pAuth);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+    }
+
+    void testSQL_Stored_Credentials_Fails_With_Bad_Port()
+    {
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(8306, sqlHostname, sqlUsername, sqlPassword) );
+
+        bool fSuccess = pBinding->AttachUsingStoredCredentials(8306, pAuth);
+        CPPUNIT_ASSERT_MESSAGE( "Database connection succeeded when failure was expected", !fSuccess );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( pBinding->GetErrorText(), static_cast<size_t>(0),
+                                      pBinding->GetErrorText().find("Can't connect to MySQL server on") );
+        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(2003), pBinding->GetErrorNum() );
+    }
+
+    void testSQL_GetConfigurationFilePaths()
+    {
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        std::vector<std::string> paths;
+        pBinding->GetConfigurationFilePaths( paths );
+
+        CPPUNIT_ASSERT_EQUAL( static_cast<size_t>(5), paths.size() );
+        CPPUNIT_ASSERT_EQUAL( std::string("/etc/my.cnf"), paths[0] );
+        CPPUNIT_ASSERT_EQUAL( std::string("/etc/mysql/my.cnf"), paths[1] );
+        CPPUNIT_ASSERT_EQUAL( std::string("/var/lib/mysql/my.cnf"), paths[2] );
+        CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/mysql/data/my.cnf"), paths[3] );
+        CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/var/my.cnf"), paths[4] );
+    }
+
     void testSQLQuery_With_No_Attach()
     {
-        //MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        //SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         CPPUNIT_ASSERT( !pQuery->ExecuteQuery("show global status") );
@@ -121,10 +177,10 @@ public:
 
     void testSQLQuery_With_Bad_Credentials()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, "BadPassword");
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, "BadPassword");
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), !fSuccess );
 
         // Verify error functions
@@ -143,7 +199,7 @@ public:
 
     void testSQLQuery_With_Bad_Query()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         bool fSuccess = pBinding->Attach();
@@ -155,14 +211,13 @@ public:
 
     void testSQLQuery_ShowGlobal_Status()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
+        std::map<std::string, std::string> status;
         bool fSuccess = pBinding->Attach();
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
-        CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") );
-
-        std::map<std::string, std::string> status = pQuery->GetResults();
+        CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") && pQuery->GetResults(status) );
         CPPUNIT_ASSERT( !status.empty() );
 
         // Determine how many entries we expect on the various platforms
@@ -179,14 +234,13 @@ public:
 
     void testSQLQuery_ShowGlobal_Status_Handler_read()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
+        std::map<std::string, std::string> status;
         bool fSuccess = pBinding->Attach();
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
-        CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") );
-
-        std::map<std::string, std::string> status = pQuery->GetResults();
+        CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") && pQuery->GetResults(status) );
         CPPUNIT_ASSERT( !status.empty() );
 
         // Verify that exactly 2 keys exist with handler_read_rnd_*; spec calls for that
@@ -199,15 +253,46 @@ public:
 
     void testSQLQuery_ShowGlobal_Status_With_Credentials()
     {
-        MySQL_Binding* pBinding = g_pFactory->GetBinding();
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
-        bool fSuccess = pBinding->Attach(sqlHostname, sqlUsername, sqlPassword);
+        std::map<std::string, std::string> status;
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
-        CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") );
-
-        std::map<std::string, std::string> status = pQuery->GetResults();
+        CPPUNIT_ASSERT( pQuery->ExecuteQuery("show global status") && pQuery->GetResults(status) );
         CPPUNIT_ASSERT( !status.empty() );
+    }
+
+    void testSQLQuery_With_Multiple_Columns()
+    {
+        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
+
+        MySQL_QueryResults resultSet;
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+        fSuccess = pQuery->ExecuteQuery("select \"c1\" as \"Column 1\", \"c2\" as \"Column 2\", \"c3\" as \"Column 3\"");
+        CPPUNIT_ASSERT_MESSAGE( pQuery->GetErrorText(), fSuccess );
+        fSuccess = pQuery->GetMultiColumnResults(resultSet);
+        CPPUNIT_ASSERT_MESSAGE( pQuery->GetErrorText(), fSuccess );
+
+        // Verify the result set
+        CPPUNIT_ASSERT( resultSet.size() == 1 );
+        CPPUNIT_ASSERT( resultSet.count("c1") > 0 );
+
+        std::vector<std::string> contents = resultSet["c1"];
+        CPPUNIT_ASSERT( contents.size() == 2);
+        CPPUNIT_ASSERT_EQUAL( std::string("c2"), contents[0] );
+        CPPUNIT_ASSERT_EQUAL( std::string("c3"), contents[1] );
+    }
+
+    void testSQLAuthentication_Construction()
+    {
+        // The MySQL_Authentication has a very rich set of unit tests
+        // But make sure we can construct/use from binding (for test purposes)
+
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
     }
 
 };

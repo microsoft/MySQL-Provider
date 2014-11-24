@@ -9,19 +9,122 @@
 #include "logstartup.h"
 #include "sqlbinding.h"
 
+using namespace SCXCoreLib;
+
 MI_BEGIN_NAMESPACE
 
-static void EnumerateOneInstance(MySQL_Server_Database_Class& inst, const std::string& dbName, uint64_t tableCount, const std::string& instanceID, const bool keysOnly)
+static void EnumerateServerDatabases(
+    Context& context,
+    SCXLogHandle& hLog,
+    unsigned int port,
+    util::unique_ptr<MySQL_Authentication>& pAuth,
+    const bool keysOnly)
 {
-    inst.InstanceID_value( std::string(instanceID + ":" + dbName).c_str() );
+    SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
 
-    if ( !keysOnly )
+    // Attach to the MySQL database instance
+    if ( !pBinding->AttachUsingStoredCredentials(port, pAuth) )
     {
-        inst.DatabaseName_value( dbName.c_str() );
-        inst.NumberOfTables_value( tableCount );
+        std::stringstream ss;
+        ss << "Failure attaching to MySQL on port: " << port << ", Error "
+           << pBinding->GetErrorNum() << ": " << pBinding->GetErrorText();
+        SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Need to work out Disk Space In Bytes with PM ...
-        inst.DiskSpaceInBytes_value( 0 );
+        // *TODO* Handle failure case here!
+
+        return;
+    }
+
+    // Execute a query to get the MySQL variables
+    std::map<std::string, std::string> variables;
+    util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
+    if ( ! pQuery->ExecuteQuery("show variables") || ! pQuery->GetResults(variables) )
+    {
+        std::stringstream ss;
+        ss << "Failure executing query \"show variables\" against MySQL engine, Error "
+           << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+        SCX_LOGERROR(hLog, ss.str());
+
+        // *TODO* Handle failure case here!
+
+        context.Post(MI_RESULT_FAILED);
+        return;
+    }
+
+    // The InstanceID is the hostname:bind-address:port:database combination (database added later)
+    std::string hostname, strPort;
+    if ( !GetStrValue(variables, "hostname", hostname) )
+    {
+        // Populate hostname here (for MySQL 5.0 systems)
+        NameResolver nr;
+        hostname = StrToUTF8(nr.GetHostname());
+    }
+
+    MySQL_AuthenticationEntry entry;
+    pAuth->GetEntry(port, entry);
+
+    if ( !GetStrValue(variables, "port", strPort) )
+    {
+        SCX_LOGERROR(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
+
+        // *TODO* Handle failure case here!
+
+        context.Post(MI_RESULT_FAILED);
+        return;
+    }
+    std::string instanceID = hostname + ":" + entry.binding + ":" + strPort;
+
+    // Execute a query to get the list of MySQL databases, number of tables per database, and size of each database
+
+
+    // Note that third column (size) may be NULL if no tables are created for database
+    MySQL_QueryResults databases;
+    const char *queryString = "select b.schema_name as \"Database\","
+                              " COUNT(a.table_name) as \"Tables\","
+                              " SUM(a.data_length) + SUM(a.index_length) as \"Size (Bytes)\" "
+                              "from information_schema.schemata b"
+                              " left join information_schema.tables a on b.schema_name = a.table_schema "
+                              "group by b.schema_name";
+    if ( ! pQuery->ExecuteQuery(queryString) || ! pQuery->GetMultiColumnResults(databases) )
+    {
+        std::stringstream ss;
+        ss << "Failure executing query to get list of tables/database against MySQL engine, error "
+           << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+        SCX_LOGERROR(hLog, ss.str());
+
+        // *TODO* Handle failure case here!
+
+        context.Post(MI_RESULT_FAILED);
+        return;
+    }
+
+    for (MySQL_QueryResults::const_iterator it = databases.begin(); it != databases.end(); ++it)
+    {
+        MySQL_Server_Database_Class inst;
+
+        inst.InstanceID_value( std::string(instanceID + ":" + it->first).c_str() );
+
+        if ( !keysOnly )
+        {
+            uint64_t tableCount = 0;
+            uint64_t dbSize = 0;
+
+            if ( ! ConvertToUnsigned(it->second[0], tableCount) )
+            {
+                SCX_LOGERROR(hLog, "Failure converting count for database " + it->first + "; enumerating with zero databases");
+            }
+
+            if ( it->second[1].size() && ! ConvertToUnsigned(it->second[1], dbSize) )
+            {
+                SCX_LOGERROR(hLog, "Failure converting size for database " + it->first + "; enumerating with zero disk space");
+            }
+
+            inst.DatabaseName_value( it->first.c_str() );
+            inst.NumberOfTables_value( tableCount );
+            inst.DiskSpaceInBytes_value( dbSize );
+        }
+
+        context.Post(inst);
     }
 }
 
@@ -44,14 +147,6 @@ void MySQL_Server_Database_Class_Provider::Load(
     if ( NULL == g_pFactory )
     {
         g_pFactory = new MySQL_Factory();
-    }
-
-    MySQL_Binding* pBinding = g_pFactory->GetBinding();
-
-    if ( !pBinding->AttachUsingStoredCredentials() )
-    {
-        context.Post(MI_RESULT_FAILED);
-        return;
     }
 
     context.Post(MI_RESULT_OK);
@@ -77,64 +172,19 @@ void MySQL_Server_Database_Class_Provider::EnumerateInstances(
     bool keysOnly,
     const MI_Filter* filter)
 {
-    SCXCoreLib::SCXLogHandle hLog = SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.provider.database");
+    SCXLogHandle hLog = SCXLogHandleFactory::GetLogHandle(L"mysql.provider.database");
 
     CIM_PEX_BEGIN
     {
-        // Execute a query to get the MySQL variables
-        util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
-        if ( ! pQuery->ExecuteQuery("show variables") )
+        // Get the list of ports (instances) that we want to look at
+        std::vector<unsigned int> portList;
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        pAuth->GetPortList(portList);
+
+        for (std::vector<unsigned int>::const_iterator it = portList.begin(); it != portList.end(); ++it)
         {
-            std::stringstream ss;
-            ss << "Failure executing query \"show variables\" against MySQL engine, Error "
-               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
-            SCX_LOGERROR(hLog, ss.str());
-            context.Post(MI_RESULT_FAILED);
-            return;
-        }
-        std::map<std::string, std::string> variables = pQuery->GetResults();
-
-        // The InstanceID is the hostname:port combination
-        std::string hostname, port;
-        if ( !GetStrValue(variables, "hostname", hostname) )
-        {
-            // Populate hostname here (for MySQL 5.0 systems)
-            SCXCoreLib::NameResolver nr;
-            hostname = SCXCoreLib::StrToUTF8(nr.GetHostname());
-        }
-
-        if ( !GetStrValue(variables, "port", port) )
-        {
-            SCX_LOGERROR(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
-            context.Post(MI_RESULT_FAILED);
-            return;
-        }
-        std::string instanceID = hostname + ":" + port;
-
-        // Execute a query to get the list of MySQL databases and number of tables per database
-        if ( ! pQuery->ExecuteQuery("select b.schema_name as \"Database\", count(a.table_name) as \"Count\" from information_schema.schemata b left join information_schema.tables a on b.schema_name = a.table_schema group by b.schema_name;") )
-        {
-            std::stringstream ss;
-            ss << "Failure executing query to get list of tables/database against MySQL engine, error "
-               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
-            SCX_LOGERROR(hLog, ss.str());
-            context.Post(MI_RESULT_FAILED);
-            return;
-        }
-        std::map<std::string, std::string> databases = pQuery->GetResults();
-
-        for (std::map<std::string,std::string>::const_iterator it = databases.begin(); it != databases.end(); ++it)
-        {
-            MySQL_Server_Database_Class inst;
-            uint64_t tableCount = 0;
-
-            if ( ! ConvertToUnsigned(it->second, tableCount) )
-            {
-                SCX_LOGERROR(hLog, "Failure converting count for database " + it->first + "; enumerating with zero databases");
-            }
-
-            EnumerateOneInstance(inst, it->first, tableCount, instanceID, keysOnly);
-            context.Post(inst);
+            EnumerateServerDatabases(context, hLog, *it, pAuth, keysOnly);
         }
 
         context.Post(MI_RESULT_OK);
@@ -148,7 +198,129 @@ void MySQL_Server_Database_Class_Provider::GetInstance(
     const MySQL_Server_Database_Class& instanceName,
     const PropertySet& propertySet)
 {
-    context.Post(MI_RESULT_NOT_SUPPORTED);
+    SCXLogHandle hLog = SCXLogHandleFactory::GetLogHandle(L"mysql.provider.database");
+
+    CIM_PEX_BEGIN
+    {
+        // Was have a single key:
+        //   [Key] InstanceID=jeffcof64-rhel6-01:127.0.0.1:3306:<databasename>
+
+        if ( !instanceName.InstanceID_exists() )
+        {
+            context.Post(MI_RESULT_INVALID_PARAMETER);
+            return;
+        }
+
+        // Save the bind-address and port from the InstanceID (host:bind-address:port)
+
+        std::wstring instanceID( StrFromUTF8(instanceName.InstanceID_value().Str()) );
+        std::vector<std::wstring> elements;
+
+        StrTokenize(instanceID, elements, L":", true, true);
+        if ( 4 != elements.size() || std::string::npos != elements[2].find_first_not_of(L"0123456789") )
+        {
+            context.Post(MI_RESULT_NOT_FOUND);
+            return;
+        }
+
+        std::string bindAddress( StrToUTF8(elements[1]) );
+        unsigned int port = StrToUInt( elements[2] );
+        std::string database( StrToUTF8(elements[3]) );
+
+        // We have the information we need, so try and retrieve the instance
+        // (But validate the bind address along the way)
+
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        MySQL_AuthenticationEntry authEntry;
+        pAuth->Load();
+        pAuth->GetEntry(port, authEntry);
+
+        if ( 0 != strcasecmp(authEntry.binding.c_str(), bindAddress.c_str()) )
+        {
+            context.Post(MI_RESULT_NOT_FOUND);
+            return;
+        }
+
+        // We can't quite use prior infrastructure for this - it's just
+        // "different enough". Considered ways to try and reuse existing code,
+        // but no code deals with just one database, and this turns out to use
+        // a different query against MySQL as well. Easiest to simply copy what
+        // we need and modify to suite.
+
+        SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+
+        // Attach to the MySQL database instance
+        if ( !pBinding->AttachUsingStoredCredentials(port, pAuth) )
+        {
+            std::stringstream ss;
+            ss << "Failure attaching to MySQL on port: " << port << ", Error "
+               << pBinding->GetErrorNum() << ": " << pBinding->GetErrorText();
+            SCX_LOGERROR(hLog, ss.str());
+
+            context.Post(MI_RESULT_FAILED);
+            return;
+        }
+
+        // Execute a query to get a result set like:
+        //   +--------------------+--------+--------------+
+        //   | Database           | Tables | Size (Bytes) |
+        //   +--------------------+--------+--------------+
+        //   | information_schema |     28 |         8192 |
+        //   +--------------------+--------+--------------+
+        // Note that Size may be NULL if database has no tables
+
+        util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
+        std::string strQuery = "select b.schema_name as \"Database\","
+                                   "COUNT(a.table_name) as \"Tables\", "
+                                   "SUM(a.data_length) + SUM(a.index_length) as \"Size (Bytes)\""
+                               " from information_schema.schemata b"
+                               " left join information_schema.tables a on b.schema_name = a.table_schema"
+                               " where b.schema_name = \"" + database + "\"";
+        MySQL_QueryResults databases;
+        if ( ! pQuery->ExecuteQuery(strQuery.c_str()) || ! pQuery->GetMultiColumnResults(databases) )
+        {
+            std::stringstream ss;
+            ss << "Failure executing query to get list of databases/table-count/disk-used against MySQL engine, error "
+               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+            SCX_LOGERROR(hLog, ss.str());
+
+            context.Post(MI_RESULT_FAILED);
+            return;
+        }
+
+        // If database wasn't found, then we won't find database in result set
+
+        MySQL_QueryResults::const_iterator it = databases.find(database);
+        if ( databases.end() != it )
+        {
+            MySQL_Server_Database_Class inst;
+            uint64_t tableCount = 0;
+            uint64_t dbSize = 0;
+
+            if ( ! ConvertToUnsigned(it->second[0], tableCount) )
+            {
+                SCX_LOGERROR(hLog, "Failure converting count for database " + it->first + "; enumerating with zero databases");
+            }
+
+            if ( it->second[1].size() && ! ConvertToUnsigned(it->second[1], dbSize) )
+            {
+                SCX_LOGERROR(hLog, "Failure converting size for database " + it->first + "; enumerating with zero disk space");
+            }
+
+            inst.InstanceID_value( StrToUTF8(instanceID).c_str() );
+            inst.DatabaseName_value( it->first.c_str() );
+            inst.NumberOfTables_value( tableCount );
+            inst.DiskSpaceInBytes_value( dbSize );
+
+            context.Post(inst);
+            context.Post(MI_RESULT_OK);
+        }
+        else
+        {
+            context.Post(MI_RESULT_NOT_FOUND);
+        }
+    }
+    CIM_PEX_END( L"MySQL_Server_Database_Class_Provider::::GetInstance", hLog );
 }
 
 void MySQL_Server_Database_Class_Provider::CreateInstance(

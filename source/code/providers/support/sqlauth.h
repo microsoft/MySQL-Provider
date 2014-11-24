@@ -25,7 +25,6 @@
 #include <map>
 #include <stdint.h>
 
-//#include <mysql.h>
 
 
 namespace MySQL_Auth
@@ -46,6 +45,23 @@ namespace MySQL_Auth
         std::wstring m_Reason;
     };
 
+    /** Exception that one of the arguments is not valid (can't use SCXInvalidArgumentException beacause it asserts) */
+    class InvalidArgumentException : public SCXCoreLib::SCXException
+    {
+    public:
+        //! Ctor
+        InvalidArgumentException(std::wstring formalArgument,
+                                 std::wstring reason,
+                                 const SCXCoreLib::SCXCodeLocation& l)
+            : SCXException(l), m_Reason(L"Argument '" + formalArgument + L"' is not valid - " + reason)
+        {}
+
+        std::wstring What() const { return m_Reason;};
+    protected:
+        //! Description of internal error
+        std::wstring m_Reason;
+    };
+
     /** Exception for a port that doesn't exist in the configuration */
     class PortNotFound : public SCXCoreLib::SCXException
     {
@@ -53,7 +69,7 @@ namespace MySQL_Auth
         //! Ctor
         PortNotFound(unsigned int port,
                      const SCXCoreLib::SCXCodeLocation& l)
-        : SCXException(l), m_Reason(L"Port not found: " + SCXCoreLib::StrFrom(port))
+            : SCXException(l), m_Reason(L"Port not found: " + SCXCoreLib::StrFrom(port))
         {}
 
         std::wstring What() const { return m_Reason;};
@@ -88,6 +104,11 @@ public:
         return filepath;
     }
 
+    virtual bool Force_AutoUpdate_Flag()
+    {
+        return true;
+    }
+
 private:
 };
 
@@ -112,7 +133,7 @@ public:
 class MySQL_Authentication
 {
 public:
-    explicit MySQL_Authentication(MySQL_AuthenticationDependencies* deps = new MySQL_AuthenticationDependencies());
+    explicit MySQL_Authentication(SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> deps = SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()));
     virtual ~MySQL_Authentication() { m_deps = NULL; }
 
     virtual void Load();

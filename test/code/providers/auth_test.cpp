@@ -19,19 +19,25 @@
 
 #include "sqlauth.h"
 
-const wchar_t* s_authFilePath = L"./mysql-auth";
+static const wchar_t* s_authFilePath = L"./mysql-auth";
 
 
 using namespace SCXCoreLib;
 
-class MySQL_TestableAuthenticationDependencies : public MySQL_AuthenticationDependencies
+// Avoid collision with definitions in other test files
+namespace
 {
-public:
-    virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName() const
+    class MySQL_TestableAuthenticationDependencies : public MySQL_AuthenticationDependencies
     {
-        return s_authFilePath;
-    }
-};
+    public:
+        virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName() const
+        {
+            return s_authFilePath;
+        }
+
+        virtual bool Force_AutoUpdate_Flag() { return false; }
+    };
+}
 
 
 class Authentication_Test : public CPPUNIT_NS::TestFixture
@@ -91,20 +97,29 @@ public:
         SCXCoreLib::SCXFile::Delete( s_authFilePath );
     }
 
+    void ValidateAuth(MySQL_AuthenticationEntry& authEntry,
+                      unsigned int port, std::string binding, std::string username, std::string password)
+    {
+        CPPUNIT_ASSERT_EQUAL( port, authEntry.port );
+        CPPUNIT_ASSERT_EQUAL( binding, authEntry.binding );
+        CPPUNIT_ASSERT_EQUAL( username, authEntry.username );
+        CPPUNIT_ASSERT_EQUAL( password, authEntry.password );
+    }
+
     void testAuth_VerifyConstruction()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
     }
 
     void testAuth_VerifyLoadWithNoFile()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
     }
 
     void testAuth_PersistEmptyFile()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.Save();
 
@@ -120,7 +135,7 @@ public:
 
     void testAuth_PersistAutoUpdate_False()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AllowAutomaticUpdates(false);
         auth.Save();
@@ -140,7 +155,7 @@ public:
 
     void testAuth_PersistAutoUpdate_True()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AllowAutomaticUpdates(true);
         auth.Save();
@@ -160,7 +175,7 @@ public:
 
     void testAuth_VerifyNoAutoUpdateKeyReturnsTrue()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT_EQUAL( static_cast<bool>(true), auth.GetAutomaticUpdates() );
     }
@@ -171,7 +186,7 @@ public:
         lines.push_back(L"AutoUpdate=faLSe");
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT_EQUAL( static_cast<bool>(false), auth.GetAutomaticUpdates() );
     }
@@ -182,7 +197,7 @@ public:
         lines.push_back(L"AutoUpdate=tRUe");
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT_EQUAL( static_cast<bool>(true), auth.GetAutomaticUpdates() );
     }
@@ -194,7 +209,7 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.Load(), MySQL_Auth::InvalidAuthentication, L"invalid value");
     }
 
@@ -205,13 +220,10 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.GetEntry(0, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(0), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("127.0.0.1"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string(""), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string(""), authEntry.password );
+        ValidateAuth(authEntry, 0, "127.0.0.1", "", "");
     }
 
     void testAuth_GetEntry_Default_InvalidPassword_Fails()
@@ -221,7 +233,7 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.Load(), MySQL_Auth::InvalidAuthentication, L"decode password");
     }
 
@@ -232,13 +244,10 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.GetEntry(0, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(0), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string(""), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("username"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("password"), authEntry.password );
+        ValidateAuth(authEntry, 0, "", "username", "password");
     }
 
     void testAuth_GetEntry_Default_BindingUserPassword()
@@ -248,30 +257,24 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.GetEntry(0, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(0), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("jeffcof64-rhel6-01"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("username"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("password"), authEntry.password );
+        ValidateAuth(authEntry, 0, "jeffcof64-rhel6-01", "username", "password");
     }
 
     void testAuth_GetEntry_Binding_Only()
     {
         std::vector<std::wstring> lines;
         lines.push_back(L"0=jeffcof64-rhel6-01, username, cGFzc3dvcmQ=");
-        lines.push_back(L"3306=172.0.0.1, ,");
+        lines.push_back(L"3306=127.0.0.1, ,");
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("172.0.0.1"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("username"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("password"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "127.0.0.1", "username", "password");
     }
 
     void testAuth_GetEntry_UserPassword_Only()
@@ -282,13 +285,10 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("jeffcof64-rhel6-01"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("anewworld"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("was found by Christopher"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "jeffcof64-rhel6-01", "anewworld", "was found by Christopher");
     }
 
     void testAuth_GetEntry_BindingUserPassword()
@@ -299,18 +299,15 @@ public:
         SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
 
         MySQL_AuthenticationEntry authEntry;
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("localhost"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("anewworld"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("was found by Christopher"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "localhost", "anewworld", "was found by Christopher");
     }
 
     void testAuth_AddCred_Default_BindingOnly()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "", "" );
         auth.Save();
@@ -325,27 +322,25 @@ public:
 
     void testAuth_AddCred_Default_UsernameOnly_Fails()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
 
         SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.AddCredentialSet(0, "", "MySQLUser", "" ),
-                                        SCXInvalidArgumentException, L"no password");
-        SCXUNIT_ASSERTIONS_FAILED_ANY();
+                                        MySQL_Auth::InvalidArgumentException, L"no password");
     }
 
     void testAuth_AddCred_Default_PasswordOnly_Fails()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
 
         SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.AddCredentialSet(0, "", "", "AuthenticateMe" ),
-                                        SCXInvalidArgumentException, L"no username");
-        SCXUNIT_ASSERTIONS_FAILED_ANY();
+                                        MySQL_Auth::InvalidArgumentException, L"no username");
     }
 
     void testAuth_AddCred_Default_UserPass_Only()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "", "randomUser", "AuthenticateMe!" );
         auth.Save();
@@ -360,7 +355,7 @@ public:
 
     void testAuth_AddCred_Default_With_All()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.Save();
@@ -375,7 +370,7 @@ public:
 
     void testAuth_AddCred_NoBinding_No_Default()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
 
         SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.AddCredentialSet(3306, "", "randomUser", "AuthenticateMe!"),
@@ -384,7 +379,7 @@ public:
 
     void testAuth_AddCred_NoUsernamePassword_No_Default()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
 
         SCXUNIT_ASSERT_THROWN_EXCEPTION(auth.AddCredentialSet(3306, "172.0.0.1", "", ""),
@@ -393,7 +388,7 @@ public:
 
     void testAuth_AddCred_NoValues_With_Default()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!");
         auth.AddCredentialSet(3306, "", "", "");
@@ -401,16 +396,10 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(0, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(0), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("127.0.0.1"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("randomUser"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("AuthenticateMe!"), authEntry.password );
+        ValidateAuth(authEntry, 0, "127.0.0.1", "randomUser", "AuthenticateMe!");
 
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("127.0.0.1"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("randomUser"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("AuthenticateMe!"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "127.0.0.1", "randomUser", "AuthenticateMe!");
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -423,7 +412,7 @@ public:
 
     void testAuth_AddCred_NoBinding_With_Default()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!");
         auth.AddCredentialSet(3306, "", "anewworld", "was found by Christopher");
@@ -431,10 +420,7 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("127.0.0.1"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("anewworld"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("was found by Christopher"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher");
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -447,7 +433,7 @@ public:
 
     void testAuth_AddCred_NoUsernamePassword_With_Default()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!");
         auth.AddCredentialSet(3306, "localhost", "", "");
@@ -455,10 +441,7 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("localhost"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("randomUser"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("AuthenticateMe!"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "localhost", "randomUser", "AuthenticateMe!");
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -471,7 +454,7 @@ public:
 
     void testAuth_AddCred_All_With_Default()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
@@ -479,10 +462,7 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(3306, authEntry);
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("localhost"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("anewworld"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("was found by Christopher"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "localhost", "anewworld", "was found by Christopher");
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -495,7 +475,7 @@ public:
 
     void testAuth_AddCred_Allows_Updates()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
@@ -505,16 +485,12 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry( 3306, authEntry );
-
-        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(3306), authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( std::string("localhost"), authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( std::string("randomUser"), authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( std::string("AuthenticateMe!"), authEntry.password );
+        ValidateAuth(authEntry, 3306, "localhost", "randomUser", "AuthenticateMe!");
     }
 
     void testAuth_AddCred_UpdateToDefaultSucceedsIfNotNeeded()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
@@ -524,7 +500,7 @@ public:
 
     void testAuth_AddCred_UpdateToDefaultFailsIfNeeded()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "", "anewworld", "was found by Christopher");
@@ -535,7 +511,7 @@ public:
 
     void testAuth_DelCred_Default_Binding_Fails()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "", "anewworld", "was found by Christopher");
@@ -546,7 +522,7 @@ public:
 
     void testAuth_DelCred_Default_UsernamePassword_Fails()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "", "");
@@ -557,7 +533,7 @@ public:
 
     void testAuth_DelCred_Default_Only()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.DeleteCredentialSet(0);
@@ -572,7 +548,7 @@ public:
 
     void testAuth_DelCred_MySQL_Port_Only()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
         auth.DeleteCredentialSet(3306);
@@ -587,7 +563,7 @@ public:
 
     void testAuth_DelCred_Default_With_Others()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
@@ -604,7 +580,7 @@ public:
 
     void testAuth_DelCred_MySQL_Port_With_Others()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");
@@ -621,7 +597,7 @@ public:
 
     void testAuth_GetPortList()
     {
-        MySQL_Authentication auth( new MySQL_TestableAuthenticationDependencies() );
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         auth.AddCredentialSet(0, "127.0.0.1", "randomUser", "AuthenticateMe!" );
         auth.AddCredentialSet(3306, "localhost", "anewworld", "was found by Christopher");

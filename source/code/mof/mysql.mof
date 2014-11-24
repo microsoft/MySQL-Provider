@@ -38,14 +38,21 @@ class MySQL_Server : CIM_InstalledProduct {
     ]
     string OperatingStatus;
 
-    [ Description ( "This function updates the MySQL Server credentials used by the MySQL OMI provider." ) ]
+    [
+        Description ( "This function updates the MySQL Server credentials used by the MySQL OMI provider." ),
+        Static(true)
+    ]
     boolean UpdateCredentials(
         [IN] uint16 Port,
         [IN] string BindAddress,
         [IN] string Username,
-        [IN] string Password);
+        [IN] string Password,
+        [IN] boolean B64Encoded);
 
-    [ Description ( "This function deletes the MySQL Server credentials used by the MySQL OMI provider." ) ]
+    [
+        Description ( "This function deletes the MySQL Server credentials used by the MySQL OMI provider." ),
+        Static(true)
+    ]
     boolean DeleteCredentials(
         [IN] uint16 Port);
 

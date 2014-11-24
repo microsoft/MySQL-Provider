@@ -11,6 +11,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include <scxcorelib/scxcmn.h>
+#include <scxcorelib/scxfile.h>
 #include <scxcorelib/scxexception.h>
 #include <scxcorelib/scxnameresolver.h>
 #include <scxcorelib/stringaid.h>
@@ -19,9 +20,13 @@
 
 #include "MySQL_ServerStatistics_Class_Provider.h"
 #include "sqlbinding.h"
+#include "sqlcredentials.h"
+#include "testablefactory.h"
 
 #include <iostream> // for cout
 
+
+using namespace SCXCoreLib;
 
 class MySQL_ServerStatistics_Test : public CPPUNIT_NS::TestFixture
 {
@@ -29,9 +34,8 @@ class MySQL_ServerStatistics_Test : public CPPUNIT_NS::TestFixture
 
     CPPUNIT_TEST( TestEnumerateInstancesKeysOnly );
     CPPUNIT_TEST( TestEnumerateInstances );
-    // *TODO* Implement GetInstance, then uncomment these tests
-    //CPPUNIT_TEST( TestVerifyKeyCompletePartial );
-    //CPPUNIT_TEST( TestGetInstance );
+    CPPUNIT_TEST( TestVerifyKeyCompletePartial );
+    CPPUNIT_TEST( TestGetInstance );
 
     SCXUNIT_TEST_ATTRIBUTE(TestEnumerateInstancesKeysOnly, SLOW);
     SCXUNIT_TEST_ATTRIBUTE(TestEnumerateInstances, SLOW);
@@ -45,23 +49,34 @@ private:
 public:
     void setUp(void)
     {
+        // Use the testable factory for control over dependencies
         if ( NULL != g_pFactory )
         {
             delete g_pFactory;
             g_pFactory = NULL;
         }
-        g_pFactory = new MySQL_Factory();
+        g_pFactory = new MySQL_TestableFactory();
 
         std::wstring errMsg;
         TestableContext context;
         SetUpAgent<mi::MySQL_ServerStatistics_Class_Provider>(context, CALL_LOCATION(errMsg));
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, false, context.WasRefuseUnloadCalled() );
 
+        // We'll fail if we don't have a valid authentication rule
+        SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
+        CPPUNIT_ASSERT_NO_THROW( pAuth->Save() );
+
         m_keyNames.push_back(L"InstanceID");
     }
 
     void tearDown(void)
     {
+        // Delete the authentication file
+        SCXFile::Delete( s_authFilePath );
+
         std::wstring errMsg;
         TestableContext context;
         TearDownAgent<mi::MySQL_ServerStatistics_Class_Provider>(context, CALL_LOCATION(errMsg));
@@ -80,8 +95,8 @@ public:
         CPPUNIT_ASSERT_EQUAL(1u, context.Size());
 
         // Verify the InstanceID
-        SCXCoreLib::NameResolver nr;
-        CPPUNIT_ASSERT_EQUAL(nr.GetHostname() + L":3306",
+        NameResolver nr;
+        CPPUNIT_ASSERT_EQUAL(nr.GetHostname() + L":" + StrFromUTF8(sqlHostname) + L":" + StrFrom(sqlPort),
                              context[0].GetKey(L"InstanceID", CALL_LOCATION(errMsg)));
     }
 
@@ -106,8 +121,10 @@ public:
     {
         std::wstring errMsg;
 
+        NameResolver nr;
         std::vector<std::wstring> keyValues;
-        keyValues.push_back(L"Memory");
+        keyValues.push_back( nr.GetHostname() + L":" + StrFromUTF8(sqlHostname) + L":" + StrFrom(sqlPort) );
+
         TestableContext context;
         CPPUNIT_ASSERT_EQUAL(MI_RESULT_OK, (GetInstance<mi::MySQL_ServerStatistics_Class_Provider,
             mi::MySQL_ServerStatistics_Class>(m_keyNames, keyValues, context, CALL_LOCATION(errMsg))));
@@ -121,7 +138,7 @@ public:
 
         CPPUNIT_ASSERT_EQUAL(MI_RESULT_OK, instance.FindProperty(propertyName, info));
         ratio = info.GetValue_MIUint8(CALL_LOCATION(errMsg));
-        SCXUNIT_ASSERT_BETWEEN(ratio, 0, 100);
+        CPPUNIT_ASSERT( ratio <= 100 );
     }
 
     void ValidateInstance(const TestableContext& context, std::wstring errMsg)
@@ -132,9 +149,11 @@ public:
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, m_keyNames[0], instance.GetKeyName(0, CALL_LOCATION(errMsg)));
 
         // Verify the InstanceID
-        SCXCoreLib::NameResolver nr;
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, nr.GetHostname() + L":3306",
-                                     instance.GetKeyValue(0, CALL_LOCATION(errMsg)));
+        NameResolver nr;
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(
+            ERROR_MESSAGE,
+            nr.GetHostname() + L":" + StrFromUTF8(sqlHostname) + L":" + StrFrom(sqlPort),
+            instance.GetKeyValue(0, CALL_LOCATION(errMsg)));
 
         std::wstring tmpExpectedProperties[] = {L"InstanceID",
                                                 L"NumConnections",
@@ -155,6 +174,10 @@ public:
 
         const size_t numprops = sizeof(tmpExpectedProperties) / sizeof(tmpExpectedProperties[0]);
         VerifyInstancePropertyNames(instance, tmpExpectedProperties, numprops, CALL_LOCATION(errMsg));
+
+        // Due to built in schema, minimim disk used appears to be 650155
+        uint64_t diskUsed = instance.GetProperty(L"ServerDiskUseInBytes", CALL_LOCATION(errMsg)).GetValue_MIUint64(CALL_LOCATION(errMsg));
+        CPPUNIT_ASSERT_MESSAGE(StrToUTF8(StrAppend(L"Disk space used: ", diskUsed)), diskUsed > 650000);
 
         ValidateRatio(instance, L"SlowQueryPct", errMsg);
         ValidateRatio(instance, L"KeyCacheHitPct", errMsg);

@@ -797,6 +797,20 @@ static MI_CONST MI_ParameterDecl MySQL_Server_UpdateCredentials_Password_param =
     offsetof(MySQL_Server_UpdateCredentials, Password), /* offset */
 };
 
+/* parameter MySQL_Server.UpdateCredentials(): B64Encoded */
+static MI_CONST MI_ParameterDecl MySQL_Server_UpdateCredentials_B64Encoded_param =
+{
+    MI_FLAG_PARAMETER|MI_FLAG_IN, /* flags */
+    0x0062640A, /* code */
+    MI_T("B64Encoded"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_BOOLEAN, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_Server_UpdateCredentials, B64Encoded), /* offset */
+};
+
 /* parameter MySQL_Server.UpdateCredentials(): MIReturn */
 static MI_CONST MI_ParameterDecl MySQL_Server_UpdateCredentials_MIReturn_param =
 {
@@ -818,12 +832,13 @@ static MI_ParameterDecl MI_CONST* MI_CONST MySQL_Server_UpdateCredentials_params
     &MySQL_Server_UpdateCredentials_BindAddress_param,
     &MySQL_Server_UpdateCredentials_Username_param,
     &MySQL_Server_UpdateCredentials_Password_param,
+    &MySQL_Server_UpdateCredentials_B64Encoded_param,
 };
 
 /* method MySQL_Server.UpdateCredentials() */
 MI_CONST MI_MethodDecl MySQL_Server_UpdateCredentials_rtti =
 {
-    MI_FLAG_METHOD, /* flags */
+    MI_FLAG_METHOD|MI_FLAG_STATIC, /* flags */
     0x00757311, /* code */
     MI_T("UpdateCredentials"), /* name */
     NULL, /* qualifiers */
@@ -875,7 +890,7 @@ static MI_ParameterDecl MI_CONST* MI_CONST MySQL_Server_DeleteCredentials_params
 /* method MySQL_Server.DeleteCredentials() */
 MI_CONST MI_MethodDecl MySQL_Server_DeleteCredentials_rtti =
 {
-    MI_FLAG_METHOD, /* flags */
+    MI_FLAG_METHOD|MI_FLAG_STATIC, /* flags */
     0x00647311, /* code */
     MI_T("DeleteCredentials"), /* name */
     NULL, /* qualifiers */

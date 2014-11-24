@@ -45,7 +45,6 @@ MAINTAINER:              'Microsoft Corporation'
 /opt/microsoft/mysql-cimprov/bin;                       755; root; root
 /opt/microsoft/mysql-cimprov/lib;                       755; root; root
 
-/opt/microsoft;                                         755; root; root
 /opt/microsoft/omi;                                     755; root; root
 /opt/microsoft/omi/lib;                                 755; root; root
 

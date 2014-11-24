@@ -91,21 +91,21 @@ public:
 
     void testSQL_Connect_No_Credentials()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         bool fSuccess = pBinding->Attach();
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 
     void testSQL_Connect_With_Credentials()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 
     void testSQL_Connect_With_Bad_Credentials()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, "BadPassword");
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), !fSuccess );
 
@@ -119,8 +119,10 @@ public:
 
     void testSQL_Connect_Will_Reuse_Connection()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+        fSuccess = pBinding->Detach();
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
 
         fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
@@ -129,7 +131,7 @@ public:
 
     void testSQL_Connect_With_Stored_Credentials()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
@@ -140,7 +142,7 @@ public:
 
     void testSQL_Stored_Credentials_Fails_With_Bad_Port()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(8306, sqlHostname, sqlUsername, sqlPassword) );
@@ -154,7 +156,7 @@ public:
 
     void testSQL_GetConfigurationFilePaths()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         std::vector<std::string> paths;
         pBinding->GetConfigurationFilePaths( paths );
 
@@ -168,7 +170,6 @@ public:
 
     void testSQLQuery_With_No_Attach()
     {
-        //SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         CPPUNIT_ASSERT( !pQuery->ExecuteQuery("show global status") );
@@ -177,7 +178,7 @@ public:
 
     void testSQLQuery_With_Bad_Credentials()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, "BadPassword");
@@ -199,7 +200,7 @@ public:
 
     void testSQLQuery_With_Bad_Query()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         bool fSuccess = pBinding->Attach();
@@ -211,7 +212,7 @@ public:
 
     void testSQLQuery_ShowGlobal_Status()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         std::map<std::string, std::string> status;
@@ -234,7 +235,7 @@ public:
 
     void testSQLQuery_ShowGlobal_Status_Handler_read()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         std::map<std::string, std::string> status;
@@ -253,7 +254,7 @@ public:
 
     void testSQLQuery_ShowGlobal_Status_With_Credentials()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         std::map<std::string, std::string> status;
@@ -265,7 +266,7 @@ public:
 
     void testSQLQuery_With_Multiple_Columns()
     {
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
         util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
 
         MySQL_QueryResults resultSet;

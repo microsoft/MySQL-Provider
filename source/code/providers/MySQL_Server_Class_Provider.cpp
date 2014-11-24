@@ -23,7 +23,7 @@ static void EnumerateOneInstance(
     util::unique_ptr<MySQL_Authentication>& pAuth,
     const bool keysOnly)
 {
-    SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
+    util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
     std::string strValue;
 
     // Attach to the MySQL database instance

@@ -119,7 +119,6 @@ public:
     void TestEnumerateInstancesKeysOnly()
     {
         // We'll fail if we don't have a valid authentication rule
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
@@ -140,7 +139,6 @@ public:
     void TestEnumerateInstances()
     {
         // We'll fail if we don't have a valid authentication rule
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
@@ -157,7 +155,6 @@ public:
     void TestVerifyKeyCompletePartial()
     {
         // We'll fail if we don't have a valid authentication rule
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
@@ -182,7 +179,6 @@ public:
         keyValues.push_back( s_sql_Version_compile_os );
 
         // We'll fail if we don't have a valid authentication rule
-        SCXCoreLib::SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );

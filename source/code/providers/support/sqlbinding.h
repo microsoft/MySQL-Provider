@@ -189,14 +189,15 @@ public:
         m_authDeps = NULL;
     }
 
-    virtual SCXCoreLib::SCXHandle<MySQL_Binding> GetBinding()
+    // This returns a unique_ptr to the MySQL_Binding class to guarantee destruction
+    //
+    // Use this with code like:
+    //   unique_ptr<MySQL_Binding> pBinding(g_pFactory->GetBinding());
+    //   pBinding->BindingMethod(...);
+    virtual util::unique_ptr<MySQL_Binding>::move_type GetBinding()
     {
-        if (NULL == m_binding)
-        {
-            m_binding = SCXCoreLib::SCXHandle<MySQL_Binding>(new MySQL_Binding(GetDependencies()));
-        }
-
-        return m_binding;
+        util::unique_ptr<MySQL_Binding> pBinding (new MySQL_Binding(GetDependencies()));
+        return pBinding.move();
     }
 
     // This returns a unique_ptr to the MySQL_Query class to guarantee destruction

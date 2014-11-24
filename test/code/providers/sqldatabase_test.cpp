@@ -63,7 +63,6 @@ public:
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, false, context.WasRefuseUnloadCalled() );
 
         // We'll fail if we don't have a valid authentication rule
-        SCXHandle<MySQL_Binding> pBinding = g_pFactory->GetBinding();
         util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
         pAuth->Load();
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );

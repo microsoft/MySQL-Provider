@@ -28,11 +28,13 @@ class Binding_Test : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE( Binding_Test );
 
     CPPUNIT_TEST( testAddValues );
+    CPPUNIT_TEST( testSQL_Binding_Construction );
     CPPUNIT_TEST( testSQL_Connect_No_Credentials );
     CPPUNIT_TEST( testSQL_Connect_With_Credentials );
     CPPUNIT_TEST( testSQL_Connect_With_Bad_Credentials );
     CPPUNIT_TEST( testSQL_Connect_Will_Reuse_Connection );
     CPPUNIT_TEST( testSQL_Connect_With_Stored_Credentials );
+    CPPUNIT_TEST( testSQL_Binding_Destruction_When_Disconnected );
     CPPUNIT_TEST( testSQL_Stored_Credentials_Fails_With_Bad_Port );
     CPPUNIT_TEST( testSQL_GetConfigurationFilePaths );
     CPPUNIT_TEST( testSQLQuery_With_No_Attach );
@@ -89,6 +91,15 @@ public:
         CPPUNIT_ASSERT_EQUAL( 165, value );
     }
 
+    void testSQL_Binding_Construction()
+    {
+        // Test testSQL_Binding_Destructed_When_Explicitly_Disconnected() will
+        // verify proper handling after using the binding object. This verifies
+        // proper destruction if we don't do anything at all with it.
+
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
+    }
+
     void testSQL_Connect_No_Credentials()
     {
         util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
@@ -137,6 +148,15 @@ public:
         CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
 
         bool fSuccess = pBinding->AttachUsingStoredCredentials(sqlPort, pAuth);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+    }
+
+    void testSQL_Binding_Destruction_When_Disconnected()
+    {
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+        fSuccess = pBinding->Detach();
         CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
     }
 

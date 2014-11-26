@@ -55,7 +55,7 @@ endif
 COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
 PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
 
-LINK_LIBRARIES := -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
+LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
 SHARED_FLAGS := -shared
@@ -402,6 +402,7 @@ ifeq ($(ULINUX),1)
 		--PFMINOR=$(PF_MINOR) \
 		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
 		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
+		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
 		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
 		base_mysql.data linux.data linux_rpm.data
 
@@ -425,6 +426,7 @@ ifeq ($(ULINUX),1)
 		--PFMINOR=$(PF_MINOR) \
 		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
 		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
+		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
 		--DPKG_LOCATION=$(SCXPAL_DIR)/installer/InstallBuilder/tools/bin/dpkg-deb-$(PF_ARCH) \
 		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
 		base_mysql.data linux.data linux_dpkg.data
@@ -465,6 +467,7 @@ else
 		--PFMINOR=$(PF_MINOR) \
 		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
 		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
+		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
 		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
 		base_mysql.data linux.data linux_rpm.data
 

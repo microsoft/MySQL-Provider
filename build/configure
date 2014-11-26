@@ -133,11 +133,11 @@ set_ulinux_pf()
     PF_DISTRO_ULINUX_D=`[ -e /usr/bin/dpkg ] && echo 1`
     if [ -n "$PF_DISTRO_ULINUX_D" ]; then
         PF_DISTOR_ULINUX_R=
-	BUILD_DPKG=1
-	PKG_SUFFIX=deb
+        BUILD_DPKG=1
+        PKG_SUFFIX=deb
     else
         PF_DISTRO_ULINUX_R=`[ -e /usr/bin/rpmbuild ] && echo 1`
-	BUILD_RPM=1
+        BUILD_RPM=1
     fi
 }
 
@@ -145,7 +145,7 @@ uname=`uname`
 case $uname in
     Linux)
         PF=Linux
-	PKG_SUFFIX=rpm
+        PKG_SUFFIX=rpm
         if [ -e /etc/SuSE-release ]; then 
             CHECK_SUSE=1
         fi
@@ -160,9 +160,9 @@ case $uname in
         fi
 
         if [ "$ULINUX" = "1" ]; then
-	    set_ulinux_pf
-	    BUILD_RPM=1
-	    BUILD_DPKG=1
+            set_ulinux_pf
+            BUILD_RPM=1
+            BUILD_DPKG=1
         elif [ -n "$CHECK_SUSE" ]; then
             PF_MAJOR=`head -n 1 /etc/SuSE-release | sed 's/.* \([0-9][0-9]*\)[ \.].*/\1/'`
             PF_MINOR=`(head -n 1 /etc/SuSE-release | sed 's/.* [0-9][0-9]*[\.]\([0-9][0-9]*\).*/\1/') | grep -v '[^0-9]' || echo '0'`
@@ -172,7 +172,7 @@ case $uname in
             PF_MINOR=`(head -n 1 /etc/redhat-release | sed 's/.* [0-9][0-9]*[\.]\([0-9][0-9]*\).*/\1/') | grep -v '[^0-9]' || echo '0'`
             PF_DISTRO=REDHAT
         else
-	    set_ulinux_pf
+            set_ulinux_pf
         fi
 
         case `uname -m` in
@@ -209,10 +209,28 @@ else
     BUILD_CONFIGURATION=${PF}_${PF_MAJOR}.${PF_MINOR}_${PF_ARCH}_${PF_WIDTH}_${build_type}
 fi
 
+# Figure out the libmysqlclient.so filename (it may have a versioned extension)
+
+case $PF_DISTRO in
+    ULINUX | SUSE)
+        MYSQLLIB_FILENAME=libmysqlclient.so.15
+        ;;
+
+    REDHAT)
+        MYSQLLIB_FILENAME=libmysqlclient.so.16
+        ;;
+
+    *)
+        echo "Unable to determine name of MySQL's client library" 1>&2
+        exit 1
+        ;;
+esac
+
 cat <<EOF > config.mak
 ENABLE_DEBUG=$enable_debug_flag
 PERFORM_OMI_MAKEINSTALL=$enable_omi_tools_flag
 OMI_CONFIGURE_QUALS=$omi_configure_quals
+MYSQLLIB_FILENAME=$MYSQLLIB_FILENAME
 
 BUILD_TYPE=$build_type
 PF=$PF

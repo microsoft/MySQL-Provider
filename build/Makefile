@@ -382,6 +382,8 @@ test : $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 # While the "formal build" only builds ULINUX, we may build something else for DEV purposes.
 # Assume we ALWAYS build RPM, but only build DPKG if --enable-ulinux is speified in configure.
 
+kit : MYSQLLIB_FULLFILENAME = $(shell ldd $(PROVIDER_LIBRARY) | grep libmysqlclient.so | awk '{print $$3}')
+kit : MYSQLLIB_FILENAME = $(shell basename $(MYSQLLIB_FULLFILENAME))
 kit : $(OMI_ROOT)/output $(MYSQL_DELIVERABLES)
 ifeq ($(ULINUX),1)
 

@@ -209,28 +209,10 @@ else
     BUILD_CONFIGURATION=${PF}_${PF_MAJOR}.${PF_MINOR}_${PF_ARCH}_${PF_WIDTH}_${build_type}
 fi
 
-# Figure out the libmysqlclient.so filename (it may have a versioned extension)
-
-case $PF_DISTRO in
-    ULINUX | SUSE)
-        MYSQLLIB_FILENAME=libmysqlclient.so.15
-        ;;
-
-    REDHAT)
-        MYSQLLIB_FILENAME=libmysqlclient.so.16
-        ;;
-
-    *)
-        echo "Unable to determine name of MySQL's client library" 1>&2
-        exit 1
-        ;;
-esac
-
 cat <<EOF > config.mak
 ENABLE_DEBUG=$enable_debug_flag
 PERFORM_OMI_MAKEINSTALL=$enable_omi_tools_flag
 OMI_CONFIGURE_QUALS=$omi_configure_quals
-MYSQLLIB_FILENAME=$MYSQLLIB_FILENAME
 
 BUILD_TYPE=$build_type
 PF=$PF

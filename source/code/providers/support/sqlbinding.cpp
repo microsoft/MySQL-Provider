@@ -235,13 +235,19 @@ MySQL_Binding::~MySQL_Binding()
 
 bool MySQL_Binding::AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth)
 {
+    bool fValidEntry = false;
     MySQL_AuthenticationEntry entry;
     try {
-        auth->GetEntry(port, entry);
+        fValidEntry = auth->GetEntry(port, entry);
     }
     catch (SCXCoreLib::SCXException& e)
     {
         SCX_LOGERROR(m_log, L"Failure getting credential entry: " + e.What());
+        return false;
+    }
+
+    if ( ! fValidEntry )
+    {
         return false;
     }
 

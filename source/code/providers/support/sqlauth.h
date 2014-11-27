@@ -142,11 +142,12 @@ public:
     virtual void AllowAutomaticUpdates(bool bAllowed);
     virtual void AddCredentialSet(unsigned int port, const std::string& binding,
                                   const std::string& user, const std::string& password);
+    virtual bool AddCredentialSet(unsigned int port, const std::string& binding);
     virtual void DeleteCredentialSet(unsigned int port);
 
     virtual bool GetAutomaticUpdates();
     virtual void GetPortList(std::vector<unsigned int>& portList);
-    virtual void GetEntry(const unsigned int& port, MySQL_AuthenticationEntry& entry);
+    virtual bool GetEntry(const unsigned int& port, MySQL_AuthenticationEntry& entry);
 
 private:
     std::wstring FormatPortSpecification(const std::string& binding, const std::string& user, const std::string& password);

@@ -111,6 +111,34 @@ void MySQL_Authentication::AddCredentialSet(unsigned int port, const std::string
     m_config.SetValue(StrFrom(port), FormatPortSpecification(binding, username, password));
 }
 
+// This entry point is intended only for OMI PreExec program (doesn't validate additions)
+bool MySQL_Authentication::AddCredentialSet(unsigned int port, const std::string& binding)
+{
+    // Default entry can't be added through this interface
+    if ( 0 == port )
+    {
+        return false;
+    }
+
+    MySQL_AuthenticationEntry entry;
+        
+    // If entry already exists and bind-address is identical, don't do anything
+    if ( m_config.KeyExists(StrFrom(port)) )
+    {
+        GetEntry(port, entry);
+        if (binding.size() == 0 || entry.binding == binding)
+        {
+            return false;
+        }
+    }
+
+    // If binding was updated, update it in the entry
+    entry.binding = binding;
+    m_config.SetValue(StrFrom(port), FormatPortSpecification(entry.binding, entry.username, entry.password));
+
+    return true;
+}
+
 void MySQL_Authentication::DeleteCredentialSet(unsigned int port)
 {
     // Does this port even exist in our configuration?
@@ -176,7 +204,7 @@ void MySQL_Authentication::GetPortList(std::vector<unsigned int>& portList)
     }
 }
 
-void MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_AuthenticationEntry& entry)
+bool MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_AuthenticationEntry& entry)
 {
     std::wstring value;
     if ( !m_config.GetValue(StrFrom(port), value) )
@@ -190,8 +218,17 @@ void MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_Authenticati
     if ( elements.size() != 3 )
     {
         std::wstringstream ss;
-        ss << L"invalid value for port " << StrFrom(port) << L": " << value;
-        throw MySQL_Auth::InvalidAuthentication(ss.str(), SCXSRCLOCATION);
+        ss << L"corrupted entry for port " << StrFrom(port) << L": " << value;
+
+        // Default entry throws; any other just logs and returns failure
+        MySQL_Auth::InvalidAuthentication e(ss.str(), SCXSRCLOCATION);
+        if ( 0 == port )
+        {
+            throw e;
+        }
+
+        SCX_LOGWARNING(m_log, e.What());
+        return false;
     }
 
     entry.port = port;
@@ -204,7 +241,16 @@ void MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_Authenticati
         {
             std::wstringstream ss;
             ss << L"unable to decode password for port " << port << L": " << value;
-            throw MySQL_Auth::InvalidAuthentication(ss.str(), SCXSRCLOCATION);
+
+            // Default entry throws; any other just logs and returns failure
+            MySQL_Auth::InvalidAuthentication e(ss.str(), SCXSRCLOCATION);
+            if ( 0 == port )
+            {
+                throw e;
+            }
+
+            SCX_LOGWARNING(m_log, e.What());
+            return false;
         }
         entry.password = password;
     }
@@ -234,10 +280,16 @@ void MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_Authenticati
             ss << L"missing values for port " << port << L": \"" << value << L"\"  "
                << L"Default binding: " << StrFromUTF8(m_default.binding)
                << L", default username: " << StrFromUTF8(m_default.username)
-               << L", default password: " << ( ! m_default.password.empty() ? L"not empty" : L"empty" );
-            throw MySQL_Auth::InvalidAuthentication(ss.str(), SCXSRCLOCATION);
+               << L", default password: " << ( ! m_default.password.empty() ? L"not empty" : L"empty" )
+               << L"; Entry will not be used to connect to MySQL";
+            SCX_LOGWARNING(m_log, ss.str());
+            return false;
         }
+
+        return true;
     }
+
+    return false;
 }
 
 std::wstring MySQL_Authentication::FormatPortSpecification(

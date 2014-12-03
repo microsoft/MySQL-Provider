@@ -54,8 +54,10 @@ endif
 
 COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
 PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
+PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) 
 
 LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
+PREEXEC_LINK_LIBRARIES := -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
 SHARED_FLAGS := -shared
@@ -286,6 +288,7 @@ STATIC_PROVIDERLIB_SRCFILES += \
 
 STATIC_PROVIDERLIB_SRCFILES += \
 	$(PROVIDER_DIR)/support/logstartup.cpp \
+	$(PROVIDER_DIR)/support/mycnf-paths.cpp \
 	$(PROVIDER_DIR)/support/productdependencies.cpp \
 	$(PROVIDER_DIR)/support/sqlauth.cpp \
 	$(PROVIDER_DIR)/support/sqlbinding.cpp
@@ -315,17 +318,26 @@ $(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLI
 # Build the omi_preexec executable (for PAL logging and state information)
 
 STATIC_OMI_PREEXEC_SRCFILES = \
-	$(SOURCE_DIR)/omi_preexec/directorylist.cpp \
-	$(SOURCE_DIR)/omi_preexec/omi_preexec.cpp
+	$(PROVIDER_DIR)/support/logstartup.cpp \
+	$(PROVIDER_DIR)/support/mycnf-paths.cpp \
+	$(PROVIDER_DIR)/support/productdependencies.cpp \
+	$(PROVIDER_DIR)/support/sqlauth.cpp \
+	$(SOURCE_DIR)/omi_preexec/omi-mysql.cpp \
+	$(SOURCE_DIR)/omi_preexec/omi-preexec.cpp
 
 STATIC_OMI_PREEXEC_HEADERS = \
-	$(SOURCE_DIR)/omi_preexec/directorylist.h
+	$(PROVIDER_DIR)/support/mycnf-paths.h \
+	$(SOURCE_DIR)/omi_preexec/omi-preexec.h
 
-$(OMI_PREEXEC): $(STATIC_OMI_PREEXEC_SRCFILES) $(STATIC_OMI_PREEXEC_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
+STATIC_OMI_PREEXEC_OBJFILES = $(call src_to_obj,$(STATIC_OMI_PREEXEC_SRCFILES))
+
+$(OMI_PREEXEC): CFLAGS += $(PREEXEC_COMPILE_FLAGS)
+$(OMI_PREEXEC): CXXFLAGS += $(PREEXEC_COMPILE_FLAGS)
+$(OMI_PREEXEC): $(STATIC_OMI_PREEXEC_OBJFILES) $(STATIC_OMI_PREEXEC_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
 	@echo "========================= Performing Building OMI preexec executable"
 	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
-	g++ $(COMPILE_FLAGS) -o $@ $(STATIC_OMI_PREEXEC_SRCFILES)
+	g++ $(PREEXEC_COMPILE_FLAGS) -o $@ $(STATIC_OMI_PREEXEC_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(PREEXEC_LINK_LIBRARIES)
 
 #--------------------------------------------------------------------------------
 # MySQL Provider Unit Tests

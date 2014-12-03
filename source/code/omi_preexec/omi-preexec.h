@@ -3,7 +3,7 @@
  *     
  *        */
  /**
-      \file        directorylist.h
+      \file        omi-preexec.h
 
       \brief       Provide list of project-specific callouts for OMI_PREEXEC program
                    (allows for common implementation to differ only by project)
@@ -12,17 +12,25 @@
 */
 /*----------------------------------------------------------------------------*/
 
-#ifndef DIRECTORYLIST_H
-#define DIRECTORYLIST_H
+#ifndef OMI_PREXEC_H
+#define OMI_PREXEC_H
+
+#include <sys/types.h>
 
 #include <string>
 #include <vector>
 
-void  GetDirectoryCreationList(std::vector<std::string>& dirList);
-int PreExec_NonPrived_Hook(uid_t uid, gid_t gid);
-int PreExec_Prived_Hook();
-int PreExec_Generic_Hook();
+class PreExecution
+{
+public:
+    void GetDirectoryCreationList(std::vector<std::string>& dirList);
+    int NonPrived_Hook(uid_t uid, gid_t gid);
+    int Prived_Hook(uid_t uid, gid_t gid);
+    int Generic_Hook(uid_t uid, gid_t gid);
 
-#endif /* DIRECTORY_LIST_H */
+    int _createDir(const std::string baseDir, uid_t uid, gid_t gid);
+};
+
+#endif /* OMI_PREEXEC_H */
 
 /*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/

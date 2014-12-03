@@ -13,6 +13,7 @@
 
 #include <vector>
 
+#include "mycnf-paths.h"
 #include "sqlauth.h"
 #include "sqlbinding.h"
 
@@ -256,13 +257,7 @@ bool MySQL_Binding::AttachUsingStoredCredentials(unsigned int port, util::unique
 
 void MySQL_Binding::GetConfigurationFilePaths( std::vector<std::string>& paths )
 {
-    paths.clear();
-    paths.push_back( "/etc/my.cnf" );
-    paths.push_back( "/etc/mysql/my.cnf" );
-    paths.push_back( "/var/lib/mysql/my.cnf" );
-    paths.push_back( "/usr/local/mysql/data/my.cnf" );
-    paths.push_back( "/usr/local/var/my.cnf" );
-
+    MySQL::GetConfigurationFilePaths( paths );
     return;
 }
 

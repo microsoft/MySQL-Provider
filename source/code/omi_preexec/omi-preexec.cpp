@@ -4,7 +4,7 @@
 /**
    \file
 
-   \brief      Operations Manager pre-execution program (used by OMI)
+   \brief      Pre-execution program (used by OMI) for use in Operations Manager (and other projects)
 
    \date       06-20-2014
 
@@ -21,18 +21,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <string>
 #include <vector>
 
-#include "directorylist.h"
+#include "omi-preexec.h"
 
-const static bool g_bDebug = false;
+const static bool s_bDebug = false;
 
-static int _createDir(
-    std::string baseDir,
+int PreExecution::_createDir(
+    const std::string baseDir,
     uid_t uid,
     gid_t gid)
 {
@@ -59,7 +58,7 @@ static int _createDir(
         // Try to change ownership of the new subdir
         if (chown(dirName.c_str(), uid, gid) == 0)
         {
-            if (g_bDebug)
+            if (s_bDebug)
             {
                 std::cout << "Created directory: " << dirName.c_str() << std::endl;
             }
@@ -123,6 +122,8 @@ static int _createDir(
 
 int main(int argc, char *argv[])
 {
+    PreExecution pe;
+
     if (argc != 3)
     {
         std::cerr << "Invalid number of parameters: " << argc << std::endl;
@@ -141,18 +142,18 @@ int main(int argc, char *argv[])
         std::vector<std::string> dirList;
 
         // Get the list of directories to create
-        GetDirectoryCreationList( dirList );
+        pe.GetDirectoryCreationList( dirList );
 
-        for (std::vector<std::string>::iterator it = dirList.begin(); it != dirList.end(); ++it)
+        for (std::vector<std::string>::const_iterator it = dirList.begin(); it != dirList.end(); ++it)
         {
-            if (0 != (rc = _createDir(*it, uid, gid)))
+            if (0 != (rc = pe._createDir(*it, uid, gid)))
             {
                 return rc;
             }
         }
 
         // Hook for non-privileged OMI_PREEXEC functions
-        if ( 0 != (rc = PreExec_NonPrived_Hook(uid, gid)) )
+        if ( 0 != (rc = pe.NonPrived_Hook(uid, gid)) )
         {
             return rc;
         }
@@ -160,14 +161,14 @@ int main(int argc, char *argv[])
     else
     {
         // Hook for Privileged OMI_PREEXEC functions
-        if ( 0 != (rc = PreExec_Prived_Hook()) )
+        if ( 0 != (rc = pe.Prived_Hook(uid, gid)) )
         {
             return rc;
         }
     }
 
     // Hook for any OMI_PREEXEC functions, regardless of privilege level
-    if ( 0 != (rc = PreExec_Generic_Hook()) )
+    if ( 0 != (rc = pe.Generic_Hook(uid, gid)) )
     {
         return rc;
     }

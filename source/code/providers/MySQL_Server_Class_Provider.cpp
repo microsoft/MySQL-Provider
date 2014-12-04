@@ -17,10 +17,14 @@
 
 
 
-// Pick up specific definitions for MySQL 5.5 if we're on an older version
+// Pick up specific definitions for new MySQL versions if we're on an older version
+
+#if !defined(ER_BASE64_DECODE_ERROR)
+#define ER_BASE64_DECODE_ERROR                  1575
+#endif
 
 #if !defined(ER_ACCESS_DENIED_NO_PASSWORD_ERROR)
-#define ER_ACCESS_DENIED_NO_PASSWORD_ERROR 1698
+#define ER_ACCESS_DENIED_NO_PASSWORD_ERROR      1698
 #endif
 
 using namespace SCXCoreLib;

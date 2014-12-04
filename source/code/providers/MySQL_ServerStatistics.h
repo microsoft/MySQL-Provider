@@ -36,11 +36,12 @@ typedef struct _MySQL_ServerStatistics /* extends CIM_StatisticalData */
     MI_ConstDatetimeField StatisticTime;
     MI_ConstDatetimeField SampleInterval;
     /* MySQL_ServerStatistics properties */
-    MI_ConstUint32Field NumConnections;
+    MI_ConstUint32Field CurrentNumConnections;
     MI_ConstUint32Field MaxConnections;
     MI_ConstUint32Field FailedConnections;
     MI_ConstUint64Field Uptime;
     MI_ConstUint64Field ServerDiskUseInBytes;
+    MI_ConstUint8Field ConnectionsUsePct;
     MI_ConstUint8Field SlowQueryPct;
     MI_ConstUint8Field KeyCacheHitPct;
     MI_ConstUint8Field KeyCacheWritePct;
@@ -318,19 +319,19 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_SampleInterval(
     return MI_RESULT_OK;
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_NumConnections(
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_CurrentNumConnections(
     MySQL_ServerStatistics* self,
     MI_Uint32 x)
 {
-    ((MI_Uint32Field*)&self->NumConnections)->value = x;
-    ((MI_Uint32Field*)&self->NumConnections)->exists = 1;
+    ((MI_Uint32Field*)&self->CurrentNumConnections)->value = x;
+    ((MI_Uint32Field*)&self->CurrentNumConnections)->exists = 1;
     return MI_RESULT_OK;
 }
 
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_NumConnections(
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_CurrentNumConnections(
     MySQL_ServerStatistics* self)
 {
-    memset((void*)&self->NumConnections, 0, sizeof(self->NumConnections));
+    memset((void*)&self->CurrentNumConnections, 0, sizeof(self->CurrentNumConnections));
     return MI_RESULT_OK;
 }
 
@@ -395,6 +396,22 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_ServerDiskUseInBytes(
     MySQL_ServerStatistics* self)
 {
     memset((void*)&self->ServerDiskUseInBytes, 0, sizeof(self->ServerDiskUseInBytes));
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_ConnectionsUsePct(
+    MySQL_ServerStatistics* self,
+    MI_Uint8 x)
+{
+    ((MI_Uint8Field*)&self->ConnectionsUsePct)->value = x;
+    ((MI_Uint8Field*)&self->ConnectionsUsePct)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_ConnectionsUsePct(
+    MySQL_ServerStatistics* self)
+{
+    memset((void*)&self->ConnectionsUsePct, 0, sizeof(self->ConnectionsUsePct));
     return MI_RESULT_OK;
 }
 
@@ -803,42 +820,42 @@ public:
     }
 
     //
-    // MySQL_ServerStatistics_Class.NumConnections
+    // MySQL_ServerStatistics_Class.CurrentNumConnections
     //
     
-    const Field<Uint32>& NumConnections() const
+    const Field<Uint32>& CurrentNumConnections() const
     {
-        const size_t n = offsetof(Self, NumConnections);
+        const size_t n = offsetof(Self, CurrentNumConnections);
         return GetField<Uint32>(n);
     }
     
-    void NumConnections(const Field<Uint32>& x)
+    void CurrentNumConnections(const Field<Uint32>& x)
     {
-        const size_t n = offsetof(Self, NumConnections);
+        const size_t n = offsetof(Self, CurrentNumConnections);
         GetField<Uint32>(n) = x;
     }
     
-    const Uint32& NumConnections_value() const
+    const Uint32& CurrentNumConnections_value() const
     {
-        const size_t n = offsetof(Self, NumConnections);
+        const size_t n = offsetof(Self, CurrentNumConnections);
         return GetField<Uint32>(n).value;
     }
     
-    void NumConnections_value(const Uint32& x)
+    void CurrentNumConnections_value(const Uint32& x)
     {
-        const size_t n = offsetof(Self, NumConnections);
+        const size_t n = offsetof(Self, CurrentNumConnections);
         GetField<Uint32>(n).Set(x);
     }
     
-    bool NumConnections_exists() const
+    bool CurrentNumConnections_exists() const
     {
-        const size_t n = offsetof(Self, NumConnections);
+        const size_t n = offsetof(Self, CurrentNumConnections);
         return GetField<Uint32>(n).exists ? true : false;
     }
     
-    void NumConnections_clear()
+    void CurrentNumConnections_clear()
     {
-        const size_t n = offsetof(Self, NumConnections);
+        const size_t n = offsetof(Self, CurrentNumConnections);
         GetField<Uint32>(n).Clear();
     }
 
@@ -1000,6 +1017,46 @@ public:
     {
         const size_t n = offsetof(Self, ServerDiskUseInBytes);
         GetField<Uint64>(n).Clear();
+    }
+
+    //
+    // MySQL_ServerStatistics_Class.ConnectionsUsePct
+    //
+    
+    const Field<Uint8>& ConnectionsUsePct() const
+    {
+        const size_t n = offsetof(Self, ConnectionsUsePct);
+        return GetField<Uint8>(n);
+    }
+    
+    void ConnectionsUsePct(const Field<Uint8>& x)
+    {
+        const size_t n = offsetof(Self, ConnectionsUsePct);
+        GetField<Uint8>(n) = x;
+    }
+    
+    const Uint8& ConnectionsUsePct_value() const
+    {
+        const size_t n = offsetof(Self, ConnectionsUsePct);
+        return GetField<Uint8>(n).value;
+    }
+    
+    void ConnectionsUsePct_value(const Uint8& x)
+    {
+        const size_t n = offsetof(Self, ConnectionsUsePct);
+        GetField<Uint8>(n).Set(x);
+    }
+    
+    bool ConnectionsUsePct_exists() const
+    {
+        const size_t n = offsetof(Self, ConnectionsUsePct);
+        return GetField<Uint8>(n).exists ? true : false;
+    }
+    
+    void ConnectionsUsePct_clear()
+    {
+        const size_t n = offsetof(Self, ConnectionsUsePct);
+        GetField<Uint8>(n).Clear();
     }
 
     //

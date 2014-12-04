@@ -1222,18 +1222,18 @@ MI_CONST MI_ClassDecl CIM_StatisticalData_rtti =
 **==============================================================================
 */
 
-/* property MySQL_ServerStatistics.NumConnections */
-static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_NumConnections_prop =
+/* property MySQL_ServerStatistics.CurrentNumConnections */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_CurrentNumConnections_prop =
 {
     MI_FLAG_PROPERTY, /* flags */
-    0x006E730E, /* code */
-    MI_T("NumConnections"), /* name */
+    0x00637315, /* code */
+    MI_T("CurrentNumConnections"), /* name */
     NULL, /* qualifiers */
     0, /* numQualifiers */
     MI_UINT32, /* type */
     NULL, /* className */
     0, /* subscript */
-    offsetof(MySQL_ServerStatistics, NumConnections), /* offset */
+    offsetof(MySQL_ServerStatistics, CurrentNumConnections), /* offset */
     MI_T("MySQL_ServerStatistics"), /* origin */
     MI_T("MySQL_ServerStatistics"), /* propagator */
     NULL,
@@ -1302,6 +1302,23 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_ServerDiskUseInBytes_prop
     NULL, /* className */
     0, /* subscript */
     offsetof(MySQL_ServerStatistics, ServerDiskUseInBytes), /* offset */
+    MI_T("MySQL_ServerStatistics"), /* origin */
+    MI_T("MySQL_ServerStatistics"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_ServerStatistics.ConnectionsUsePct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_ConnectionsUsePct_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x00637411, /* code */
+    MI_T("ConnectionsUsePct"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT8, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_ServerStatistics, ConnectionsUsePct), /* offset */
     MI_T("MySQL_ServerStatistics"), /* origin */
     MI_T("MySQL_ServerStatistics"), /* propagator */
     NULL,
@@ -1486,11 +1503,12 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_ServerStatistics_props[] =
     &CIM_StatisticalData_StartStatisticTime_prop,
     &CIM_StatisticalData_StatisticTime_prop,
     &CIM_StatisticalData_SampleInterval_prop,
-    &MySQL_ServerStatistics_NumConnections_prop,
+    &MySQL_ServerStatistics_CurrentNumConnections_prop,
     &MySQL_ServerStatistics_MaxConnections_prop,
     &MySQL_ServerStatistics_FailedConnections_prop,
     &MySQL_ServerStatistics_Uptime_prop,
     &MySQL_ServerStatistics_ServerDiskUseInBytes_prop,
+    &MySQL_ServerStatistics_ConnectionsUsePct_prop,
     &MySQL_ServerStatistics_SlowQueryPct_prop,
     &MySQL_ServerStatistics_KeyCacheHitPct_prop,
     &MySQL_ServerStatistics_KeyCacheWritePct_prop,

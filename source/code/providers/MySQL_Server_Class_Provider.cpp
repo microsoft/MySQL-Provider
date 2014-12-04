@@ -12,9 +12,135 @@
 #include "logstartup.h"
 #include "sqlbinding.h"
 
+#include <errmsg.h>
+#include <mysqld_error.h>
+
+
+
+// Pick up specific definitions for MySQL 5.5 if we're on an older version
+
+#if !defined(ER_ACCESS_DENIED_NO_PASSWORD_ERROR)
+#define ER_ACCESS_DENIED_NO_PASSWORD_ERROR 1698
+#endif
+
 using namespace SCXCoreLib;
 
 MI_BEGIN_NAMESPACE
+
+static std::string FindConfigurationFile(
+    util::unique_ptr<MySQL_Binding>& pBinding,
+    util::unique_ptr<MySQL_Authentication>& pAuth)
+{
+    std::string configFile;
+    if ( pAuth->GetAutomaticUpdates() )
+    {
+        std::vector<std::string> sqlPaths;
+        pBinding->GetConfigurationFilePaths( sqlPaths );
+
+        for (std::vector<std::string>::const_iterator it = sqlPaths.begin(); it != sqlPaths.end(); ++it)
+        {
+            if ( SCXFile::Exists(SCXFilePath(StrFromUTF8(*it))) )
+            {
+                configFile = *it;
+                break;
+            }
+        }
+    }
+
+    return configFile;
+}
+
+static void EnumerateConnectionFailure(
+    SCXLogHandle& hLog,
+    util::unique_ptr<MySQL_Binding>& pBinding,
+    MySQL_Server_Class& inst,
+    unsigned int port,
+    util::unique_ptr<MySQL_Authentication>& pAuth,
+    const bool keysOnly,
+    unsigned int sqlError)
+{
+    // The ProductID is the hostname:bind-address:port combination (assume no DB connection)
+    NameResolver nr;
+    std::string hostname( StrToUTF8(nr.GetHostname()) );
+
+    MySQL_AuthenticationEntry entry;
+    pAuth->GetEntry(port, entry);
+
+    std::string productID = hostname + ":" + entry.binding + ":" + StrToUTF8(StrFrom(port));
+
+    inst.ProductIdentifyingNumber_value( productID.c_str() );
+    inst.ProductName_value( "MySQL" );
+    inst.ProductVendor_value( "Oracle" );
+    inst.ProductVersion_value( "" );
+    inst.SystemID_value( "" );
+    inst.CollectionID_value( "" );
+
+    if ( !keysOnly )
+    {
+        // Try and find the configuration at a list of known locations
+        std::string configFile( FindConfigurationFile(pBinding, pAuth) );
+        if ( configFile.size() )
+        {
+            inst.ConfigurationFile_value( configFile.c_str() );
+        }
+
+        inst.Hostname_value( hostname.c_str() );
+        inst.BindAddress_value( entry.binding.c_str() );
+        inst.Port_value( port );
+
+        const char *pStatus;
+        switch (sqlError)
+        {
+            case ER_ABORTING_CONNECTION:        // 1152
+                pStatus = "Aborted";
+                break;
+
+            case ER_CRASHED_ON_REPAIR:          // 1195
+            case ER_WARN_QC_RESIZE:             // 1282
+            case ER_INDEX_REBUILD:              // 1187
+                pStatus = "Degraded";
+                break;
+
+            case ER_DBACCESS_DENIED_ERROR:      // 1044
+            case ER_ACCESS_DENIED_ERROR:        // 1045
+            case ER_SPECIFIC_ACCESS_DENIED_ERROR: // 1227
+            case ER_CANNOT_USER:                // 1396
+            case ER_BASE64_DECODE_ERROR:        // 1575
+            case ER_ACCESS_DENIED_NO_PASSWORD_ERROR: // 1698
+                pStatus = "Insufficient Privileges";
+                break;
+
+            case CR_CONNECTION_ERROR:           // 2002
+            case CR_CONN_HOST_ERROR:            // 2003
+                pStatus = "No Contact";
+                break;
+
+            case ER_SERVER_SHUTDOWN:            // 1053
+            case ER_NORMAL_SHUTDOWN:            // 1077
+                pStatus = "Stopping";
+                break;
+
+            case ER_CON_COUNT_ERROR:            // 1040
+            case ER_OUT_OF_RESOURCES:           // 1041
+            case ER_HOST_IS_BLOCKED:            // 1129
+            case ER_CANT_CREATE_THREAD:         // 1135
+            case ER_TOO_MANY_USER_CONNECTIONS:  // 1203
+            case ER_FPARSER_TOO_BIG_FILE:       // 1340
+                pStatus = "Stressed";
+                break;
+
+            case MYSQL_AUTH_EXCEPTION:          // (Internal)
+            case MYSQL_AUTH_INVALID_ENTRY:      // (Internal)
+                pStatus = "Supporting Entity in Error";
+                break;
+
+            default:
+                pStatus = "Unknown";
+        }
+
+        inst.OperatingStatus_value( pStatus );
+    }
+}
 
 static void EnumerateOneInstance(
     SCXLogHandle& hLog,
@@ -34,8 +160,7 @@ static void EnumerateOneInstance(
            << pBinding->GetErrorNum() << ": " << pBinding->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Handle failure case here!
-
+        EnumerateConnectionFailure(hLog, pBinding, inst, port, pAuth, keysOnly, pBinding->GetErrorNum());
         return;
     }
 
@@ -45,12 +170,11 @@ static void EnumerateOneInstance(
     if ( ! pQuery->ExecuteQuery("show variables") || ! pQuery->GetResults(variables) )
     {
         std::stringstream ss;
-        ss << "Failure executing query \"show variables\" against MySQL engine, Error "
-           << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+        ss << "Failure executing query \"show variables\" against MySQL engine on port " << port
+           << ", Error " << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Handle failure case here!
-
+        EnumerateConnectionFailure(hLog, pBinding, inst, port, pAuth, keysOnly, pQuery->GetErrorNum());
         return;
     }
 
@@ -68,7 +192,7 @@ static void EnumerateOneInstance(
 
     if ( !GetStrValue(variables, "port", strPort) )
     {
-        SCX_LOGERROR(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
+        SCX_LOGERROR(hLog, StrAppend(L"Query \"show variables\" did not return \"port\" in the result set on port ", port));
         strPort = StrToUTF8(StrFrom(port));
     }
     std::string productID = hostname + ":" + entry.binding + ":" + strPort;
@@ -95,21 +219,7 @@ static void EnumerateOneInstance(
     if ( !keysOnly )
     {
         // Try and find the configuration at a list of known locations
-        std::string configFile;
-        if ( pAuth->GetAutomaticUpdates() )
-        {
-            std::vector<std::string> sqlPaths;
-            pBinding->GetConfigurationFilePaths( sqlPaths );
-
-            for (std::vector<std::string>::const_iterator it = sqlPaths.begin(); it != sqlPaths.end(); ++it)
-            {
-                if ( SCXFile::Exists(SCXFilePath(StrFromUTF8(*it))) )
-                {
-                    configFile = *it;
-                    break;
-                }
-            }
-        }
+        std::string configFile( FindConfigurationFile(pBinding, pAuth) );
         if ( configFile.size() )
         {
             inst.ConfigurationFile_value( configFile.c_str() );
@@ -134,7 +244,6 @@ static void EnumerateOneInstance(
             inst.DataDirectory_value( strValue.c_str() );
         }
 
-        // *TODO* Waiting for PM feedback on this one!
         inst.OperatingStatus_value( "OK" );
     }
 }

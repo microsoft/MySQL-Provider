@@ -155,11 +155,12 @@ public:
             instance.GetKeyValue(0, CALL_LOCATION(errMsg)));
 
         std::wstring tmpExpectedProperties[] = {L"InstanceID",
-                                                L"NumConnections",
+                                                L"CurrentNumConnections",
                                                 L"MaxConnections",
                                                 L"FailedConnections",
                                                 L"Uptime",
                                                 L"ServerDiskUseInBytes",
+                                                L"ConnectionsUsePct",
                                                 L"SlowQueryPct",
                                                 L"KeyCacheHitPct",
                                                 L"KeyCacheWritePct",

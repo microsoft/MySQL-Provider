@@ -30,8 +30,6 @@ static void EnumerateServerDatabases(
            << pBinding->GetErrorNum() << ": " << pBinding->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Handle failure case here!
-
         return;
     }
 
@@ -41,13 +39,10 @@ static void EnumerateServerDatabases(
     if ( ! pQuery->ExecuteQuery("show variables") || ! pQuery->GetResults(variables) )
     {
         std::stringstream ss;
-        ss << "Failure executing query \"show variables\" against MySQL engine, Error "
-           << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+        ss << "Failure executing query \"show variables\" against MySQL engine on port " << port
+           << ", Error " << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Handle failure case here!
-
-        context.Post(MI_RESULT_FAILED);
         return;
     }
 
@@ -65,19 +60,20 @@ static void EnumerateServerDatabases(
 
     if ( !GetStrValue(variables, "port", strPort) )
     {
-        SCX_LOGERROR(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
-
-        // *TODO* Handle failure case here!
-
-        context.Post(MI_RESULT_FAILED);
-        return;
+        SCX_LOGWARNING(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
+        strPort = StrToUTF8(StrFrom(port));
+        /* This one isn't fatal - continue processing, we've done the best we can */
     }
     std::string instanceID = hostname + ":" + entry.binding + ":" + strPort;
 
-    // Execute a query to get the list of MySQL databases, number of tables per database, and size of each database
+    // Execute a query to get a result set like:
+    //   +--------------------+--------+--------------+
+    //   | Database           | Tables | Size (Bytes) |
+    //   +--------------------+--------+--------------+
+    //   | information_schema |     28 |         8192 |
+    //   +--------------------+--------+--------------+
+    // Note that Size may be NULL if database has no tables
 
-
-    // Note that third column (size) may be NULL if no tables are created for database
     MySQL_QueryResults databases;
     const char *queryString = "select b.schema_name as \"Database\","
                               " COUNT(a.table_name) as \"Tables\","
@@ -88,13 +84,10 @@ static void EnumerateServerDatabases(
     if ( ! pQuery->ExecuteQuery(queryString) || ! pQuery->GetMultiColumnResults(databases) )
     {
         std::stringstream ss;
-        ss << "Failure executing query to get list of tables/database against MySQL engine, error "
-           << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+        ss << "Failure executing query to get list of tables/database against MySQL engine on port " << port
+           << ", error " << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Handle failure case here!
-
-        context.Post(MI_RESULT_FAILED);
         return;
     }
 

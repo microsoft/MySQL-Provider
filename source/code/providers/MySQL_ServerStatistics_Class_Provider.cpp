@@ -22,7 +22,7 @@ static void ComputeRatio(float numerator, float denominator, uint8_t& ratio, boo
 
     if ( denominator ) // Avoid divide by zero
     {
-        ratio = static_cast<uint8_t> ((numerator / denominator) * 100.0);
+        ratio = static_cast<uint8_t> ((numerator / denominator) * 100.0 + 0.5);
     }
 }
 
@@ -63,8 +63,6 @@ static bool EnumerateOneInstance(
            << pBinding->GetErrorNum() << ": " << pBinding->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
 
-        // *TODO* Handle failure case here!
-
         return false;
     }
 
@@ -74,11 +72,9 @@ static bool EnumerateOneInstance(
     if ( ! pQuery->ExecuteQuery("show variables") || ! pQuery->GetResults(variables) )
     {
         std::stringstream ss;
-        ss << "Failure executing query \"show variables\" against MySQL engine, Error "
-           << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+        ss << "Failure executing query \"show variables\" against MySQL engine on port " << port
+           << ", Error " << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
         SCX_LOGERROR(hLog, ss.str());
-
-        // *TODO* Handle failure case here!
 
         return false;
     }
@@ -97,11 +93,9 @@ static bool EnumerateOneInstance(
 
     if ( !GetStrValue(variables, "port", strPort) )
     {
-        SCX_LOGERROR(hLog, L"Query \"show variables\" did not return \"port\" in the result set");
-
-        // *TODO* Handle failure case here!
-
-        return false;
+        SCX_LOGWARNING(hLog, StrAppend(L"Query \"show variables\" did not return \"port\" in the result set from port ", port));
+        strPort = StrToUTF8(StrFrom(port));
+        /* This one isn't fatal - continue processing, we've done the best we can */
     }
 
     std::string instanceID = hostname + ":" + entry.binding + ":" + strPort;
@@ -114,11 +108,9 @@ static bool EnumerateOneInstance(
         if ( ! pQuery->ExecuteQuery("show global status") || ! pQuery->GetResults(globals) )
         {
             std::stringstream ss;
-            ss << "Failure executing query \"show global status\" against MySQL engine, Error "
-               << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
+            ss << "Failure executing query \"show global status\" against MySQL engine on port " << port
+               << ", Error " << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
             SCX_LOGERROR(hLog, ss.str());
-
-            // *TODO* Handle failure case here!
 
             return false;
         }
@@ -156,14 +148,17 @@ static bool EnumerateOneInstance(
             }
         }
 
-        if ( GetUValue(globals, "threads_connected", uval32) )
+        
+        uint32_t connectionsCurrent;
+        if ( GetUValue(globals, "threads_connected", connectionsCurrent) )
         {
-            inst.NumConnections_value( uval32 );
+            inst.CurrentNumConnections_value( connectionsCurrent );
         }
 
-        if ( GetUValue(variables, "max_connections", uval32) )
+        uint32_t connectionsMax;
+        if ( GetUValue(variables, "max_connections", connectionsMax) )
         {
-            inst.MaxConnections_value( uval32 );
+            inst.MaxConnections_value( connectionsMax );
         }
 
         if ( GetUValue(globals, "aborted_connects", uval32) )
@@ -190,6 +185,9 @@ static bool EnumerateOneInstance(
                << pQuery->GetErrorNum() << ": " << pQuery->GetErrorText();
             SCX_LOGWARNING(hLog, ss.str());
         }
+
+        ComputeRatio(connectionsCurrent, connectionsMax, uval8);
+        inst.ConnectionsUsePct_value( uval8 );
 
         if ( GetUValue(globals, "slow_queries", valFloat) )
         {
@@ -240,7 +238,7 @@ static bool EnumerateOneInstance(
 
         // Support for FullTableScanPct
         //
-        // We can use AddValue() method because handler_read_*_last may exist, but should not be included
+        // We can't use AddValue() method because handler_read_*_last may exist, but should not be included
         float read_rnd, read_rnd_next, read_first, read_key, read_next, read_prev;
 
         if ( GetUValue(globals, "handler_read_rnd", read_rnd, true)
@@ -322,12 +320,13 @@ void MySQL_ServerStatistics_Class_Provider::EnumerateInstances(
         for (std::vector<unsigned int>::const_iterator it = portList.begin(); it != portList.end(); ++it)
         {
             MySQL_ServerStatistics_Class inst;
-            if ( !EnumerateOneInstance(hLog, inst, *it, pAuth, keysOnly) )
+            if ( EnumerateOneInstance(hLog, inst, *it, pAuth, keysOnly) )
             {
-                context.Post(MI_RESULT_FAILED);
-                return;
+                // If we posted results in EnumerateOneInstance, then post them here.
+                // If not, we just skip it to pick up other instances ...
+
+                context.Post(inst);
             }
-            context.Post(inst);
         }
 
         context.Post(MI_RESULT_OK);

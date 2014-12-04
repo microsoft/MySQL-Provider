@@ -66,7 +66,7 @@ class MySQL_Server : CIM_InstalledProduct {
 class MySQL_ServerStatistics : CIM_StatisticalData {
 
     [ Description ( "How many current open threads (connections) are connected to a MySQL Server instance" ) ]
-    uint32 NumConnections;
+    uint32 CurrentNumConnections;
 
     [ Description ( "Maximum amount of connections allowed for MySQL Server instance" ) ]
     uint32 MaxConnections;
@@ -79,6 +79,9 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
 
     [ Description ( "Amount of disk space used (in bytes) by MySQL Server instance" ) ]
     uint64 ServerDiskUseInBytes;
+
+    [ Description ( "The percent of connections in use by the Server" ) ]
+    uint8 ConnectionsUsePct;
 
     [ Description ( "Number of slow queries compared to all queries" ) ]
     uint8 SlowQueryPct;

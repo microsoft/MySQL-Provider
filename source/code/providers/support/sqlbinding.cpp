@@ -94,6 +94,33 @@ bool MySQL_Dependencies::Attach()
     return true;
 }
 
+bool MySQL_Dependencies::AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth)
+{
+    bool fValidEntry = false;
+    MySQL_AuthenticationEntry entry;
+    try {
+        fValidEntry = auth->GetEntry(port, entry);
+    }
+    catch (SCXCoreLib::SCXException& e)
+    {
+        SCX_LOGERROR(m_log, L"Failure getting credential entry: " + e.What());
+        m_sqlErrorNum = MYSQL_AUTH_EXCEPTION;
+        m_sqlErrorText = SCXCoreLib::StrToUTF8( e.What() );
+
+        return false;
+    }
+
+    if ( ! fValidEntry )
+    {
+        m_sqlErrorNum = MYSQL_AUTH_INVALID_ENTRY;
+        m_sqlErrorText = SCXCoreLib::StrToUTF8( SCXCoreLib::StrAppend(L"Invalid authentication entry for port ", port) );
+
+        return false;
+    }
+
+    return Attach(entry.port, entry.binding, entry.username, entry.password);
+}
+
 bool MySQL_Dependencies::Detach()
 {
     if ( NULL != m_sqlConnection )
@@ -232,27 +259,6 @@ MySQL_Binding::~MySQL_Binding()
     Detach();
 
     // Note: We don't "own" pointer to dependencies; this is owned by the factory
-}
-
-bool MySQL_Binding::AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth)
-{
-    bool fValidEntry = false;
-    MySQL_AuthenticationEntry entry;
-    try {
-        fValidEntry = auth->GetEntry(port, entry);
-    }
-    catch (SCXCoreLib::SCXException& e)
-    {
-        SCX_LOGERROR(m_log, L"Failure getting credential entry: " + e.What());
-        return false;
-    }
-
-    if ( ! fValidEntry )
-    {
-        return false;
-    }
-
-    return m_deps->Attach(entry.port, entry.binding, entry.username, entry.password);
 }
 
 void MySQL_Binding::GetConfigurationFilePaths( std::vector<std::string>& paths )

@@ -26,6 +26,17 @@
 
 #include "sqlauth.h"
 
+
+
+/*
+ * Define constants for MySQL_Binding authentication
+ */
+
+#define MYSQL_AUTH_EXCEPTION            5000
+#define MYSQL_AUTH_INVALID_ENTRY        5001
+
+
+
 /*------------------------------------------------------------------------------*/
 /**
  *   MySQL_Dependencies
@@ -53,6 +64,7 @@ public:
         return Attach();
     }
     bool Attach();
+    bool AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth);
     bool Detach();
 
     const std::string& GetErrorText() { return m_sqlErrorText; }
@@ -149,7 +161,8 @@ public:
     bool Attach(unsigned int port, const std::string& hostname, const std::string& username, const std::string& password)
         { return m_deps->Attach(port, hostname, username, password); }
     bool Attach() { return m_deps->Attach(); }
-    bool AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth);
+    bool AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth)
+        { return m_deps->AttachUsingStoredCredentials(port, auth); }
     bool Detach() { return m_deps->Detach(); }
 
     void GetConfigurationFilePaths( std::vector<std::string>& paths );

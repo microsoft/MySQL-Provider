@@ -32,7 +32,6 @@ INTERMEDIATE_DIR=$(BASE_DIR)/intermediate/$(BUILD_CONFIGURATION)
 TARGET_DIR := $(BASE_DIR)/target/$(BUILD_CONFIGURATION)
 PROVIDER_LIBRARY := $(TARGET_DIR)/libmysqlProvider.so
 OMI_PREEXEC := $(TARGET_DIR)/omi_preexec
-MYSQL_DELIVERABLES = $(PROVIDER_LIBRARY) $(OMI_PREEXEC)
 
 INSTALLER_TMPDIR := $(TARGET_DIR)/installer_tmp
 
@@ -76,9 +75,9 @@ CXXFLAGS = $(COMPILE_FLAGS)
 # Build targets
 
 ifeq ($(ULINUX),1)
-all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(MYSQL_DELIVERABLES) kit
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) PROVIDER_STATUS $(PROVIDER_LIBRARY) OMI_PREEXEC_STATUS $(OMI_PREEXEC) KIT_STATUS kit
 else
-all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) $(MYSQL_DELIVERABLES)
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) PROVIDER_STATUS $(PROVIDER_LIBRARY) OMI_PREEXEC_STATUS $(OMI_PREEXEC)
 endif
 
 clean :
@@ -110,6 +109,15 @@ restart :
 	@-sudo /etc/init.d/omiserverd stop
 	@sudo /etc/init.d/omiserverd start
 
+
+PROVIDER_STATUS:
+	@echo "========================= Performing Building provider"
+
+OMI_PREEXEC_STATUS:
+	@echo "========================= Performing Building OMI preexec executable"
+
+KIT_STATUS:
+	@echo "========================= Performing Building provider tests"
 
 #--------------------------------------------------------------------------------
 # OMI build
@@ -307,7 +315,6 @@ $(PROVIDER_LIBRARY): INCLUDES += $(PROVIDER_INCLUDE_FLAGS)
 $(PROVIDER_LIBRARY): CFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(PROVIDER_LIBRARY): CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
-	@echo "========================= Performing Building provider"
 	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
 	g++ $(PROVIDER_COMPILE_FLAGS) $(SHARED_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
@@ -334,7 +341,6 @@ STATIC_OMI_PREEXEC_OBJFILES = $(call src_to_obj,$(STATIC_OMI_PREEXEC_SRCFILES))
 $(OMI_PREEXEC): CFLAGS += $(PREEXEC_COMPILE_FLAGS)
 $(OMI_PREEXEC): CXXFLAGS += $(PREEXEC_COMPILE_FLAGS)
 $(OMI_PREEXEC): $(STATIC_OMI_PREEXEC_OBJFILES) $(STATIC_OMI_PREEXEC_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
-	@echo "========================= Performing Building OMI preexec executable"
 	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
 	g++ $(PREEXEC_COMPILE_FLAGS) -o $@ $(STATIC_OMI_PREEXEC_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(PREEXEC_LINK_LIBRARIES)
@@ -375,14 +381,16 @@ $(TARGET_DIR)/testrunner: INCLUDES += $(PROVIDER_TEST_INCLUDE_FLAGS) -I$(PAL_INC
 $(TARGET_DIR)/testrunner: CFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(TARGET_DIR)/testrunner: CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(TARGET_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
-	@echo "========================= Performing Building provider tests"
 	$(MKPATH) $(INTERMEDIATE_DIR)
 	$(MKPATH) $(TARGET_DIR)
 	g++ $(PROVIDER_COMPILE_FLAGS) $(PROVIDER_TEST_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDER_PAL_UNITFILES) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(LINK_LIBRARIES) $(PROVIDER_TEST_LINK_LIBRARIES)
 
 testrun : test
 
-test : $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
+TEST_STATUS:
+	@echo "========================= Performing Building provider tests"
+
+test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 	@echo "========================= Performing MySQL testrun execution"
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib; cd $(TARGET_DIR); ./testrunner
 
@@ -396,7 +404,7 @@ test : $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 
 kit : MYSQLLIB_FULLFILENAME = $(shell ldd $(PROVIDER_LIBRARY) | grep libmysqlclient.so | awk '{print $$3}')
 kit : MYSQLLIB_FILENAME = $(shell basename $(MYSQLLIB_FULLFILENAME))
-kit : $(OMI_ROOT)/output $(MYSQL_DELIVERABLES)
+kit : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(OMI_PREEXEC)
 ifeq ($(ULINUX),1)
 
 	@echo "========================= Performing Building RPM and DPKG packages"

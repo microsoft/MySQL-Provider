@@ -18,7 +18,7 @@
 #include "sqlbinding.h"
 
 // Define single global copy (intended as a singleton class)
-MySQL_Factory* g_pFactory = NULL;
+SCXCoreLib::SCXHandle<MySQL_Factory> g_pFactory(new MySQL_Factory());
 
 class SQLError : public SCXCoreLib::SCXException
 {

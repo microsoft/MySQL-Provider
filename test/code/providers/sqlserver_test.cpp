@@ -79,11 +79,7 @@ public:
     void setUp(void)
     {
         // Use the testable factory for control over dependencies
-        if ( NULL != g_pFactory )
-        {
-            delete g_pFactory;
-            g_pFactory = NULL;
-        }
+        g_pFactory = NULL;
         g_pFactory = new MySQL_TestableFactory();
 
         // Load the provider
@@ -112,7 +108,6 @@ public:
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, false, context.WasRefuseUnloadCalled() );
 
         // Clean up the testable factory
-        delete g_pFactory;
         g_pFactory = NULL;
     }
 

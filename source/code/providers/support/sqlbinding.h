@@ -15,6 +15,7 @@
 #define SQLBINDING_H
 
 #include <scxcorelib/scxcmn.h>
+#include <scxcorelib/scxhandle.h>
 #include <scxcorelib/scxlog.h>
 #include <util/unique_ptr.h>
 
@@ -265,7 +266,7 @@ protected:
 };
 
 // Define single global copy (intended as a singleton class)
-extern MySQL_Factory* g_pFactory;
+extern SCXCoreLib::SCXHandle<MySQL_Factory> g_pFactory;
 
 
 

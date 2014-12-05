@@ -50,11 +50,7 @@ private:
 public:
     void setUp(void)
     {
-        if ( NULL != g_pFactory )
-        {
-            delete g_pFactory;
-            g_pFactory = NULL;
-        }
+        g_pFactory = NULL;
         g_pFactory = new MySQL_TestableFactory();
 
         std::wstring errMsg;
@@ -81,7 +77,6 @@ public:
         TearDownAgent<mi::MySQL_Server_Database_Class_Provider>(context, CALL_LOCATION(errMsg));
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, false, context.WasRefuseUnloadCalled() );
 
-        delete g_pFactory;
         g_pFactory = NULL;
     }
 

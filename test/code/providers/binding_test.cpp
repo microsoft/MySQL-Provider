@@ -53,12 +53,12 @@ private:
 public:
     void setUp(void)
     {
+        g_pFactory = NULL;
         g_pFactory = new MySQL_Factory();
     }
 
     void tearDown(void)
     {
-        delete g_pFactory;
         g_pFactory = NULL;
     }
 

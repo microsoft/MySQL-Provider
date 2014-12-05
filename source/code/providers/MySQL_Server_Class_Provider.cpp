@@ -267,25 +267,12 @@ void MySQL_Server_Class_Provider::Load(
 {
     MySQL::LogStartup();
 
-    // Get pointer to MySQL Factory if we don't have one
-    if ( NULL == g_pFactory )
-    {
-        g_pFactory = new MySQL_Factory();
-    }
-
     context.Post(MI_RESULT_OK);
 }
 
 void MySQL_Server_Class_Provider::Unload(
         Context& context)
 {
-    // Delete our factory
-    if ( NULL != g_pFactory )
-    {
-        delete g_pFactory;
-        g_pFactory = NULL;
-    }
-
     context.Post(MI_RESULT_OK);
 }
 

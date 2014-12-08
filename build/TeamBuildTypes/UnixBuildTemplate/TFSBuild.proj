@@ -5,7 +5,7 @@
         specific build are set via the UnixBuildType property and the UnixBuildTypes.props
         file. See README.txt for more info.
         
-        Apache_osm
+        MySQL_osm
   -->
   
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\TeamBuild\Microsoft.TeamFoundation.Build.targets" />
@@ -69,9 +69,9 @@
     <ErrorWarningLogText>The errors/warnings log file is at:</ErrorWarningLogText>
     <SkipPostBuild>true</SkipPostBuild>
 
-    <WorkspaceFolder>$(BuildDirectory)\Sources\Apache</WorkspaceFolder>
+    <WorkspaceFolder>$(BuildDirectory)\Sources\MySQL</WorkspaceFolder>
 
-    <BinariesRoot>$(SolutionRoot)\Apache\Target</BinariesRoot>
+    <BinariesRoot>$(SolutionRoot)\MySQL\Target</BinariesRoot>
 
     <!--MakeTargetToBuild 'stub' is used for debugging the TFSBuild process when we don't 
     need to have the whole build done, but want the skeleton of the build done, for
@@ -97,10 +97,10 @@
     <UnixBuildServer Condition="$(BuildServerOverride)!=''">$(BuildServerOverride)</UnixBuildServer>
   </PropertyGroup>
 
-  <UsingTask TaskName="RegexReplace" AssemblyFile="$(SolutionRoot)\Apache\build\Tools\MSBuild.Community.Tasks.dll\MSBuild.Community.Tasks.dll" />
+  <UsingTask TaskName="RegexReplace" AssemblyFile="$(SolutionRoot)\MySQL\build\Tools\MSBuild.Community.Tasks.dll\MSBuild.Community.Tasks.dll" />
   <UsingTask TaskName="Microsoft.TeamFoundation.Build.Tasks.SetBuildProperties" 
              AssemblyFile="$(VSINSTALLDIR)\Common7\IDE\PrivateAssemblies\Microsoft.TeamFoundation.Build.ProcessComponents.dll" />
-  <UsingTask TaskName="CustomBuildNumberTask.CustomBuildNumber" AssemblyFile="$(SolutionRoot)\Apache\build\Tools\CustomBuildNumberTask\CustomBuildNumberTask.dll" />
+  <UsingTask TaskName="CustomBuildNumberTask.CustomBuildNumber" AssemblyFile="$(SolutionRoot)\MySQL\build\Tools\CustomBuildNumberTask\CustomBuildNumberTask.dll" />
 
   <!-- Fail the build if the UnixBuildType and related properties haven't been configured correctly. -->
   <Target Name="ValidateUnixBuildType" Condition=" '$(SkipValidateUnixBuildType)' != 'true' " >
@@ -180,7 +180,7 @@
       <SshComTemp>$(TEMP)\sshcom</SshComTemp>
     </PropertyGroup>
     <ItemGroup>
-      <SshComFiles Include="$(SolutionRoot)\Apache\build\Tools\sshcom\*.*"></SshComFiles>
+      <SshComFiles Include="$(SolutionRoot)\MySQL\build\Tools\sshcom\*.*"></SshComFiles>
     </ItemGroup>
     
     <Message Text="AfterGet: Setting up Workspace on $(UnixBuildServer)" />
@@ -215,7 +215,7 @@
     <Message Text="CoreCompile: UnixWorkSpaceName: $(UnixWorkSpaceName)" />
     <Message Text="CoreCompile: ConfigToBuild: $(ConfigToBuild) " />
     <Exec WorkingDirectory="$(WorkspaceFolder)\bootstrap"
-          Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\RunRemoteBashScript.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/Apache/bootstrap/RunBuild.bsh $(UnixWorkspaceName)/Apache $(MakeTargetToBuild) $(ConfigToBuild)'
+          Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\RunRemoteBashScript.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/MySQL/bootstrap/RunBuild.bsh $(UnixWorkspaceName)/MySQL $(MakeTargetToBuild) $(ConfigToBuild)'
           IgnoreStandardErrorWarningFormat='true'
           />
 
@@ -229,16 +229,16 @@
 
     <!-- Pack up staging directory (since it contains symlinks, some of which may not exist) -->
     <Exec WorkingDirectory="$(WorkspaceFolder)\bootstrap"
-          Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\RunRemoteBashScript.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/Apache/bootstrap/PackStagingDir.bsh $(UnixWorkspaceName)/Apache'
+          Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\RunRemoteBashScript.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/MySQL/bootstrap/PackStagingDir.bsh $(UnixWorkspaceName)/MySQL'
           IgnoreStandardErrorWarningFormat='true'
           />
 
     <!-- If more than one thing needs dropped, it should be done here rather than in DropFiles.bsh: keep dropfiles.bsh generic -->
     <Exec WorkingDirectory='$(WorkspaceFolder)\bootstrap'
-          Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\GetFiles.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/Apache/target/* "$(BinariesRoot)/"'
+          Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\GetFiles.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/MySQL/target/* "$(BinariesRoot)/"'
       />
     <Exec WorkingDirectory='$(WorkspaceFolder)\bootstrap'
-          <!-- Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\GetFiles.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/Apache/test/util/testapp/testapp "$(BinariesRoot)/"'
+          <!-- Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\GetFiles.ps1 $(UnixBuildServer) $(UnixWorkSpaceName)/MySQL/test/util/testapp/testapp "$(BinariesRoot)/"'
           IgnoreExitCode='true' /> -->
   </Target>
 
@@ -270,7 +270,7 @@
   <Target Name="AfterDropBuild">
     <Message Text="AfterDropBuild: Cleaning up workspaces on unix host." />
 
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\sources\Apache\bootstrap"
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\sources\MySQL\bootstrap"
           Command='$(PowerShellExecutable) -ExecutionPolicy RemoteSigned .\RunRemoteBashScript.ps1 $(UnixBuildServer) ./$(UnixWorkSpaceName).UnpackWorkspace.bsh $(UnixWorkspaceName) CleanupMode' />
   </Target>
 

@@ -17,7 +17,8 @@ FindClientLibrary() {
     MYSQL_PATH=`which mysql`
     [ -n "${MYSQL_PATH}" ] && CLIENT_LIBRARY=`ldd ${MYSQL_PATH} | grep ${MYSQL_NAME} | awk '{print $3}'`
 
-    [ -z "${CLIENT_LIBRARY}" ] && CLIENT_LIBRARY=`/sbin/ldconfig -p | grep ${MYSQL_NAME} | awk '{print $NF}'`
+    # Be aware that /sbin/ldconfig may return multiple hits; if so, we'll use the first one
+    [ -z "${CLIENT_LIBRARY}" ] && CLIENT_LIBRARY=`/sbin/ldconfig -p | grep ${MYSQL_NAME} | head -1 | awk '{print $NF}'`
 
     if [ -z "${CLIENT_LIBRARY}" ]; then
         SEARCH_LIST_64="/usr/lib64 /usr/lib64/mysql /lib64 /lib64/mysql /usr/lib/x86_64-linux-gnu"

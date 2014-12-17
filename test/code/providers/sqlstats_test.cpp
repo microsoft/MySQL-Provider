@@ -156,14 +156,19 @@ public:
                                                 L"Uptime",
                                                 L"ServerDiskUseInBytes",
                                                 L"ConnectionsUsePct",
+                                                L"AbortedConnectionPct",
                                                 L"SlowQueryPct",
                                                 L"KeyCacheHitPct",
                                                 L"KeyCacheWritePct",
+                                                L"KeyCacheUsePct",
                                                 L"QCacheHitPct",
                                                 L"QCachePrunesPct",
+                                                L"QCacheUsePct",
                                                 L"TCacheHitPct",
                                                 L"TableLockContentionPct",
+                                                L"TableCacheUsePct",
                                                 L"IDB_BP_HitPct",
+                                                L"IDB_BP_WriteWaitPct",
                                                 L"IDB_BP_UsePct",
                                                 L"FullTableScanPct"};
 
@@ -174,14 +179,20 @@ public:
         uint64_t diskUsed = instance.GetProperty(L"ServerDiskUseInBytes", CALL_LOCATION(errMsg)).GetValue_MIUint64(CALL_LOCATION(errMsg));
         CPPUNIT_ASSERT_MESSAGE(StrToUTF8(StrAppend(L"Disk space used: ", diskUsed)), diskUsed > 430000);
 
+        ValidateRatio(instance, L"ConnectionsUsePct", errMsg);
+        ValidateRatio(instance, L"AbortedConnectionPct", errMsg);
         ValidateRatio(instance, L"SlowQueryPct", errMsg);
         ValidateRatio(instance, L"KeyCacheHitPct", errMsg);
         ValidateRatio(instance, L"KeyCacheWritePct", errMsg);
+        ValidateRatio(instance, L"KeyCacheUsePct", errMsg);
         ValidateRatio(instance, L"QCacheHitPct", errMsg);
         ValidateRatio(instance, L"QCachePrunesPct", errMsg);
+        ValidateRatio(instance, L"QCacheUsePct", errMsg);
         ValidateRatio(instance, L"TCacheHitPct", errMsg);
         ValidateRatio(instance, L"TableLockContentionPct", errMsg);
+        ValidateRatio(instance, L"TableCacheUsePct", errMsg);
         ValidateRatio(instance, L"IDB_BP_HitPct", errMsg);
+        ValidateRatio(instance, L"IDB_BP_WriteWaitPct", errMsg);
         ValidateRatio(instance, L"IDB_BP_UsePct", errMsg);
         ValidateRatio(instance, L"FullTableScanPct", errMsg);
     }

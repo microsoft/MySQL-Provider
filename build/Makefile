@@ -32,6 +32,7 @@ INTERMEDIATE_DIR=$(BASE_DIR)/intermediate/$(BUILD_CONFIGURATION)
 TARGET_DIR := $(BASE_DIR)/target/$(BUILD_CONFIGURATION)
 PROVIDER_LIBRARY := $(TARGET_DIR)/libmysqlProvider.so
 OMI_PREEXEC := $(TARGET_DIR)/omi_preexec
+MYAUTH_PROG := $(TARGET_DIR)/mycimprovauth
 
 INSTALLER_TMPDIR := $(TARGET_DIR)/installer_tmp
 
@@ -53,9 +54,11 @@ endif
 
 COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
 PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
+MYAUTH_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) `mysql_config --cflags`
 PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) 
 
 LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
+MYAUTH_LINK_LIBRARIES := -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 PREEXEC_LINK_LIBRARIES := -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
@@ -75,9 +78,9 @@ CXXFLAGS = $(COMPILE_FLAGS)
 # Build targets
 
 ifeq ($(ULINUX),1)
-all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) PROVIDER_STATUS $(PROVIDER_LIBRARY) OMI_PREEXEC_STATUS $(OMI_PREEXEC) KIT_STATUS kit
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) PROVIDER_STATUS $(PROVIDER_LIBRARY) MYAUTH_STATUS $(MYAUTH_PROG) OMI_PREEXEC_STATUS $(OMI_PREEXEC) KIT_STATUS kit
 else
-all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) PROVIDER_STATUS $(PROVIDER_LIBRARY) OMI_PREEXEC_STATUS $(OMI_PREEXEC)
+all : $(OMI_ROOT)/output $(SCXPAL_INTERMEDIATE_DIR) PROVIDER_STATUS $(PROVIDER_LIBRARY) MYAUTH_STATUS $(MYAUTH_PROG) OMI_PREEXEC_STATUS $(OMI_PREEXEC)
 endif
 
 clean :
@@ -112,6 +115,9 @@ restart :
 
 PROVIDER_STATUS:
 	@echo "========================= Performing Building provider"
+
+MYAUTH_STATUS:
+	@echo "========================= Performing Building mycimprovauth executable"
 
 OMI_PREEXEC_STATUS:
 	@echo "========================= Performing Building OMI preexec executable"
@@ -187,7 +193,7 @@ $(INCLUDE_VERSION) : $(BASE_DIR)/build/Makefile.version
 	@$(call pf_fappend,"/** Build number */                                                             ", $@)
 	@$(call pf_fappend,"const int CIMPROV_BUILDVERSION_BUILDNR = $(SCX_BUILDVERSION_BUILDNR);           ", $@)
 	@$(call pf_fappend,"/** Build date */                                                               ", $@)
-	@$(call pf_fappend,"const std::string CIMPROV_BUILDVERSION_DATE(\"$(SCX_BUILDVERSION_DATE)\");      ", $@)
+	@$(call pf_fappend,"const std::wstring CIMPROV_BUILDVERSION_DATE(L\"$(SCX_BUILDVERSION_DATE)\");    ", $@)
 	@$(call pf_fappend,"/** Build status */                                                             ", $@)
 	@$(call pf_fappend,"const std::wstring CIMPROV_BUILDVERSION_STATUS(L\"$(SCX_BUILDVERSION_STATUS)\");  ", $@)
 	@$(call pf_fappend,"                                                                                ", $@)
@@ -320,6 +326,29 @@ $(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLI
 	g++ $(PROVIDER_COMPILE_FLAGS) $(SHARED_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
 
 #--------------------------------------------------------------------------------
+# MySQL mycimprovauth executable
+#
+# Build the mycimprovauth executable (authentication file maintenance)
+
+STATIC_MYAUTH_SRCFILES = \
+	$(PROVIDER_DIR)/support/logstartup.cpp \
+	$(PROVIDER_DIR)/support/productdependencies.cpp \
+	$(PROVIDER_DIR)/support/sqlauth.cpp \
+	$(SOURCE_DIR)/myauth/myauth.cpp
+
+STATIC_MYAUTH_HEADERS = \
+	$(PROVIDER_DIR)/support/sqlauth.h
+
+STATIC_MYAUTH_OBJFILES = $(call src_to_obj,$(STATIC_MYAUTH_SRCFILES))
+
+$(MYAUTH_PROG): CFLAGS += $(MYAUTH_COMPILE_FLAGS)
+$(MYAUTH_PROG): CXXFLAGS += $(MYAUTH_COMPILE_FLAGS)
+$(MYAUTH_PROG): $(STATIC_MYAUTH_OBJFILES) $(STATIC_MYAUTH_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
+	$(MKPATH) $(INTERMEDIATE_DIR)
+	$(MKPATH) $(TARGET_DIR)
+	g++ $(MYAUTH_COMPILE_FLAGS) -o $@ $(STATIC_MYAUTH_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(MYAUTH_LINK_LIBRARIES)
+
+#--------------------------------------------------------------------------------
 # MySQL OMI_PREEXEC
 #
 # Build the omi_preexec executable (for PAL logging and state information)
@@ -404,7 +433,7 @@ test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 
 kit : MYSQLLIB_FULLFILENAME = $(shell ldd $(PROVIDER_LIBRARY) | grep libmysqlclient.so | awk '{print $$3}')
 kit : MYSQLLIB_FILENAME = $(shell basename $(MYSQLLIB_FULLFILENAME))
-kit : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(OMI_PREEXEC)
+kit : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(MYAUTH_PROG) $(OMI_PREEXEC)
 ifeq ($(ULINUX),1)
 
 	@echo "========================= Performing Building RPM and DPKG packages"

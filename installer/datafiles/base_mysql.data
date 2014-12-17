@@ -15,6 +15,7 @@ MAINTAINER:              'Microsoft Corporation'
 %Defines
 
 %Files
+/opt/microsoft/mysql-cimprov/bin/mycimprovauth;                         target/${{BUILD_CONFIGURATION}}/mycimprovauth;         755; root; root
 /opt/microsoft/mysql-cimprov/bin/omi_preexec;                           target/${{BUILD_CONFIGURATION}}/omi_preexec;           755; root; root
 /opt/microsoft/mysql-cimprov/lib/libmysqlProvider.${{SHLIB_EXT}};       target/${{BUILD_CONFIGURATION}}/libmysqlProvider.${{SHLIB_EXT}}; 755; root; root
 

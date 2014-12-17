@@ -130,7 +130,7 @@ static bool EnumerateOneInstance(
         // On MySQL 5.1+, just use variable "queries"
 
         float queries = 0;
-        if ( !GetUValue(globals, "queries", uval64) )
+        if ( !GetUValue(globals, "queries", queries) )
         {
             // Fallback for older MySQL servers that don't return "queries" ...
 
@@ -189,6 +189,11 @@ static bool EnumerateOneInstance(
         ComputeRatio(connectionsCurrent, connectionsMax, uval8);
         inst.ConnectionsUsePct_value( uval8 );
 
+        if ( ComputeRatio(globals, "aborted_connects", "connections", uval8) )
+        {
+            inst.AbortedConnectionPct_value( uval8 );
+        }
+
         if ( GetUValue(globals, "slow_queries", valFloat) )
         {
             ComputeRatio(valFloat, queries, uval8);
@@ -197,12 +202,21 @@ static bool EnumerateOneInstance(
 
         if ( ComputeRatio(globals, "key_reads", "key_read_requests", uval8) )
         {
-            inst.KeyCacheHitPct_value( uval8 );
+            inst.KeyCacheHitPct_value( 100 - uval8 );
         }
 
         if ( ComputeRatio(globals, "key_writes", "key_write_requests", uval8) )
         {
             inst.KeyCacheWritePct_value( uval8 );
+        }
+
+        float keyBlocksUnused, keyCacheBlockSize;
+        if ( GetUValue(globals, "key_blocks_unused", keyBlocksUnused)
+             && GetUValue(variables, "key_cache_block_size", keyCacheBlockSize)
+             && GetUValue(variables, "key_buffer_size", valFloat) )
+        {
+            ComputeRatio(keyBlocksUnused * keyCacheBlockSize, valFloat, uval8);
+            inst.KeyCacheUsePct_value( 100 - uval8 );
         }
 
         if ( ComputeRatio(globals, "qcache_hits", "com_select", uval8, true) )
@@ -216,6 +230,13 @@ static bool EnumerateOneInstance(
             inst.QCachePrunesPct_value( uval8 );
         }
 
+        if ( GetUValue(variables, "query_cache_size", valFloat)
+             && GetUValue(globals, "qcache_free_memory", valFloat2) )
+        {
+            ComputeRatio( valFloat - valFloat2, valFloat, uval8 );
+            inst.QCacheUsePct_value( uval8 );
+        }
+
         if ( ComputeRatio(globals, "open_tables", "opened_tables", uval8) )
         {
             inst.TCacheHitPct_value( uval8 );
@@ -226,9 +247,22 @@ static bool EnumerateOneInstance(
             inst.TableLockContentionPct_value( uval8 );
         }
 
-        if ( ComputeRatio(globals, "innodb_buffer_pool_reads", "innodb_buffer_pool_read_requests", uval8, true) )
+        if ( GetUValue(globals, "open_tables", valFloat)
+             && (GetUValue(variables, "table_open_cache", valFloat2)
+                 || GetUValue(variables, "table_cache", valFloat2)) )
         {
-            inst.IDB_BP_HitPct_value( uval8 );
+            ComputeRatio( valFloat, valFloat2, uval8 );
+            inst.TableCacheUsePct_value( uval8 );
+        }
+
+        if ( ComputeRatio(globals, "innodb_buffer_pool_reads", "innodb_buffer_pool_read_requests", uval8) )
+        {
+            inst.IDB_BP_HitPct_value( 100 - uval8 );
+        }
+
+        if ( ComputeRatio(globals, "innodb_buffer_pool_wait_free", "innodb_buffer_pool_write_requests", uval8) )
+        {
+            inst.IDB_BP_WriteWaitPct_value( uval8 );
         }
 
         if ( ComputeRatio(globals, "innodb_buffer_pool_pages_data", "innodb_buffer_pool_pages_total", uval8) )

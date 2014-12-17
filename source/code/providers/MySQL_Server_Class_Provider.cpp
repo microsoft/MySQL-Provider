@@ -135,7 +135,7 @@ static void EnumerateConnectionFailure(
 
             case MYSQL_AUTH_EXCEPTION:          // (Internal)
             case MYSQL_AUTH_INVALID_ENTRY:      // (Internal)
-                pStatus = "Supporting Entity in Error";
+                pStatus = "Authentication File in Error";
                 break;
 
             default:

@@ -33,8 +33,8 @@ class MySQL_Server : CIM_InstalledProduct {
     string DataDirectory;
 
     [ Description ( "Current operating status for the MySQL instance" ),
-      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" },
-      Values { "Unknown", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode", "Insufficient Privileges" }
+      ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20" },
+      Values { "Unknown", "Other", "OK", "Degraded", "Stressed", "Predictive Failure", "Error", "Non-Recoverable Error", "Starting", "Stopping", "Stopped", "In Service", "No Contact",  "Lost Communication", "Aborted", "Dormant", "Supporting Entity in Error", "Completed", "Power Mode", "Insufficient Privileges", "Authentication File in Error" }
     ]
     string OperatingStatus;
 
@@ -83,6 +83,9 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     [ Description ( "The percent of connections in use by the Server" ) ]
     uint8 ConnectionsUsePct;
 
+    [ Description ( "The percent of connections failed when connecting to the Server" ) ]
+    uint8 AbortedConnectionPct;
+
     [ Description ( "Number of slow queries compared to all queries" ) ]
     uint8 SlowQueryPct;
 
@@ -92,20 +95,32 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     [ Description ( "Key Cache Write Rate for MySQL Server instance" ) ]
     uint8 KeyCacheWritePct;
 
+    [ Description ( "Percent of Key Cache Use for MySQL Server instance" ) ]
+    uint8 KeyCacheUsePct;
+
     [ Description ( "Query Cache Hit Rate for MySQL Server instance" ) ]
     uint8 QCacheHitPct;
 
     [ Description ( "Query Cache Low Memory Prunes from cache" ) ]
     uint8 QCachePrunesPct;
 
-    [ Description ( "Table Cache tit rate" ) ]
+    [ Description ( "Percent of Query Cache Use for MySQL Server instance" ) ]
+    uint8 QCacheUsePct;
+
+    [ Description ( "Table Cache hit rate" ) ]
     uint8 TCacheHitPct;
 
     [ Description ( "Table Lock contention rate" ) ]
     uint8 TableLockContentionPct;
 
+    [ Description ( "Percent of Table Cache Use for MySQL Server instance" ) ]
+    uint8 TableCacheUsePct;
+
     [ Description ( "Percent of InnoDB logical read requests satisfied from the buffer pool" ) ]
     uint8 IDB_BP_HitPct;
+
+    [ Description ( "Percent of time MySQL has to wait for memory pages to be flushed compared to those that were immediate" ) ]
+    uint8 IDB_BP_WriteWaitPct;
 
     [ Description ( "How much of the InnoDB buffer pool is being used" ) ]
     uint8 IDB_BP_UsePct;

@@ -42,14 +42,19 @@ typedef struct _MySQL_ServerStatistics /* extends CIM_StatisticalData */
     MI_ConstUint64Field Uptime;
     MI_ConstUint64Field ServerDiskUseInBytes;
     MI_ConstUint8Field ConnectionsUsePct;
+    MI_ConstUint8Field AbortedConnectionPct;
     MI_ConstUint8Field SlowQueryPct;
     MI_ConstUint8Field KeyCacheHitPct;
     MI_ConstUint8Field KeyCacheWritePct;
+    MI_ConstUint8Field KeyCacheUsePct;
     MI_ConstUint8Field QCacheHitPct;
     MI_ConstUint8Field QCachePrunesPct;
+    MI_ConstUint8Field QCacheUsePct;
     MI_ConstUint8Field TCacheHitPct;
     MI_ConstUint8Field TableLockContentionPct;
+    MI_ConstUint8Field TableCacheUsePct;
     MI_ConstUint8Field IDB_BP_HitPct;
+    MI_ConstUint8Field IDB_BP_WriteWaitPct;
     MI_ConstUint8Field IDB_BP_UsePct;
     MI_ConstUint8Field FullTableScanPct;
 }
@@ -415,6 +420,22 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_ConnectionsUsePct(
     return MI_RESULT_OK;
 }
 
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_AbortedConnectionPct(
+    MySQL_ServerStatistics* self,
+    MI_Uint8 x)
+{
+    ((MI_Uint8Field*)&self->AbortedConnectionPct)->value = x;
+    ((MI_Uint8Field*)&self->AbortedConnectionPct)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_AbortedConnectionPct(
+    MySQL_ServerStatistics* self)
+{
+    memset((void*)&self->AbortedConnectionPct, 0, sizeof(self->AbortedConnectionPct));
+    return MI_RESULT_OK;
+}
+
 MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_SlowQueryPct(
     MySQL_ServerStatistics* self,
     MI_Uint8 x)
@@ -463,6 +484,22 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_KeyCacheWritePct(
     return MI_RESULT_OK;
 }
 
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_KeyCacheUsePct(
+    MySQL_ServerStatistics* self,
+    MI_Uint8 x)
+{
+    ((MI_Uint8Field*)&self->KeyCacheUsePct)->value = x;
+    ((MI_Uint8Field*)&self->KeyCacheUsePct)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_KeyCacheUsePct(
+    MySQL_ServerStatistics* self)
+{
+    memset((void*)&self->KeyCacheUsePct, 0, sizeof(self->KeyCacheUsePct));
+    return MI_RESULT_OK;
+}
+
 MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_QCacheHitPct(
     MySQL_ServerStatistics* self,
     MI_Uint8 x)
@@ -492,6 +529,22 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_QCachePrunesPct(
     MySQL_ServerStatistics* self)
 {
     memset((void*)&self->QCachePrunesPct, 0, sizeof(self->QCachePrunesPct));
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_QCacheUsePct(
+    MySQL_ServerStatistics* self,
+    MI_Uint8 x)
+{
+    ((MI_Uint8Field*)&self->QCacheUsePct)->value = x;
+    ((MI_Uint8Field*)&self->QCacheUsePct)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_QCacheUsePct(
+    MySQL_ServerStatistics* self)
+{
+    memset((void*)&self->QCacheUsePct, 0, sizeof(self->QCacheUsePct));
     return MI_RESULT_OK;
 }
 
@@ -527,6 +580,22 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_TableLockContentionPct(
     return MI_RESULT_OK;
 }
 
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_TableCacheUsePct(
+    MySQL_ServerStatistics* self,
+    MI_Uint8 x)
+{
+    ((MI_Uint8Field*)&self->TableCacheUsePct)->value = x;
+    ((MI_Uint8Field*)&self->TableCacheUsePct)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_TableCacheUsePct(
+    MySQL_ServerStatistics* self)
+{
+    memset((void*)&self->TableCacheUsePct, 0, sizeof(self->TableCacheUsePct));
+    return MI_RESULT_OK;
+}
+
 MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_IDB_BP_HitPct(
     MySQL_ServerStatistics* self,
     MI_Uint8 x)
@@ -540,6 +609,22 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_BP_HitPct(
     MySQL_ServerStatistics* self)
 {
     memset((void*)&self->IDB_BP_HitPct, 0, sizeof(self->IDB_BP_HitPct));
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_IDB_BP_WriteWaitPct(
+    MySQL_ServerStatistics* self,
+    MI_Uint8 x)
+{
+    ((MI_Uint8Field*)&self->IDB_BP_WriteWaitPct)->value = x;
+    ((MI_Uint8Field*)&self->IDB_BP_WriteWaitPct)->exists = 1;
+    return MI_RESULT_OK;
+}
+
+MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_BP_WriteWaitPct(
+    MySQL_ServerStatistics* self)
+{
+    memset((void*)&self->IDB_BP_WriteWaitPct, 0, sizeof(self->IDB_BP_WriteWaitPct));
     return MI_RESULT_OK;
 }
 
@@ -1060,6 +1145,46 @@ public:
     }
 
     //
+    // MySQL_ServerStatistics_Class.AbortedConnectionPct
+    //
+    
+    const Field<Uint8>& AbortedConnectionPct() const
+    {
+        const size_t n = offsetof(Self, AbortedConnectionPct);
+        return GetField<Uint8>(n);
+    }
+    
+    void AbortedConnectionPct(const Field<Uint8>& x)
+    {
+        const size_t n = offsetof(Self, AbortedConnectionPct);
+        GetField<Uint8>(n) = x;
+    }
+    
+    const Uint8& AbortedConnectionPct_value() const
+    {
+        const size_t n = offsetof(Self, AbortedConnectionPct);
+        return GetField<Uint8>(n).value;
+    }
+    
+    void AbortedConnectionPct_value(const Uint8& x)
+    {
+        const size_t n = offsetof(Self, AbortedConnectionPct);
+        GetField<Uint8>(n).Set(x);
+    }
+    
+    bool AbortedConnectionPct_exists() const
+    {
+        const size_t n = offsetof(Self, AbortedConnectionPct);
+        return GetField<Uint8>(n).exists ? true : false;
+    }
+    
+    void AbortedConnectionPct_clear()
+    {
+        const size_t n = offsetof(Self, AbortedConnectionPct);
+        GetField<Uint8>(n).Clear();
+    }
+
+    //
     // MySQL_ServerStatistics_Class.SlowQueryPct
     //
     
@@ -1180,6 +1305,46 @@ public:
     }
 
     //
+    // MySQL_ServerStatistics_Class.KeyCacheUsePct
+    //
+    
+    const Field<Uint8>& KeyCacheUsePct() const
+    {
+        const size_t n = offsetof(Self, KeyCacheUsePct);
+        return GetField<Uint8>(n);
+    }
+    
+    void KeyCacheUsePct(const Field<Uint8>& x)
+    {
+        const size_t n = offsetof(Self, KeyCacheUsePct);
+        GetField<Uint8>(n) = x;
+    }
+    
+    const Uint8& KeyCacheUsePct_value() const
+    {
+        const size_t n = offsetof(Self, KeyCacheUsePct);
+        return GetField<Uint8>(n).value;
+    }
+    
+    void KeyCacheUsePct_value(const Uint8& x)
+    {
+        const size_t n = offsetof(Self, KeyCacheUsePct);
+        GetField<Uint8>(n).Set(x);
+    }
+    
+    bool KeyCacheUsePct_exists() const
+    {
+        const size_t n = offsetof(Self, KeyCacheUsePct);
+        return GetField<Uint8>(n).exists ? true : false;
+    }
+    
+    void KeyCacheUsePct_clear()
+    {
+        const size_t n = offsetof(Self, KeyCacheUsePct);
+        GetField<Uint8>(n).Clear();
+    }
+
+    //
     // MySQL_ServerStatistics_Class.QCacheHitPct
     //
     
@@ -1256,6 +1421,46 @@ public:
     void QCachePrunesPct_clear()
     {
         const size_t n = offsetof(Self, QCachePrunesPct);
+        GetField<Uint8>(n).Clear();
+    }
+
+    //
+    // MySQL_ServerStatistics_Class.QCacheUsePct
+    //
+    
+    const Field<Uint8>& QCacheUsePct() const
+    {
+        const size_t n = offsetof(Self, QCacheUsePct);
+        return GetField<Uint8>(n);
+    }
+    
+    void QCacheUsePct(const Field<Uint8>& x)
+    {
+        const size_t n = offsetof(Self, QCacheUsePct);
+        GetField<Uint8>(n) = x;
+    }
+    
+    const Uint8& QCacheUsePct_value() const
+    {
+        const size_t n = offsetof(Self, QCacheUsePct);
+        return GetField<Uint8>(n).value;
+    }
+    
+    void QCacheUsePct_value(const Uint8& x)
+    {
+        const size_t n = offsetof(Self, QCacheUsePct);
+        GetField<Uint8>(n).Set(x);
+    }
+    
+    bool QCacheUsePct_exists() const
+    {
+        const size_t n = offsetof(Self, QCacheUsePct);
+        return GetField<Uint8>(n).exists ? true : false;
+    }
+    
+    void QCacheUsePct_clear()
+    {
+        const size_t n = offsetof(Self, QCacheUsePct);
         GetField<Uint8>(n).Clear();
     }
 
@@ -1340,6 +1545,46 @@ public:
     }
 
     //
+    // MySQL_ServerStatistics_Class.TableCacheUsePct
+    //
+    
+    const Field<Uint8>& TableCacheUsePct() const
+    {
+        const size_t n = offsetof(Self, TableCacheUsePct);
+        return GetField<Uint8>(n);
+    }
+    
+    void TableCacheUsePct(const Field<Uint8>& x)
+    {
+        const size_t n = offsetof(Self, TableCacheUsePct);
+        GetField<Uint8>(n) = x;
+    }
+    
+    const Uint8& TableCacheUsePct_value() const
+    {
+        const size_t n = offsetof(Self, TableCacheUsePct);
+        return GetField<Uint8>(n).value;
+    }
+    
+    void TableCacheUsePct_value(const Uint8& x)
+    {
+        const size_t n = offsetof(Self, TableCacheUsePct);
+        GetField<Uint8>(n).Set(x);
+    }
+    
+    bool TableCacheUsePct_exists() const
+    {
+        const size_t n = offsetof(Self, TableCacheUsePct);
+        return GetField<Uint8>(n).exists ? true : false;
+    }
+    
+    void TableCacheUsePct_clear()
+    {
+        const size_t n = offsetof(Self, TableCacheUsePct);
+        GetField<Uint8>(n).Clear();
+    }
+
+    //
     // MySQL_ServerStatistics_Class.IDB_BP_HitPct
     //
     
@@ -1376,6 +1621,46 @@ public:
     void IDB_BP_HitPct_clear()
     {
         const size_t n = offsetof(Self, IDB_BP_HitPct);
+        GetField<Uint8>(n).Clear();
+    }
+
+    //
+    // MySQL_ServerStatistics_Class.IDB_BP_WriteWaitPct
+    //
+    
+    const Field<Uint8>& IDB_BP_WriteWaitPct() const
+    {
+        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
+        return GetField<Uint8>(n);
+    }
+    
+    void IDB_BP_WriteWaitPct(const Field<Uint8>& x)
+    {
+        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
+        GetField<Uint8>(n) = x;
+    }
+    
+    const Uint8& IDB_BP_WriteWaitPct_value() const
+    {
+        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
+        return GetField<Uint8>(n).value;
+    }
+    
+    void IDB_BP_WriteWaitPct_value(const Uint8& x)
+    {
+        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
+        GetField<Uint8>(n).Set(x);
+    }
+    
+    bool IDB_BP_WriteWaitPct_exists() const
+    {
+        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
+        return GetField<Uint8>(n).exists ? true : false;
+    }
+    
+    void IDB_BP_WriteWaitPct_clear()
+    {
+        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
         GetField<Uint8>(n).Clear();
     }
 

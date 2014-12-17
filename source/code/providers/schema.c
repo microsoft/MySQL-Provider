@@ -1324,6 +1324,23 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_ConnectionsUsePct_prop =
     NULL,
 };
 
+/* property MySQL_ServerStatistics.AbortedConnectionPct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_AbortedConnectionPct_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x00617414, /* code */
+    MI_T("AbortedConnectionPct"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT8, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_ServerStatistics, AbortedConnectionPct), /* offset */
+    MI_T("MySQL_ServerStatistics"), /* origin */
+    MI_T("MySQL_ServerStatistics"), /* propagator */
+    NULL,
+};
+
 /* property MySQL_ServerStatistics.SlowQueryPct */
 static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_SlowQueryPct_prop =
 {
@@ -1375,6 +1392,23 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_KeyCacheWritePct_prop =
     NULL,
 };
 
+/* property MySQL_ServerStatistics.KeyCacheUsePct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_KeyCacheUsePct_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x006B740E, /* code */
+    MI_T("KeyCacheUsePct"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT8, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_ServerStatistics, KeyCacheUsePct), /* offset */
+    MI_T("MySQL_ServerStatistics"), /* origin */
+    MI_T("MySQL_ServerStatistics"), /* propagator */
+    NULL,
+};
+
 /* property MySQL_ServerStatistics.QCacheHitPct */
 static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_QCacheHitPct_prop =
 {
@@ -1404,6 +1438,23 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_QCachePrunesPct_prop =
     NULL, /* className */
     0, /* subscript */
     offsetof(MySQL_ServerStatistics, QCachePrunesPct), /* offset */
+    MI_T("MySQL_ServerStatistics"), /* origin */
+    MI_T("MySQL_ServerStatistics"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_ServerStatistics.QCacheUsePct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_QCacheUsePct_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x0071740C, /* code */
+    MI_T("QCacheUsePct"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT8, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_ServerStatistics, QCacheUsePct), /* offset */
     MI_T("MySQL_ServerStatistics"), /* origin */
     MI_T("MySQL_ServerStatistics"), /* propagator */
     NULL,
@@ -1443,6 +1494,23 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_TableLockContentionPct_pr
     NULL,
 };
 
+/* property MySQL_ServerStatistics.TableCacheUsePct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_TableCacheUsePct_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x00747410, /* code */
+    MI_T("TableCacheUsePct"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT8, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_ServerStatistics, TableCacheUsePct), /* offset */
+    MI_T("MySQL_ServerStatistics"), /* origin */
+    MI_T("MySQL_ServerStatistics"), /* propagator */
+    NULL,
+};
+
 /* property MySQL_ServerStatistics.IDB_BP_HitPct */
 static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_IDB_BP_HitPct_prop =
 {
@@ -1455,6 +1523,23 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_IDB_BP_HitPct_prop =
     NULL, /* className */
     0, /* subscript */
     offsetof(MySQL_ServerStatistics, IDB_BP_HitPct), /* offset */
+    MI_T("MySQL_ServerStatistics"), /* origin */
+    MI_T("MySQL_ServerStatistics"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_ServerStatistics.IDB_BP_WriteWaitPct */
+static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_IDB_BP_WriteWaitPct_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x00697413, /* code */
+    MI_T("IDB_BP_WriteWaitPct"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT8, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_ServerStatistics, IDB_BP_WriteWaitPct), /* offset */
     MI_T("MySQL_ServerStatistics"), /* origin */
     MI_T("MySQL_ServerStatistics"), /* propagator */
     NULL,
@@ -1509,14 +1594,19 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_ServerStatistics_props[] =
     &MySQL_ServerStatistics_Uptime_prop,
     &MySQL_ServerStatistics_ServerDiskUseInBytes_prop,
     &MySQL_ServerStatistics_ConnectionsUsePct_prop,
+    &MySQL_ServerStatistics_AbortedConnectionPct_prop,
     &MySQL_ServerStatistics_SlowQueryPct_prop,
     &MySQL_ServerStatistics_KeyCacheHitPct_prop,
     &MySQL_ServerStatistics_KeyCacheWritePct_prop,
+    &MySQL_ServerStatistics_KeyCacheUsePct_prop,
     &MySQL_ServerStatistics_QCacheHitPct_prop,
     &MySQL_ServerStatistics_QCachePrunesPct_prop,
+    &MySQL_ServerStatistics_QCacheUsePct_prop,
     &MySQL_ServerStatistics_TCacheHitPct_prop,
     &MySQL_ServerStatistics_TableLockContentionPct_prop,
+    &MySQL_ServerStatistics_TableCacheUsePct_prop,
     &MySQL_ServerStatistics_IDB_BP_HitPct_prop,
+    &MySQL_ServerStatistics_IDB_BP_WriteWaitPct_prop,
     &MySQL_ServerStatistics_IDB_BP_UsePct_prop,
     &MySQL_ServerStatistics_FullTableScanPct_prop,
 };

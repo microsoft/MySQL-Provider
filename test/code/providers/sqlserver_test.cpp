@@ -54,6 +54,8 @@ class MySQL_Server_Test : public CPPUNIT_NS::TestFixture
 
     CPPUNIT_TEST( TestEnumerateInstancesKeysOnly );
     CPPUNIT_TEST( TestEnumerateInstances );
+    CPPUNIT_TEST( TestEnumerateInstancesWithInvalidPassword );
+    CPPUNIT_TEST( TestEnumerateInstancesWithBadAuthFile );
     CPPUNIT_TEST( TestVerifyKeyCompletePartial );
     CPPUNIT_TEST( TestGetInstance );
 
@@ -68,6 +70,8 @@ class MySQL_Server_Test : public CPPUNIT_NS::TestFixture
 
     SCXUNIT_TEST_ATTRIBUTE(TestEnumerateInstancesKeysOnly, SLOW);
     SCXUNIT_TEST_ATTRIBUTE(TestEnumerateInstances, SLOW);
+    SCXUNIT_TEST_ATTRIBUTE(TestEnumerateInstancesWithInvalidPassword, SLOW);
+    SCXUNIT_TEST_ATTRIBUTE(TestEnumerateInstancesWithBadAuthFile, SLOW);
     SCXUNIT_TEST_ATTRIBUTE(TestVerifyKeyCompletePartial, SLOW);
     SCXUNIT_TEST_ATTRIBUTE(TestGetInstance, SLOW);
     CPPUNIT_TEST_SUITE_END();
@@ -145,6 +149,38 @@ public:
             m_keyNames, context, CALL_LOCATION(errMsg));
         CPPUNIT_ASSERT_EQUAL(1u, context.Size());
         ValidateInstance(context, CALL_LOCATION(errMsg));
+    }
+
+    void TestEnumerateInstancesWithInvalidPassword()
+    {
+        // We'll fail if we don't have a valid authentication rule
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, "BadPassword") );
+        CPPUNIT_ASSERT_NO_THROW( pAuth->Save() );
+
+        std::wstring errMsg;
+        TestableContext context;
+        StandardTestEnumerateInstances<mi::MySQL_Server_Class_Provider>(
+            m_keyNames, context, CALL_LOCATION(errMsg));
+        CPPUNIT_ASSERT_EQUAL(1u, context.Size());
+        ValidateInstanceConnectFailed(context, L"Insufficient Privileges", CALL_LOCATION(errMsg));
+    }
+
+    void TestEnumerateInstancesWithBadAuthFile()
+    {
+        // Create an auth file with only the port (what OMI's preexec will set up)
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname) );
+        CPPUNIT_ASSERT_NO_THROW( pAuth->Save() );
+
+        std::wstring errMsg;
+        TestableContext context;
+        StandardTestEnumerateInstances<mi::MySQL_Server_Class_Provider>(
+            m_keyNames, context, CALL_LOCATION(errMsg));
+        CPPUNIT_ASSERT_EQUAL(1u, context.Size());
+        ValidateInstanceConnectFailed(context, L"Authentication File in Error", CALL_LOCATION(errMsg));
     }
 
     void TestVerifyKeyCompletePartial()
@@ -427,6 +463,67 @@ public:
         CPPUNIT_ASSERT_EQUAL(std::wstring(L"/var/lib/mysql/"),
             instance.GetProperty(L"DataDirectory", CALL_LOCATION(errMsg)).GetValue_MIString(CALL_LOCATION(errMsg)));
         CPPUNIT_ASSERT_EQUAL(std::wstring(L"OK"),
+            instance.GetProperty(L"OperatingStatus", CALL_LOCATION(errMsg)).GetValue_MIString(CALL_LOCATION(errMsg)));
+    }
+
+    void ValidateInstanceConnectFailed(const TestableContext& context, const std::wstring serverError, std::wstring errMsg)
+    {
+        CPPUNIT_ASSERT_EQUAL(1u, context.Size());// This provider has only one instance (at least for test purposes)
+        const TestableInstance &instance = context[0];
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, m_keyNames[0], instance.GetKeyName(0, CALL_LOCATION(errMsg)));
+
+        // Verify each of the key properties returned by the primary MySQL instance
+        SCXCoreLib::NameResolver nr;
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(
+            ERROR_MESSAGE,
+            nr.GetHostname() + L":" + StrFromUTF8(sqlHostname) + L":" + StrFrom(sqlPort),
+            context[0].GetKey(L"ProductIdentifyingNumber", CALL_LOCATION(errMsg)));
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, std::wstring(L"MySQL"),
+            context[0].GetKey(L"ProductName", CALL_LOCATION(errMsg)));
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, std::wstring(L"Oracle"),
+            context[0].GetKey(L"ProductVendor", CALL_LOCATION(errMsg)));
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(StrToUTF8(context[0].GetKey(L"ProductVersion", CALL_LOCATION(errMsg))),
+            static_cast<size_t>(std::string::npos),
+            context[0].GetKey(L"ProductVersion", CALL_LOCATION(errMsg)).find(L"5."));
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ERROR_MESSAGE, std::wstring(L""),
+            context[0].GetKey(L"SystemID", CALL_LOCATION(errMsg)));
+
+        // CollectionID is kinda "nasty" to validate - something like "redhat-linux-gnu", but hard to predict
+        // Just verify that we can fetch it, and that it's empty (since we couldn't connect to the server)
+
+        CPPUNIT_ASSERT_MESSAGE(StrToUTF8(context[0].GetKey(L"SystemID", CALL_LOCATION(errMsg))),
+            context[0].GetKey(L"SystemID", CALL_LOCATION(errMsg)).empty());
+
+        std::wstring tmpExpectedProperties[] = {L"ProductIdentifyingNumber",
+                                                L"ProductName",
+                                                L"ProductVendor",
+                                                L"ProductVersion",
+                                                L"SystemID",
+                                                L"CollectionID",
+                                                L"ConfigurationFile",
+                                                L"Hostname",
+                                                L"BindAddress",
+                                                L"Port",
+                                                L"OperatingStatus"};
+
+        const size_t numprops = sizeof(tmpExpectedProperties) / sizeof(tmpExpectedProperties[0]);
+        VerifyInstancePropertyNames(instance, tmpExpectedProperties, numprops, CALL_LOCATION(errMsg));
+
+        // Verify each of the non-key properties returned by the primary MySQL instance
+        CPPUNIT_ASSERT_EQUAL(std::wstring(L"/etc/my.cnf"),
+            instance.GetProperty(L"ConfigurationFile", CALL_LOCATION(errMsg)).GetValue_MIString(CALL_LOCATION(errMsg)));
+        CPPUNIT_ASSERT_EQUAL(nr.GetHostname(),
+            instance.GetProperty(L"Hostname", CALL_LOCATION(errMsg)).GetValue_MIString(CALL_LOCATION(errMsg)));
+        CPPUNIT_ASSERT_EQUAL(std::wstring(StrFromUTF8(sqlHostname)),
+            instance.GetProperty(L"BindAddress", CALL_LOCATION(errMsg)).GetValue_MIString(CALL_LOCATION(errMsg)));
+        CPPUNIT_ASSERT_EQUAL(static_cast<MI_Uint16>(sqlPort),
+            instance.GetProperty(L"Port", CALL_LOCATION(errMsg)).GetValue_MIUint16(CALL_LOCATION(errMsg)));
+        CPPUNIT_ASSERT_EQUAL(std::wstring(serverError),
             instance.GetProperty(L"OperatingStatus", CALL_LOCATION(errMsg)).GetValue_MIString(CALL_LOCATION(errMsg)));
     }
 };

@@ -107,6 +107,7 @@ static void EnumerateConnectionFailure(
 
             case ER_DBACCESS_DENIED_ERROR:      // 1044
             case ER_ACCESS_DENIED_ERROR:        // 1045
+            case ER_HOST_NOT_PRIVILEGED:        // 1130
             case ER_SPECIFIC_ACCESS_DENIED_ERROR: // 1227
             case ER_CANNOT_USER:                // 1396
             case ER_BASE64_DECODE_ERROR:        // 1575

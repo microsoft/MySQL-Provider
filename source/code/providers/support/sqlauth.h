@@ -23,6 +23,7 @@
 #include <scxcorelib/scxuser.h>
 
 #include <map>
+#include <pwd.h>
 #include <stdint.h>
 
 
@@ -91,9 +92,9 @@ public:
     MySQL_AuthenticationDependencies() { }
     virtual ~MySQL_AuthenticationDependencies() { }
 
-    virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName() const
+    virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName(uid_t uid = geteuid()) const
     {
-        SCXCoreLib::SCXUser user;
+        SCXCoreLib::SCXUser user(uid);
         SCXCoreLib::SCXFilePath filepath(L"/var/opt/microsoft/mysql-cimprov/auth/mysql-auth");
 
         if (!user.IsRoot())
@@ -115,25 +116,35 @@ private:
 struct MySQL_AuthenticationEntry
 {
 public:
-    MySQL_AuthenticationEntry() : port(0) {}
+    enum sourceFlags
+    {
+        BindingFromDefault = 0x1,
+        UsernameFromDefault = 0x2,
+        PasswordFromDefault = 0x4
+    };
+
+    MySQL_AuthenticationEntry() : port(0), sourcedFromDefault(0) {}
     void clear()
     {
         port = 0;
         binding.clear();
         username.clear();
         password.clear();
+        sourcedFromDefault = 0;
     }
 
     unsigned int port;
     std::string binding;
     std::string username;
     std::string password;
+
+    int sourcedFromDefault;
 };
 
 class MySQL_Authentication
 {
 public:
-    explicit MySQL_Authentication(SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> deps = SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()));
+    explicit MySQL_Authentication(SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> deps = SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()), uid_t uid = geteuid(), gid_t gid = getegid());
     virtual ~MySQL_Authentication() { m_deps = NULL; }
 
     virtual void Load();
@@ -156,6 +167,10 @@ private:
     SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> m_deps;
     SCXCoreLib::SCXConfigFile m_config;
     SCXCoreLib::SCXLogHandle m_log;
+
+    uid_t m_uid;
+    gid_t m_gid;
+
     MySQL_AuthenticationEntry m_default;
 };
 

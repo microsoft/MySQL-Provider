@@ -30,7 +30,7 @@ namespace
     class MySQL_TestableAuthenticationDependencies : public MySQL_AuthenticationDependencies
     {
     public:
-        virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName() const
+        virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName(uid_t /* uid */) const
         {
             return s_authFilePath;
         }
@@ -65,6 +65,7 @@ class Authentication_Test : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testAuth_GetEntry_InvalidPasswordReturnsFalse );
     CPPUNIT_TEST( testAuth_GetEntry_IncompleteEntryReturnsFalse );
     CPPUNIT_TEST( testAuth_GetEntry_DefaultedCompleteEntryReturnsTrue );
+    CPPUNIT_TEST( testAuth_GetEntry_EmptyFieldsWithNoDefaultRecord );
     CPPUNIT_TEST( testAuth_AddCred_Default_BindingOnly );
     CPPUNIT_TEST( testAuth_AddCred_Default_UsernameOnly_Fails );
     CPPUNIT_TEST( testAuth_AddCred_Default_PasswordOnly_Fails );
@@ -109,13 +110,15 @@ public:
         SCXCoreLib::SCXFile::Delete( s_authFilePath );
     }
 
-    void ValidateAuth(MySQL_AuthenticationEntry& authEntry,
-                      unsigned int port, std::string binding, std::string username, std::string password)
+    void ValidateAuth(unsigned long line,
+                      MySQL_AuthenticationEntry& authEntry,
+                      unsigned int port, std::string binding, std::string username, std::string password, int flags)
     {
-        CPPUNIT_ASSERT_EQUAL( port, authEntry.port );
-        CPPUNIT_ASSERT_EQUAL( binding, authEntry.binding );
-        CPPUNIT_ASSERT_EQUAL( username, authEntry.username );
-        CPPUNIT_ASSERT_EQUAL( password, authEntry.password );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unexpected value for port, called from line " + StrToUTF8(StrFrom(line)), port, authEntry.port );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unexpected value for binding, called from line " + StrToUTF8(StrFrom(line)), binding, authEntry.binding );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unexpected value for username, called from line " + StrToUTF8(StrFrom(line)), username, authEntry.username );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unexpected value for password, called from line " + StrToUTF8(StrFrom(line)), password, authEntry.password );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unexpected value for sourcedByDefault, called from line " + StrToUTF8(StrFrom(line)), flags, authEntry.sourcedFromDefault );
     }
 
     void testAuth_VerifyConstruction()
@@ -234,7 +237,8 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( !auth.GetEntry(0, authEntry) );
-        ValidateAuth(authEntry, 0, "127.0.0.1", "", "");
+        ValidateAuth( __LINE__, authEntry, 0, "127.0.0.1", "", "",
+                      MySQL_AuthenticationEntry::BindingFromDefault );
     }
 
     void testAuth_GetEntry_Default_InvalidPassword_Fails()
@@ -257,7 +261,8 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( !auth.GetEntry(0, authEntry) );
-        ValidateAuth(authEntry, 0, "", "username", "password");
+        ValidateAuth( __LINE__, authEntry, 0, "", "username", "password",
+                      MySQL_AuthenticationEntry::UsernameFromDefault | MySQL_AuthenticationEntry::PasswordFromDefault );
     }
 
     void testAuth_GetEntry_Default_BindingUserPassword()
@@ -270,7 +275,10 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( !auth.GetEntry(0, authEntry) );
-        ValidateAuth(authEntry, 0, "jeffcof64-rhel6-01", "username", "password");
+        ValidateAuth( __LINE__, authEntry, 0, "jeffcof64-rhel6-01", "username", "password",
+                      MySQL_AuthenticationEntry::BindingFromDefault
+                      | MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
     }
 
     void testAuth_GetEntry_CorruptedEntryReturnsFalse()
@@ -296,7 +304,9 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "127.0.0.1", "username", "password");
+        ValidateAuth( __LINE__, authEntry, 3306, "127.0.0.1", "username", "password",
+                      MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
     }
 
     void testAuth_GetEntry_UserPassword_Only()
@@ -310,7 +320,8 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "jeffcof64-rhel6-01", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "jeffcof64-rhel6-01", "anewworld", "was found by Christopher",
+                      MySQL_AuthenticationEntry::BindingFromDefault );
     }
 
     void testAuth_GetEntry_BindingUserPassword()
@@ -324,7 +335,7 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "localhost", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "localhost", "anewworld", "was found by Christopher", 0 );
     }
 
     void testAuth_GetEntry_NoDefaultEntryThrows()
@@ -362,7 +373,7 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( !auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "", "anewworld", "was found by Christopher", 0 );
     }
 
     void testAuth_GetEntry_DefaultedCompleteEntryReturnsTrue()
@@ -376,8 +387,34 @@ public:
         MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
         auth.Load();
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher",
+                      MySQL_AuthenticationEntry::BindingFromDefault
+                      | MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
     }
+
+    void testAuth_GetEntry_EmptyFieldsWithNoDefaultRecord()
+    {
+        // Create a file much like omi-preexec will create
+        // Validate proper responses. In particular, sourcedFromDefault should
+        // not say fields come from default if no default record exists!
+
+        std::vector<std::wstring> lines;
+        lines.push_back(L"3306=127.0.0.1, ,");
+        lines.push_back(L"3399=127.0.0.1, ,");
+        lines.push_back(L"AutoUpdate=true"); 
+        SCXFile::WriteAllLines( s_authFilePath, lines, std::ios_base::out );
+
+        MySQL_AuthenticationEntry authEntry;
+        MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies()) );
+        auth.Load();
+
+        CPPUNIT_ASSERT( !auth.GetEntry(3306, authEntry) );
+        ValidateAuth( __LINE__, authEntry, 3306, "127.0.0.1", "", "", 0 );
+
+        CPPUNIT_ASSERT( !auth.GetEntry(3399, authEntry) );
+        ValidateAuth( __LINE__, authEntry, 3399, "127.0.0.1", "", "", 0 );
+     }
 
     void testAuth_AddCred_Default_BindingOnly()
     {
@@ -470,10 +507,16 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(0, authEntry);
-        ValidateAuth(authEntry, 0, "127.0.0.1", "randomUser", "AuthenticateMe!");
+        ValidateAuth( __LINE__, authEntry, 0, "127.0.0.1", "randomUser", "AuthenticateMe!",
+                      MySQL_AuthenticationEntry::BindingFromDefault
+                      | MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
 
         auth.GetEntry(3306, authEntry);
-        ValidateAuth(authEntry, 3306, "127.0.0.1", "randomUser", "AuthenticateMe!");
+        ValidateAuth( __LINE__, authEntry, 3306, "127.0.0.1", "randomUser", "AuthenticateMe!",
+                      MySQL_AuthenticationEntry::BindingFromDefault
+                      | MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -494,7 +537,8 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(3306, authEntry);
-        ValidateAuth(authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__,  authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher",
+                      MySQL_AuthenticationEntry::BindingFromDefault );
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -515,7 +559,9 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(3306, authEntry);
-        ValidateAuth(authEntry, 3306, "localhost", "randomUser", "AuthenticateMe!");
+        ValidateAuth( __LINE__, authEntry, 3306, "localhost", "randomUser", "AuthenticateMe!",
+                      MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -536,7 +582,7 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry(3306, authEntry);
-        ValidateAuth(authEntry, 3306, "localhost", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "localhost", "anewworld", "was found by Christopher", 0 );
 
         // Verify authentication file contents
         std::vector<std::wstring> lines;
@@ -559,7 +605,9 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         auth.GetEntry( 3306, authEntry );
-        ValidateAuth(authEntry, 3306, "localhost", "randomUser", "AuthenticateMe!");
+        ValidateAuth( __LINE__, authEntry, 3306, "localhost", "randomUser", "AuthenticateMe!",
+                      MySQL_AuthenticationEntry::UsernameFromDefault
+                      | MySQL_AuthenticationEntry::PasswordFromDefault );
     }
 
     void testAuth_AddCred_UpdateToDefaultSucceedsIfNotNeeded()
@@ -629,7 +677,7 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "localhost", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "localhost", "anewworld", "was found by Christopher", 0 );
     }
 
     void testAuth_AddCredPort_UpdatedEntryRetainsPassword()
@@ -644,7 +692,7 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher", 0 );
     }
 
     void testAuth_AddCredPort_BlankBindingRetainsBinding()
@@ -660,7 +708,8 @@ public:
 
         MySQL_AuthenticationEntry authEntry;
         CPPUNIT_ASSERT( auth.GetEntry(3306, authEntry) );
-        ValidateAuth(authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher");
+        ValidateAuth( __LINE__, authEntry, 3306, "127.0.0.1", "anewworld", "was found by Christopher",
+                      0 );
     }
 
     void testAuth_DelCred_Default_Binding_Fails()

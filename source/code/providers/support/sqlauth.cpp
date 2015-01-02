@@ -21,10 +21,12 @@
 
 using namespace SCXCoreLib;
 
-MySQL_Authentication::MySQL_Authentication(SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> deps /* = SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()) */)
+MySQL_Authentication::MySQL_Authentication(SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> deps /* = SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()) */, uid_t uid, gid_t gid)
     : m_deps(deps),
-      m_config(deps->GetDefaultAuthFileName()),
-      m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.authentication"))
+      m_config(deps->GetDefaultAuthFileName(uid)),
+      m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.authentication")),
+      m_uid(uid),
+      m_gid(gid)
 {
 }
 
@@ -54,6 +56,18 @@ void MySQL_Authentication::Save()
     }
 
     m_config.SaveConfig();
+
+    // Be sure that privileges are set appropriately for the authentication
+    // file.
+    //
+    // Note: Depending on how/when we're called (perhaps from omi-preexec,
+    // perhaps not), we may or may not have privileges (and thus, we may or
+    // may not succeed). This is the rare event where we actually do want to
+    // ignore the result code from a system call.
+
+    std::string path = StrToUTF8(m_deps->GetDefaultAuthFileName(m_uid).Get());
+    chown(path.c_str(), m_uid, m_gid);
+    chmod(path.c_str(), S_IRUSR | S_IWUSR);
 }
 
 void MySQL_Authentication::AllowAutomaticUpdates(bool bAllowed)
@@ -261,16 +275,28 @@ bool MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_Authenticati
         if ( entry.binding.empty() )
         {
             entry.binding = m_default.binding;
+            if ( ! entry.binding.empty() )
+            {
+                entry.sourcedFromDefault |= MySQL_AuthenticationEntry::BindingFromDefault;
+            }
         }
 
         if ( entry.username.empty() )
         {
             entry.username = m_default.username;
+            if ( ! entry.username.empty() )
+            {
+                entry.sourcedFromDefault |= MySQL_AuthenticationEntry::UsernameFromDefault;
+            }
         }
 
         if ( entry.password.empty() )
         {
             entry.password = m_default.password;
+            if ( ! entry.password.empty() )
+            {
+                entry.sourcedFromDefault |= MySQL_AuthenticationEntry::PasswordFromDefault;
+            }
         }
 
         // Be sure everything we need is returned
@@ -287,6 +313,24 @@ bool MySQL_Authentication::GetEntry(const unsigned int& port, MySQL_Authenticati
         }
 
         return true;
+    }
+    else
+    {
+        // If we're fetching the default record, set sourcedFromDefault appropriately
+        if ( !entry.binding.empty() )
+        {
+            entry.sourcedFromDefault |= MySQL_AuthenticationEntry::BindingFromDefault;
+        }
+
+        if ( !entry.username.empty() )
+        {
+            entry.sourcedFromDefault |= MySQL_AuthenticationEntry::UsernameFromDefault;
+        }
+
+        if ( !entry.password.empty() )
+        {
+            entry.sourcedFromDefault |= MySQL_AuthenticationEntry::PasswordFromDefault;
+        }
     }
 
     return false;

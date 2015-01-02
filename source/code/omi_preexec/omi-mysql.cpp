@@ -27,12 +27,12 @@
 
 using namespace SCXCoreLib;
 
-static int MySQL_ConfigurationParser(const std::wstring cnfFile)
+static int MySQL_ConfigurationParser(uid_t uid, gid_t gid, const std::wstring cnfFile)
 {
     SCXLogHandle hLog = SCXLogHandleFactory::GetLogHandle(L"mysql.omi-preexec");
     int rc = 0;
 
-    MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()) );
+    MySQL_Authentication auth( SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies()), uid, gid );
     SCX_LOGHYSTERICAL(hLog, L"Loading MySQL authentication file");
     auth.Load();
     if ( ! auth.GetAutomaticUpdates() )
@@ -151,7 +151,7 @@ static int MySQL_ConfigurationParser(const std::wstring cnfFile)
     return rc;
 }
 
-static int MySQL_ConfigurationFinder()
+static int MySQL_ConfigurationFinder(uid_t uid, gid_t gid)
 {
     SCXLogHandle hLog = SCXLogHandleFactory::GetLogHandle(L"mysql.omi-preexec");
 
@@ -170,7 +170,7 @@ static int MySQL_ConfigurationFinder()
 
         // We found a MySQL configuration file; parse it and build up our authentication
 
-        if ( 0 != (rc = MySQL_ConfigurationParser(configFile)) )
+        if ( 0 != (rc = MySQL_ConfigurationParser(uid, gid, configFile)) )
         {
             SCX_LOGHYSTERICAL(hLog, L"Parser returned failure!");
             return rc;
@@ -206,7 +206,7 @@ int PreExecution::Prived_Hook(uid_t uid, gid_t gid)
 
 int PreExecution::Generic_Hook(uid_t uid, gid_t gid)
 {
-    return  MySQL_ConfigurationFinder();
+    return  MySQL_ConfigurationFinder(uid, gid);
 }
 
 /*----------------------------E-N-D---O-F---F-I-L-E---------------------------*/

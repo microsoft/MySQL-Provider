@@ -24,7 +24,7 @@ static const wchar_t* s_authFilePath = L"./mysql-auth";
 class MySQL_TestableAuthenticationDependencies : public MySQL_AuthenticationDependencies
 {
 public:
-    virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName() const
+    virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName(uid_t /*uid*/) const
     {
         return s_authFilePath;
     }

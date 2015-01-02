@@ -334,6 +334,8 @@ STATIC_MYAUTH_SRCFILES = \
 	$(PROVIDER_DIR)/support/logstartup.cpp \
 	$(PROVIDER_DIR)/support/productdependencies.cpp \
 	$(PROVIDER_DIR)/support/sqlauth.cpp \
+	$(PROVIDER_DIR)/support/sqlbinding.cpp \
+	$(PROVIDER_DIR)/support/mycnf-paths.cpp \
 	$(SOURCE_DIR)/myauth/myauth.cpp
 
 STATIC_MYAUTH_HEADERS = \

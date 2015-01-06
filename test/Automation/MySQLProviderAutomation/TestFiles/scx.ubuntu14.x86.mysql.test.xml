@@ -1,0 +1,270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<varmap xmlns="http://smxinfranet/schemas/mcf/2002/01/varmap"
+        assembly="..\MySQL.dll"
+        dsc="MySQL Automation Test"
+        owner="v-jeali" contact="v-jeali">
+
+  <snippet id="MySQLInstallInfo">
+    <rec key="MySQL.InstallCmd">sh /tmp/{0}</rec>
+    <rec key="MySQL.VerifyFolderExistCmd"><![CDATA[/bin/ls /opt/microsoft/|grep -ic "MySQL";/bin/ls /var/opt/microsoft/|grep -ic "MySQL";/bin/ls /etc/opt/microsoft/|grep -ic "MySQL"]]></rec>
+    <rec key="MySQL.VerifyMySQLInstalledCmd">dpkg -l |grep -i mysql-cimprov</rec>
+  </snippet>
+  <snippet id="LinuxInfo">
+    <rec key="Linux.Host">m56p-ub14-02</rec>
+  </snippet>
+  <snippet id="MySQLAuthInfo">
+    <rec key="MySQL.DefaultAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username root Password OpsMgr2007R2 }</rec>
+  </snippet>
+  <snippet id="CommonVariables">
+    <rec key="IpAddress">[0-9]{0,3}.[0-9]{0,3}.[0-9]{0,3}.[0-9]{0,3}</rec>
+    <rec key="Port">3306</rec>
+    <rec key="ConfigurationFile">/etc/my.cnf</rec>
+    <rec key="ErrorLogFile">/var/log/mysql/error.log</rec>
+    <rec key="SocketFile">/var/run/mysqld/mysqld.sock</rec>
+    <rec key="DataDirectory">/var/lib/mysql/</rec>
+  </snippet>
+
+  <!-- 779296-VerifynonprivilegedAccountEnumeratedMySQL_Server -->
+  <var set="3" lvl="0" vid="779296" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the non-privileged account can enumerated for MySQL_Server" act="true">
+    <snipref id="MySQLAuthInfo" />
+    <rec key="AddMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
+    <rec key="useNonSuperUser">true</rec>
+    <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
+    <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic scxuser</rec>
+    <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/scxuser|grep -i mysql-auth</rec>
+    <rec key="expectedAuthFolderCount">1</rec>
+    <rec key="expectedAuthFileOwner">scxuser</rec>
+    <rec key="expectedAuthFileProtection">-rw-r--r--</rec>
+    <rec key="expectedOperatingStatus">OperatingStatus=Insufficient Privileges</rec>
+  </var>
+
+  <!-- 779297-VerifyPrivilegedAccountEnumeratedMySQL_Server -->
+  <var set="3" lvl="0" vid="779297" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the privileged account can enumerated for MySQL_Server" act="true">
+    <snipref id="MySQLAuthInfo" />
+    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
+    <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic mysql-auth</rec>
+    <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth|grep -i mysql-auth</rec>
+    <rec key="expectedAuthFolderCount">1</rec>
+    <rec key="expectedAuthFileOwner">root</rec>
+    <rec key="expectedAuthFileProtection">-rw-r--r--</rec>
+    <rec key="expectedOperatingStatus">OperatingStatus=OK</rec>
+  </var>
+
+  <!-- 727495-VerifyCimProvInstallationUsingOptionInstall -->
+  <var set="1" lvl="0" vid="727495" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if install MySQL agent successfully with '--install' option" act="true">
+    <snipref id="MySQLInstallInfo" />
+    <rec key="mysqlCmd">sh /tmp/{0} --install</rec>
+    <rec key="isInvalidInstall">false</rec>
+    <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
+    <!-- The mysql-cimprov folder under /opt/microsoft and /var/opt/microsoft and /etc/opt/microsoft should be 1,1,1 -->
+    <rec key="expectedFolderCount">1,1,1</rec>
+    <rec key="installLogKeyWorlds">done</rec>
+    <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
+  </var>
+
+  <!-- 727742-VerifyCimProvInstallationUsingOptionInstallAndForce -->
+  <var set="1" lvl="0" vid="727742" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if install MySQL agent successfully with '--install --force' option" act="true">
+    <snipref id="MySQLInstallInfo" />
+    <rec key="mysqlCmd">sh /tmp/{0} --install --force</rec>
+    <rec key="isInvalidInstall">false</rec>
+    <!-- The mysql-cimprov folder under /opt/microsoft and /var/opt/microsoft and /etc/opt/microsoft should be 1,1,1 -->
+    <rec key="expectedFolderCount">1,1,1</rec>
+    <rec key="installLogKeyWorlds">done</rec>
+    <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
+    <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
+  </var>
+
+  <!-- 727744-VerifyCimProvInstallationtwicefailed -->
+  <var set="1" lvl="0" vid="727744" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if install an MySQL agent twice failed on the same version" act="true">
+    <rec key="mysqlCmd">sh /tmp/{0} --install</rec>
+    <rec key="isInvalidInstall">true</rec>
+    <rec key="installTwice">true</rec>
+  </var>
+
+  <!-- 727503-VerifyCimProvInstallationUsingInvalidOptions-->
+  <var set="1" lvl="0" vid="727503" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if install an MySQL agent failed with invalid option" act="true">
+    <rec key="mysqlCmd">sh /tmp/{0} --invalidinstall</rec>
+    <rec key="isInvalidInstall">true</rec>
+  </var>
+
+  <!-- 727504-VerifyCimProvInstallationWithOutOption -->
+  <var set="1" lvl="0" vid="727504" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if install an MySQL agent failed without options" act="true">
+    <rec key="mysqlCmd">sh /tmp/{0}</rec>
+    <rec key="isInvalidInstall">true</rec>
+    <rec key="installLogKeyWorlds">usage</rec>
+  </var>
+
+  <!-- 727498-VerifyCimProvUsingRemoveOption -->
+  <var set="1" lvl="0" vid="727498" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if uninstall MySQL agent successfully with '--remove' option" act="true">
+    <snipref id="MySQLInstallInfo" />
+    <rec key="mysqlCmd">sh /tmp/{0} --remove</rec>
+    <rec key="isRemoveOption">true</rec>
+    <rec key="expectedFolderCount">0,0,0</rec>
+    <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
+    <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
+  </var>
+
+  <!-- 727499-VerifyCimProvUsingpurgeOption -->
+  <var set="1" lvl="0" vid="727499" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if uninstalll MySQL agent cleanly with '--purge' option" act="true">
+    <snipref id="MySQLInstallInfo" />
+    <rec key="mysqlCmd">sh /tmp/{0} --purge</rec>
+    <rec key="isRemoveOption">true</rec>
+    <rec key="expectedFolderCount">0,0,0</rec>
+    <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
+    <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
+  </var>
+
+  <!-- 727500-VerifyCimProvHelpOption -->
+  <var set="1" lvl="0" vid="727500" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if output the usage properly when type '--help' option" act="true">
+    <rec key="mysqlCmd">sh /tmp/{0} --help</rec>
+    <rec key="isHelpOption">true</rec>
+  </var>
+
+  <!-- 727741-VerifyCimProvUpgradeOption -->
+  <var set="1" lvl="0" vid="727741" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvCompatibility" dsc="[MySQL]Verify if upgrade MySQL agent successfully with '--upgrade' option" act="true">
+    <rec key="installOlderMySQLCmd">sh /tmp/{0} --install</rec>
+    <rec key="oldMySQLsLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
+    <rec key="mysqlCmd">sh /tmp/{0} --upgrade</rec>
+    <rec key="isUpgrade">true</rec>
+    <rec key="expectedFolderCount">1,1,1</rec>
+    <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
+    <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
+  </var>
+
+  <!-- 727743-VerifyCimProvUpgradeUsingForceOption -->
+  <var set="1" lvl="0" vid="727743" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvCompatibility" dsc="[MySQL]Verify if upgrade MySQL agent successfully with '--upgrade --force' option" act="true">
+    <rec key="installOlderMySQLCmd">sh /tmp/{0} --install</rec>
+    <rec key="oldMySQLsLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
+    <rec key="mysqlCmd">sh /tmp/{0} --upgrade --force</rec>
+    <rec key="isUpgrade">true</rec>
+    <rec key="expectedFolderCount">1,1,1</rec>
+    <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
+    <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
+  </var>
+
+  <!-- 727745-VerifyCimProvDoesNotUpgradeToLowerVersion-->
+  <var set="1" lvl="0" vid="727745" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvCompatibility" dsc="[MySQL]Verify if upgrade MySQL agent successfully with '--upgrade --force' option" act="true">
+    <rec key="oldMySQLsLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
+    <rec key="mysqlCmd">sh /tmp/{0} --upgrade</rec>
+    <rec key="isUpgrade">false</rec>
+  </var>
+
+  <!-- VerifyEnumerate Test Case information -->
+  <!-- Verify MySQL_Server works fine by comparing info from provider to wsman-->
+  <var set="5" lvl="0" vid="728316" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify MySQL_Server works fine by comparing info from provider to wsman." act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="p:InstanceID">^$</rec>
+    <rec key="p:Caption">^$</rec>
+    <rec key="p:Description">^$</rec>
+    <rec key="p:ElementName">^$</rec>
+    <rec key="p:ProductIdentifyingNumber">[0-9]</rec>
+    <rec key="p:ProductName">MySQL</rec>
+    <rec key="p:ProductVendor">Oracle</rec>
+    <rec key="p:ProductVersion">[0-9].[0-9].[0-9]+</rec>
+    <rec key="p:SystemID">[0-9]</rec>
+    <rec key="p:CollectionID">Linux</rec>
+    <rec key="p:Name">^$</rec>
+    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
+    <rec key="p:ErrorLogFile">%ErrorLogFile%</rec>
+    <rec key="p:Hostname">%Linux.Host%</rec>
+    <rec key="p:BindAddress">%IpAddress%</rec>
+    <rec key="p:Port">%Port%</rec>
+    <rec key="p:SocketFile">%SocketFile%</rec>
+    <rec key="p:DataDirectory">%DataDirectory%</rec>
+    <rec key="p:OperatingStatus">OK</rec>
+  </var>
+  <!-- Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman-->
+  <var set="4" lvl="0" vid="779298" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="AddMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
+    <rec key="useNonSuperUser">true</rec>
+    <rec key="p:InstanceID">^$</rec>
+    <rec key="p:Caption">^$</rec>
+    <rec key="p:Description">^$</rec>
+    <rec key="p:ElementName">^$</rec>
+    <rec key="p:ProductIdentifyingNumber">%Linux.Host%:%IpAddress%:%Port%</rec>
+    <rec key="p:ProductName">MySQL</rec>
+    <rec key="p:ProductVendor">Oracle</rec>
+    <rec key="p:ProductVersion">^$</rec>
+    <rec key="p:SystemID">^$</rec>
+    <rec key="p:CollectionID">^$</rec>
+    <rec key="p:Name">^$</rec>
+    <rec key="p:ConfigurationFile">%ConfigurationFile %</rec>
+    <rec key="p:ErrorLogFile">^$</rec>
+    <rec key="p:Hostname">%Linux.Host%</rec>
+    <rec key="p:BindAddress">%IpAddress%</rec>
+    <rec key="p:Port">%Port%</rec>
+    <rec key="p:SocketFile">^$</rec>
+    <rec key="p:DataDirectory">^$</rec>
+    <rec key="p:OperatingStatus">Insufficient Privileges</rec>
+  </var>
+
+  <!-- Verify MySQL_Server works fine by comparing info from SQL commands to provider-->
+  <var set="5" lvl="0" vid="728341" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="Verify MySQL_Server works fine by comparing info from SQL commands to provider." act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="p:InstanceID">^$</rec>
+    <rec key="p:Caption">^$</rec>
+    <rec key="p:Description">^$</rec>
+    <rec key="p:ElementName">^$</rec>
+    <rec key="p:ProductIdentifyingNumber">[0-9]</rec>
+    <rec key="p:ProductName">MySQL</rec>
+    <rec key="p:ProductVendor">Oracle</rec>
+    <rec key="p:ProductVersion">[0-9].[0-9].[0-9]+</rec>
+    <rec key="p:SystemID">[0-9]</rec>
+    <rec key="p:CollectionID">Linux</rec>
+    <rec key="p:Name">^$</rec>
+    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
+    <rec key="p:ErrorLogFile">%ErrorLogFile%</rec>
+    <rec key="p:Hostname">%Linux.Host%</rec>
+    <rec key="p:BindAddress">%IpAddress%</rec>
+    <rec key="p:Port">%Port%</rec>
+    <rec key="p:SocketFile">%SocketFile%</rec>
+    <rec key="p:DataDirectory">%DataDirectory%</rec>
+    <rec key="p:OperatingStatus">OK</rec>
+    <rec key="ProductIdentifyingNumberMysqlcmd">SHOW VARIABLES where variable_name="hostname";</rec>
+    <rec key="loginMysqlcmd">mysql -u root -pOpsMgr2007R2</rec>
+  </var>
+
+  <!-- Test Variables Definition -->
+  <grp cls="Scx.Test.MySQL.Provider.GroupHelper">
+    <snipref id="LinuxInfo" />
+    <rec key="hostname">%Linux.Host%</rec>
+    <rec key="omserver">osst-w12r2-01</rec>
+    <rec key="username">root</rec>
+    <rec key="password">OpsMgr2007R2</rec>
+    <rec key="nonsuperuser">scxuser</rec>
+    <rec key="nonsuperuserpwd">scxuser</rec>
+    <rec key="PlatformTag">.universald.1.x86</rec>
+    <rec key="MySQLTag">universal.1.i686</rec>
+    <rec key="InstallOMCmd">sh /tmp/{0} --install</rec>
+    <rec key="UninstallOMCmd">sh /tmp/{0} --purge</rec>
+    <rec key="CleanupOMCmd"><![CDATA[sh /tmp/{0} --purge;rm -rf /opt/microsoft;rm -rf /etc/opt/microsoft;rm -rf /var/opt/microsoft]]></rec>
+    <rec key="installonly">false</rec>
+    <rec key="knownIssueFormat">Known Issue: WI {0}: '{1}'</rec>
+    <rec key="OMAgentLocation"><![CDATA[C:\Program Files\Microsoft System Center 2012 R2\Operations Manager\Server\AgentManagement\UnixAgents]]></rec>
+    <!--cimprov-->
+    <rec key="MySQLsLocation"><![CDATA[C:\MySQL\cimprov]]></rec>
+    <rec key="installMySQLCmd">sh /tmp/{0} --install</rec>
+    <rec key="UninstallMySQLCmd">sh /tmp/{0} --purge</rec>
+    <rec key="CleanupMySQLCmd"><![CDATA[sh /tmp/{0} --purge;rm -rf /etc/opt/microsoft/mysql*;rm -rf /opt/microsoft/mysql*;rm -rf /var/opt/microsoft/mysql*;]]></rec>
+
+    <!--check MySQL status-->
+    <rec key="installMySQLPkg">yum install mysql</rec>
+    <rec key="startMySQLCmd">service mysql start</rec>
+    <rec key="checkServiceCmd">service mysql status</rec>
+    <rec key="checkMySQLInstalled">dpkg -l |grep -i mysql</rec>
+
+    <!-- Skip agent deployment: run WSMAN tests without attempting to install a new agent on the client machine, and don't uninstall the agent when testing is done-->
+    <!--<rec key="skipagentdeploy">false</rec>-->
+    <varref />
+  </grp>
+</varmap>

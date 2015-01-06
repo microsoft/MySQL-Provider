@@ -205,35 +205,6 @@
     <rec key="p:OperatingStatus">Insufficient Privileges</rec>
   </var>
 
-  <!-- Verify MySQL_Server works fine by comparing info from SQL commands to provider-->
-  <var set="5" lvl="0" vid="728341" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="Verify MySQL_Server works fine by comparing info from SQL commands to provider." act="true">
-    <snipref id="LinuxInfo" />
-    <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
-    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <rec key="p:InstanceID">^$</rec>
-    <rec key="p:Caption">^$</rec>
-    <rec key="p:Description">^$</rec>
-    <rec key="p:ElementName">^$</rec>
-    <rec key="p:ProductIdentifyingNumber">[0-9]</rec>
-    <rec key="p:ProductName">MySQL</rec>
-    <rec key="p:ProductVendor">Oracle</rec>
-    <rec key="p:ProductVersion">[0-9].[0-9].[0-9]+</rec>
-    <rec key="p:SystemID">[0-9]</rec>
-    <rec key="p:CollectionID">Linux</rec>
-    <rec key="p:Name">^$</rec>
-    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
-    <rec key="p:ErrorLogFile">%ErrorLogFile%</rec>
-    <rec key="p:Hostname">%Linux.Host%</rec>
-    <rec key="p:BindAddress">%IpAddress%</rec>
-    <rec key="p:Port">%Port%</rec>
-    <rec key="p:SocketFile">%SocketFile%</rec>
-    <rec key="p:DataDirectory">%DataDirectory%</rec>
-    <rec key="p:OperatingStatus">OK</rec>
-    <rec key="ProductIdentifyingNumberMysqlcmd">SHOW VARIABLES where variable_name="hostname";</rec>
-    <rec key="loginMysqlcmd">mysql -u root -pOpsMgr2007R2</rec>
-  </var>
-
   <!-- Test Variables Definition -->
   <grp cls="Scx.Test.MySQL.Provider.GroupHelper">
     <snipref id="LinuxInfo" />

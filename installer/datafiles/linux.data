@@ -22,7 +22,7 @@ FindClientLibrary() {
 
     if [ -z "${CLIENT_LIBRARY}" ]; then
         SEARCH_LIST_64="/usr/lib64 /usr/lib64/mysql /lib64 /lib64/mysql /usr/lib/x86_64-linux-gnu"
-        SEARCH_LIST_32="/usr/lib /usr/lib/mysql /lib /lib/mysql /usr/lib/*86-linux-gnu"
+        SEARCH_LIST_32="/usr/lib /usr/lib/mysql /lib /lib/mysql /usr/lib/*86-linux-gnu /usr/local/mysql/lib"
 
         if [ `uname -m` = "x86_64" ]; then
             SEARCH_LIST="${SEARCH_LIST_64} ${SEARCH_LIST_32}"

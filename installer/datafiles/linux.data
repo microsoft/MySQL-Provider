@@ -90,10 +90,6 @@ if [ $OMI_IS_RUNNING -eq 1 ]; then
     StopOmiServer
 fi
 
-%Postinstall_1100
-#include OmiService_funcs
-StartOmiServer
-
 %Postinstall_2000
 #include FindClientLibrary
 
@@ -108,21 +104,36 @@ LIBRARY_DIR='/opt/microsoft/mysql-cimprov/lib'
 [ -e ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY} ] && rm ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY}
 ln -s ${CLIENT_LIBRARY} ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY}
 
+#include OmiService_funcs
+StartOmiServer
+
 %Postuninstall_1000
-# Remove linkage in case it exists
-MYSQL_BUILD_LIBRARY=${{MYSQL_BUILD_LIBRARY}}
-LIBRARY_DIR='/opt/microsoft/mysql-cimprov/lib'
-[ -e ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY} ] && rm ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY}
-rmdir /opt/microsoft/mysql-cimprov/lib 2> /dev/null
-rmdir /opt/microsoft/mysql-cimprov 2> /dev/null
-rmdir /opt/microsoft 2> /dev/null
-rmdir /opt 2> /dev/null
+# Calling sequence for RPM pre/post scripts, during upgrade, is as follows:
+#   1. Run the %pre section of the RPM being installed.
+#   2. Install the files that the RPM provides.
+#   3. Run the %post section of the RPM.
+#   4. Run the %preun of the old package.
+#   5. Delete any old files not overwritten by the newer version.
+#      (This step deletes files that the new package does not require.)
+#   6. Run the %postun hook of the old package.
+#
+# Thus, if we're an upgrade, skip all of this cleanup
+if [ "$1" -ne 1 ]; then 
+   # Remove linkage in case it exists
+   MYSQL_BUILD_LIBRARY=${{MYSQL_BUILD_LIBRARY}}
+   LIBRARY_DIR='/opt/microsoft/mysql-cimprov/lib'
+   [ -e ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY} ] && rm ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY}
+   rmdir /opt/microsoft/mysql-cimprov/lib 2> /dev/null
+   rmdir /opt/microsoft/mysql-cimprov 2> /dev/null
+   rmdir /opt/microsoft 2> /dev/null
+   rmdir /opt 2> /dev/null
+fi
 
 %Postuninstall_1100
 #include OmiService_funcs
 #include CheckIfOmiIsRunning
 
 # If we're called for upgrade, don't do anything
-if [ "$1" != "upgrade" ]; then 
+if [ "$1" -ne 1 ]; then 
     RestartOmiServer
 fi

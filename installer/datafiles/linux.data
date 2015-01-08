@@ -118,7 +118,7 @@ StartOmiServer
 #   6. Run the %postun hook of the old package.
 #
 # Thus, if we're an upgrade, skip all of this cleanup
-if [ "$1" -ne 1 ]; then 
+if ${{PERFORMING_UPGRADE_NOT}}; then 
    # Remove linkage in case it exists
    MYSQL_BUILD_LIBRARY=${{MYSQL_BUILD_LIBRARY}}
    LIBRARY_DIR='/opt/microsoft/mysql-cimprov/lib'
@@ -134,6 +134,6 @@ fi
 #include CheckIfOmiIsRunning
 
 # If we're called for upgrade, don't do anything
-if [ "$1" -ne 1 ]; then 
+if ${{PERFORMING_UPGRADE_NOT}}; then 
     RestartOmiServer
 fi

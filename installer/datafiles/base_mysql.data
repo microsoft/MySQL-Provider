@@ -80,12 +80,15 @@ WriteInstallInfo() {
 WriteInstallInfo
 
 %Postuninstall_10
-# Clean up installinfo.txt file (registered as "conf" file to pass rpmcheck)
-rm -f /etc/opt/microsoft/mysql-cimprov/conf/installinfo.txt*
-rmdir /etc/opt/microsoft/mysql-cimprov/conf 2> /dev/null
-rmdir /etc/opt/microsoft/mysql-cimprov 2> /dev/null
-rmdir /etc/opt/microsoft 2> /dev/null
-rmdir /etc/opt 2> /dev/null
+# If we're an upgrade, skip all of this cleanup
+if ${{PERFORMING_UPGRADE_NOT}}; then 
+   # Clean up installinfo.txt file (registered as "conf" file to pass rpmcheck)
+   rm -f /etc/opt/microsoft/mysql-cimprov/conf/installinfo.txt*
+   rmdir /etc/opt/microsoft/mysql-cimprov/conf 2> /dev/null
+   rmdir /etc/opt/microsoft/mysql-cimprov 2> /dev/null
+   rmdir /etc/opt/microsoft 2> /dev/null
+   rmdir /etc/opt 2> /dev/null
+fi
 
 %Preinstall_0
 ${{SHELL_HEADER}}

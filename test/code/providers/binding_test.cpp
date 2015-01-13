@@ -180,12 +180,13 @@ public:
         std::vector<std::string> paths;
         pBinding->GetConfigurationFilePaths( paths );
 
-        CPPUNIT_ASSERT_EQUAL( static_cast<size_t>(5), paths.size() );
+        CPPUNIT_ASSERT_EQUAL( static_cast<size_t>(6), paths.size() );
         CPPUNIT_ASSERT_EQUAL( std::string("/etc/my.cnf"), paths[0] );
         CPPUNIT_ASSERT_EQUAL( std::string("/etc/mysql/my.cnf"), paths[1] );
         CPPUNIT_ASSERT_EQUAL( std::string("/var/lib/mysql/my.cnf"), paths[2] );
         CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/mysql/data/my.cnf"), paths[3] );
         CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/var/my.cnf"), paths[4] );
+		CPPUNIT_ASSERT_EQUAL( std::string("/usr/my.cnf"), paths[5] );
     }
 
     void testSQLQuery_With_No_Attach()

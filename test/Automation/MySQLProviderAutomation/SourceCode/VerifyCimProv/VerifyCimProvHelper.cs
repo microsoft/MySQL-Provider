@@ -170,7 +170,7 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
             {
                 throw new VarAbort("hostName not specified");
             }
-            
+
             // in same case need use NonSuperUser.
             if (ctx.Records.HasKey("useNonSuperUser"))
             {
@@ -290,10 +290,11 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                 // get expected version number:
                 string[] nameParts = this.MySQLHelper.mysqlAgentName.Split('-');
                 string versionNumber = nameParts[2] + '.' + nameParts[3].Split('.')[0];
+                string versionNumber01 = nameParts[2] + '-' + nameParts[3].Split('.')[0];
 
                 // get acutally version number using cmd.
                 string commandStdOut = this.MySQLHelper.RunCmd(verifyMySQLInstalledCmd).StdOut;
-                if (!commandStdOut.Contains(versionNumber))
+                if (!commandStdOut.Contains(versionNumber) && !commandStdOut.Contains(versionNumber01))
                 {
                     throw new VarAbort("verify the mysql version failed");
                 }

@@ -110,6 +110,8 @@ namespace Scx.Test.MySQL.Provider
 
         private bool needStopServer = false;
 
+        private bool enumerateresult=true;
+
         private string stopServerCmd = "";
 
         private bool needRestartOmAgent = false;
@@ -210,7 +212,7 @@ namespace Scx.Test.MySQL.Provider
             {
                 throw new VarAbort("password not specified");
             }
-
+          
             this.mysqlHelper = new MySQLHelper(mcfContext.Trc, this.hostname, this.username, this.password);
             this.queryClass = varContext.CustomID;
             if (String.IsNullOrEmpty(this.queryClass))
@@ -224,11 +226,11 @@ namespace Scx.Test.MySQL.Provider
                 this.mysqlHelper.SetupMySqlAuth(this.addMySQLAuthCmd);
             }
 
-            if (mcfContext.Records.HasKey("StopApcheServer") &&
-               mcfContext.Records.GetValue("StopApcheServer") == "true")
+            if (mcfContext.Records.HasKey("needStopServer") &&
+               mcfContext.Records.GetValue("needStopServer") == "true")
             {
                 this.needStopServer = true;
-                this.stopServerCmd = mcfContext.ParentContext.Records.GetValue("stopMySQLCmd");
+                this.stopServerCmd = mcfContext.Records.GetValue("stopMySQLCmd");
                 this.mysqlHelper.StopMySQLServiceStatus(stopServerCmd);
             }
 
@@ -238,7 +240,10 @@ namespace Scx.Test.MySQL.Provider
                 this.restartOmAgentCmd = mcfContext.ParentContext.Records.GetValue("RestartOMAgentCmd");
                 this.mysqlHelper.RestartMySQLServiceStatus(restartOmAgentCmd);
             }
-
+            if (mcfContext.Records.HasKey("enumerateresult") && mcfContext.Records.GetValue("enumerateresult") == "false")
+            {
+                this.enumerateresult=false;
+            }
             this.ipaddress = new ClientInfo().GetHostIPv4Address(this.hostname);
 
             mcfContext.Trc(string.Format("Initialized enumeration test against {0}, ipaddr={1} for enumeration query {2}", this.hostname, this.ipaddress, this.queryClass));
@@ -263,6 +268,10 @@ namespace Scx.Test.MySQL.Provider
                     }
 
                     if (this.queryXmlResult != null && this.queryXmlResult.Count > 0)
+                    {
+                        success = true;
+                    }
+                    if (this.queryXmlResult.Count==0 && this.enumerateresult==false)
                     {
                         success = true;
                     }
@@ -326,9 +335,18 @@ namespace Scx.Test.MySQL.Provider
                     Console.WriteLine();
                 }
 
-                XmlNodeList nameNodeList = root.GetElementsByTagName("p:Name");
+                XmlNodeList nameNodeList = root.GetElementsByTagName("p:InstanceID");
                 string xmlDocumentName = nameNodeList.Count > 0 ? nameNodeList[0].InnerText : "unknown";
                 mcfContext.Trc("Processing new XML document: " + xmlDocumentName);
+                
+                // this property used to be fillter multi instances
+                string portRecordValue = mcfContext.Records.GetValue("p:InstanceID");
+                System.Text.RegularExpressions.Regex criteriaPort = new Regex(portRecordValue);
+
+                if (!criteriaPort.IsMatch(nameNodeList[0].InnerText))
+                {
+                    continue;
+                }
 
                 // Test entries in MCF variation map records agains fields returned by WSMAN
                 // The WSMAN fields will be start with 'p:','wsa:','wsman:'.

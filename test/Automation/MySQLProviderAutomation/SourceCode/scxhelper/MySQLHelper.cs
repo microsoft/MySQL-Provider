@@ -287,7 +287,7 @@ namespace Scx.Test.Common
             }
             catch (Exception e)
             {
-                throw new Exception("Check mysql status failed: " + e.Message);
+                throw new Exception("Start mysql Service failed: " + e.Message);
             }
         }
 
@@ -302,7 +302,7 @@ namespace Scx.Test.Common
             }
             catch (Exception e)
             {
-                throw new Exception("Check mysql status failed: " + e.Message);
+                throw new Exception("Stop mysql service failed: " + e.Message);
             }
         }
 
@@ -317,7 +317,7 @@ namespace Scx.Test.Common
             }
             catch (Exception e)
             {
-                throw new Exception("Check mysql status failed: " + e.Message);
+                throw new Exception("Restart mysql service failed: " + e.Message);
             }
         }
 
@@ -333,7 +333,7 @@ namespace Scx.Test.Common
             }
             catch (Exception e)
             {
-                throw new Exception("Install mysql CimProv agent failed: " + e.Message);
+                throw new Exception("Set up mysql auth failed: " + e.Message);
             }
         }
 

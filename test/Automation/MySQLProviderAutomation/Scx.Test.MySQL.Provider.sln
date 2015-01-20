@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{B8CB00A2-23FB-4ACF-8752-BAAA55BF3162}"
 	ProjectSection(SolutionItems) = preProject
-		TestFiles\scx.ubuntu14.x86.mysql.test.xml = TestFiles\scx.ubuntu14.x86.mysql.test.xml
+		TestFiles\scx.universald.x86.mysql.test.xml = TestFiles\scx.universald.x86.mysql.test.xml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WSManCommon", "WSManCommon\WSManCommon.csproj", "{EB1D1123-7E8A-4634-8E57-C06131B791C8}"

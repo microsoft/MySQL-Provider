@@ -142,6 +142,15 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         /// <param name="ctx">ctx</param>
         public void Cleanup(IContext ctx)
         {
+            if (isUpgrade)
+            {
+                this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
+            }
+            else
+            {
+                this.MySQLHelper.RunCmd(string.Format("sh /tmp/{0} --purge", Path.GetFileName(this.mysqlOlderAgentFullName)));
+            }
+            this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.MySQLHelper.mysqlAgentName));
             // the uninstall will be down via group clean up.
         }
 

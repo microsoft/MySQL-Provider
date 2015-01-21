@@ -108,13 +108,21 @@ namespace Scx.Test.MySQL.Provider
         /// </summary>
         private TimeSpan queryRetryInterval = new TimeSpan(0, 0, 20);
 
-        private bool needStopServer = false;
+        private bool enumerateresult = true;
 
-        private bool enumerateresult=true;
+        private bool stopMySQLServer = false;
 
-        private string stopServerCmd = "";
+        private string stopMySQLCmd = "";
 
-        private bool needRestartOmAgent = false;
+        private bool restartMySQLServer = false;
+
+        private string restartMySQLCmd = "";
+
+        private bool stopOmAgent = false;
+
+        private string stopOmAgentCmd = "";
+
+        private bool restartOmAgent = false;
 
         private string restartOmAgentCmd = "";
 
@@ -126,6 +134,7 @@ namespace Scx.Test.MySQL.Provider
         private string addMySQLAuthCmd;
 
         private MySQLHelper mysqlHelper;
+        private AgentHelper agentHelper;
 
         #endregion Private Fields
 
@@ -212,37 +221,53 @@ namespace Scx.Test.MySQL.Provider
             {
                 throw new VarAbort("password not specified");
             }
-          
+
             this.mysqlHelper = new MySQLHelper(mcfContext.Trc, this.hostname, this.username, this.password);
+            this.agentHelper = new AgentHelper(mcfContext.Trc, this.hostname, this.username, this.password);
+
             this.queryClass = varContext.CustomID;
             if (String.IsNullOrEmpty(this.queryClass))
             {
                 throw new VarAbort("cid field not specified, specify query class in cid");
             }
 
-            if (mcfContext.Records.HasKey("AddMySQLAuthCmd"))
+            if (mcfContext.Records.HasKey("addMySQLAuthCmd"))
             {
-                this.addMySQLAuthCmd = mcfContext.Records.GetValue("AddMySQLAuthCmd");
+                this.addMySQLAuthCmd = mcfContext.Records.GetValue("addMySQLAuthCmd");
                 this.mysqlHelper.SetupMySqlAuth(this.addMySQLAuthCmd);
             }
 
-            if (mcfContext.Records.HasKey("needStopServer") &&
-               mcfContext.Records.GetValue("needStopServer") == "true")
+            if (mcfContext.Records.HasKey("stopMySQLServer") &&
+               mcfContext.Records.GetValue("stopMySQLServer") == "true")
             {
-                this.needStopServer = true;
-                this.stopServerCmd = mcfContext.Records.GetValue("stopMySQLCmd");
-                this.mysqlHelper.StopMySQLServiceStatus(stopServerCmd);
+                this.stopMySQLServer = true;
+                this.stopMySQLCmd = mcfContext.Records.GetValue("stopMySQLCmd");
+                this.mysqlHelper.StopMySQLServiceStatus(stopMySQLCmd);
             }
-
-            if (mcfContext.Records.HasKey("RestartOmAgent") &&
-               mcfContext.Records.GetValue("RestartOmAgent") == "true")
+            if (mcfContext.Records.HasKey("restartMySQLServer") &&
+               mcfContext.Records.GetValue("restartMySQLServer") == "true")
             {
-                this.restartOmAgentCmd = mcfContext.ParentContext.Records.GetValue("RestartOMAgentCmd");
-                this.mysqlHelper.RestartMySQLServiceStatus(restartOmAgentCmd);
+                this.restartMySQLServer = true;
+                this.restartMySQLCmd = mcfContext.Records.GetValue("restartMySQLCmd");
+                this.mysqlHelper.RestartMySQLServiceStatus(restartMySQLCmd);
+            }
+            if (mcfContext.Records.HasKey("stopOmAgent") &&
+               mcfContext.Records.GetValue("stopOmAgent") == "true")
+            {
+                this.stopOmAgent = true;
+                this.stopOmAgentCmd = mcfContext.Records.GetValue("stopOmAgentCmd");
+                this.agentHelper.StopOmAgent(stopOmAgentCmd);
+            }
+            if (mcfContext.Records.HasKey("restartOmAgent") &&
+               mcfContext.Records.GetValue("restartOmAgent") == "true")
+            {
+                this.restartOmAgent = true;
+                this.restartOmAgentCmd = mcfContext.ParentContext.Records.GetValue("restartOmAgentCmd");
+                this.agentHelper.RestartOmAgent(restartOmAgentCmd);
             }
             if (mcfContext.Records.HasKey("enumerateresult") && mcfContext.Records.GetValue("enumerateresult") == "false")
             {
-                this.enumerateresult=false;
+                this.enumerateresult = false;
             }
             this.ipaddress = new ClientInfo().GetHostIPv4Address(this.hostname);
 
@@ -271,7 +296,7 @@ namespace Scx.Test.MySQL.Provider
                     {
                         success = true;
                     }
-                    if (this.queryXmlResult.Count==0 && this.enumerateresult==false)
+                    if (this.queryXmlResult.Count == 0 && this.enumerateresult == false)
                     {
                         success = true;
                     }
@@ -293,6 +318,7 @@ namespace Scx.Test.MySQL.Provider
                 }
             }
         }
+
 
         /// <summary>
         /// Implements MCF Run interface
@@ -338,14 +364,17 @@ namespace Scx.Test.MySQL.Provider
                 XmlNodeList nameNodeList = root.GetElementsByTagName("p:InstanceID");
                 string xmlDocumentName = nameNodeList.Count > 0 ? nameNodeList[0].InnerText : "unknown";
                 mcfContext.Trc("Processing new XML document: " + xmlDocumentName);
-                
-                // this property used to be fillter multi instances
-                string portRecordValue = mcfContext.Records.GetValue("p:InstanceID");
-                System.Text.RegularExpressions.Regex criteriaPort = new Regex(portRecordValue);
 
-                if (!criteriaPort.IsMatch(nameNodeList[0].InnerText))
+                // this property used to be fillter multi instances
+                if (mcfContext.Records.HasKey("p:InstanceID"))
                 {
-                    continue;
+                    string portRecordValue = mcfContext.Records.GetValue("p:InstanceID");
+                    System.Text.RegularExpressions.Regex criteriaPort = new Regex(portRecordValue);
+
+                    if (!criteriaPort.IsMatch(nameNodeList[0].InnerText))
+                    {
+                        continue;
+                    }
                 }
 
                 // Test entries in MCF variation map records agains fields returned by WSMAN
@@ -361,7 +390,7 @@ namespace Scx.Test.MySQL.Provider
                     XmlNodeList nodes = root.GetElementsByTagName(recordKey);
 
                     // If the recordkey contains "wsman:Selector",we try to get the nodes by the tagname.
-                    if (recordKey.Contains("StopApcheServer"))
+                    if (recordKey.Contains("stopMySQLServer"))
                     {
                         continue;
                     }
@@ -462,9 +491,14 @@ namespace Scx.Test.MySQL.Provider
         public void Cleanup(IContext mcfContext)
         {
             mcfContext.Trc("Cleanup entered");
-            if (needStopServer)
+            if (stopMySQLServer)
             {
                 string startServerCmd = mcfContext.ParentContext.Records.GetValue("startMySQLCmd");
+                this.mysqlHelper.StartMySQLServiceStatus(startServerCmd);
+            }
+            if (stopOmAgent)
+            {
+                string startServerCmd = mcfContext.ParentContext.Records.GetValue("startOmAgentCmd");
                 this.mysqlHelper.StartMySQLServiceStatus(startServerCmd);
             }
         }

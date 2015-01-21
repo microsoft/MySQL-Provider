@@ -27,27 +27,27 @@
   <!-- 779296-VerifynonprivilegedAccountEnumeratedMySQL_Server -->
   <var set="1" lvl="0" vid="779296" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the non-privileged account can enumerated for MySQL_Server" act="true">
     <snipref id="MySQLAuthInfo" />
-    <rec key="AddMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
+    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
     <rec key="useNonSuperUser">true</rec>
     <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
     <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic scxuser</rec>
     <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/scxuser|grep -i mysql-auth</rec>
     <rec key="expectedAuthFolderCount">1</rec>
     <rec key="expectedAuthFileOwner">scxuser</rec>
-    <rec key="expectedAuthFileProtection">-rw-r--r--</rec>
+    <rec key="expectedAuthFileProtection">-rw-------</rec>
     <rec key="expectedOperatingStatus">OperatingStatus=Insufficient Privileges</rec>
   </var>
 
   <!-- 779297-VerifyPrivilegedAccountEnumeratedMySQL_Server -->
   <var set="1" lvl="0" vid="779297" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the privileged account can enumerated for MySQL_Server" act="true">
     <snipref id="MySQLAuthInfo" />
-    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
     <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic mysql-auth</rec>
     <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth|grep -i mysql-auth</rec>
     <rec key="expectedAuthFolderCount">1</rec>
     <rec key="expectedAuthFileOwner">root</rec>
-    <rec key="expectedAuthFileProtection">-rw-r--r--</rec>
+    <rec key="expectedAuthFileProtection">-rw-------</rec>
     <rec key="expectedOperatingStatus">OperatingStatus=OK</rec>
   </var>
 
@@ -156,7 +156,7 @@
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
     <snipref id="CommonVariables" />
-    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <rec key="p:InstanceID">^$</rec>
     <rec key="p:Caption">^$</rec>
     <rec key="p:Description">^$</rec>
@@ -183,7 +183,7 @@
     <snipref id="LinuxInfo" />
     <snipref id="CommonVariables" />
     <snipref id="MySQLAuthInfo"/>
-    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <rec key="p:InstanceID">%Linux.Host%:127.0.0.1:%Port%</rec>
     <rec key="p:CurrentNumConnections">[0-9]</rec>
     <rec key="p:MaxConnections">[0-9]</rec>
@@ -213,7 +213,7 @@
     <snipref id="LinuxInfo" />
     <snipref id="CommonVariables" />
     <snipref id="MySQLAuthInfo"/>
-    <rec key="AddMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <recm key="p:InstanceID">
       <val>%Linux.Host%:%IpAddress%:%Port%:information_schema</val>
       <val>%Linux.Host%:%IpAddress%:%Port%:mysql</val>
@@ -235,11 +235,11 @@
       <val>[0-9]</val>
     </recm>
   </var>
-  
+
   <!--728898-Verify the enumeration of CIM instance info failed if mysql service is not running-->
   <var set="2" lvl="0" vid="728898" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify the enumeration of CIM instance info failed if mysql service is not running" act="true">
     <rec key="enumerateresult">false</rec>
-    <rec key="needStopServer">true</rec>
+    <rec key="stopServer">true</rec>
     <rec key="stopMySQLCmd">service mysql stop</rec>
   </var>
 
@@ -275,7 +275,7 @@
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
     <snipref id="CommonVariables" />
-    <rec key="AddMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
+    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
     <rec key="useNonSuperUser">true</rec>
     <rec key="p:InstanceID">^$</rec>
     <rec key="p:Caption">^$</rec>
@@ -288,7 +288,7 @@
     <rec key="p:SystemID">^$</rec>
     <rec key="p:CollectionID">^$</rec>
     <rec key="p:Name">^$</rec>
-    <rec key="p:ConfigurationFile">%ConfigurationFile %</rec>
+    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
     <rec key="p:ErrorLogFile">^$</rec>
     <rec key="p:Hostname">%Linux.Host%</rec>
     <rec key="p:BindAddress">%IpAddress%</rec>
@@ -297,7 +297,47 @@
     <rec key="p:DataDirectory">^$</rec>
     <rec key="p:OperatingStatus">Insufficient Privileges</rec>
   </var>
-
+  <!--TestCase 728349 Verify the provider works fine after restart the scx agent-->
+  <var set="2" lvl="0" vid="728349" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the provider works fine after restart the scx agent" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="restartOmAgent">true</rec>
+    <rec key="restartOmAgentCmd">scxadmin -restart</rec>
+    <rec key="p:OperatingStatus">OK</rec>
+  </var>
+  <!--TestCase 728360 Verify provider works fine after restart mysql service-->
+  <var set="2" lvl="0" vid="728360" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify provider works fine after restart mysql service" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="restartMySQLServer">true</rec>
+    <rec key="restartMySQLCmd">service mysql restart</rec>
+    <rec key="p:OperatingStatus">OK</rec>
+  </var>
+  <!--TestCase 728896 Verify the property 'OperatingStatus' will be 'No Contact' if mysql servive not running-->
+  <var set="2" lvl="0" vid="728896" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the property 'OperatingStatus' will be 'No Contact' if mysql servive not running" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="stopMySQLServer">true</rec>
+    <rec key="stopMySQLCmd">service mysql stop</rec>
+    <rec key="p:OperatingStatus">No Contact</rec>
+  </var>
+  <!--TestCase 728897 Verify the enumeration of CIM instance info failed if mysql service is not running-->
+  <var set="2" lvl="0" vid="728897" cid="MySQL_ServerStatistics"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the enumeration of CIM instance info failed if mysql service is not running" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="enumerateresult">false</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="stopMySQLServer">true</rec>
+    <rec key="stopMySQLCmd">service mysql stop</rec>
+    <rec key="result">$</rec>
+  </var>
   <!-- Test Variables Definition -->
   <grp cls="Scx.Test.MySQL.Provider.GroupHelper">
     <snipref id="LinuxInfo" />
@@ -307,7 +347,6 @@
     <rec key="password">OpsMgr2007R2</rec>
     <rec key="nonsuperuser">scxuser</rec>
     <rec key="nonsuperuserpwd">scxuser</rec>
-    <rec key="PlatformTag">.universald.1.x86</rec>
     <rec key="MySQLTag">universal.1.i686</rec>
     <rec key="InstallOMCmd">sh /tmp/{0} --install</rec>
     <rec key="UninstallOMCmd">sh /tmp/{0} --purge</rec>
@@ -324,7 +363,12 @@
     <!--check MySQL status-->
     <rec key="installMySQLPkg">yum install mysql</rec>
     <rec key="startMySQLCmd">service mysql start</rec>
+    <rec key="stopMySQLCmd">service mysql stop</rec>
+    <rec key="restartMySQLCmd">service mysql restart</rec>
     <rec key="checkServiceCmd">service mysql status</rec>
+    <rec key="restartOmAgentCmd">scxadmin -restart</rec>
+    <rec key="stopOmAgentCmd">scxadmin -stop</rec>
+    <rec key="startOmAgentCmd">scxadmin -start</rec>
     <rec key="checkMySQLInstalled">dpkg -l |grep -i mysql</rec>
 
     <!-- Skip agent deployment: run WSMAN tests without attempting to install a new agent on the client machine, and don't uninstall the agent when testing is done-->

@@ -103,7 +103,9 @@ namespace Scx.Test.MySQL.Provider
                 this.installOmCmd = ctx.Records.GetValue("InstallOMCmd");
                 this.uninstallOmCmd = ctx.Records.GetValue("UninstallOMCmd");
                 this.cleanupOmCmd = ctx.Records.GetValue("CleanupOMCmd");
-                this.platformTag = ctx.Records.GetValue("PlatformTag");
+                // get GetPlatformTag
+                // this.platformTag = ctx.Records.GetValue("PlatformTag");
+                this.platformTag = GetPlatformTag(this.hostName);
                 this.MySQLTag = ctx.Records.GetValue("MySQLTag");
                 this.installMySQLCmd = ctx.Records.GetValue("installmySQLCmd");
                 this.uninstallMySQLCmd = ctx.Records.GetValue("UninstallMySQLCmd");
@@ -144,6 +146,40 @@ namespace Scx.Test.MySQL.Provider
             {
                 throw new GroupAbort(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// GetPlatformTag
+        /// </summary>
+        /// <param name="hostName">hostName</param>
+        /// <returns>platformtag</returns>
+        private string GetPlatformTag(string hostName)
+        {
+            string platformtagstr = string.Empty;
+            if (hostName.ToLower().Contains("rhel") || hostName.ToLower().Contains("sles"))
+            {
+                string[] names = hostName.Split('-');
+                platformtagstr = names[1].Substring(0, 4) + "." + (hostName.ToLower().Contains("sles") ? names[1].Substring(4, 2) : names[1].Substring(4, 1));
+            }
+            else if (hostName.ToLower().Contains("deb") || hostName.ToLower().Contains("ubun"))
+            {
+                platformtagstr = ".universald.1";
+            }
+            else
+            {
+                platformtagstr = ".universalr.1";
+            }
+
+            if (hostName.Contains("64"))
+            {
+                platformtagstr = platformtagstr + ".x64";
+            }
+            else
+            {
+                platformtagstr = platformtagstr + ".x86";
+            }
+
+            return platformtagstr;
         }
 
         /// <summary>

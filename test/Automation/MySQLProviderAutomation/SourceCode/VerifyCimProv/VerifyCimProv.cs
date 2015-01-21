@@ -131,6 +131,10 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         /// <param name="ctx"></param>
         public void Cleanup(IContext ctx)
         {
+            if ((this.isInValidInstall && !ctx.Records.HasKey("installTwice")) || ctx.Records.HasKey("isRemoveOption"))
+            {
+                this.MySQLHelper.InstallMySQLAgent(this.InstallMySQLCmd);
+            }
             // the uninstall will be down via group clean up.
         }
     }

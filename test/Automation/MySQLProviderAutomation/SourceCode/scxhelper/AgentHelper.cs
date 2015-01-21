@@ -107,6 +107,36 @@ namespace Scx.Test.Common
 
         #region Constructors
 
+         /// <summary>
+        /// Initializes a new instance of the AgentHelper class.
+        /// </summary>
+        /// <param name="logger">Log delegate method (takes single string as argument)</param>
+        /// <param name="hostName">Name of Posix host</param>
+        /// <param name="userName">Valid user on Posix host</param>
+        /// <param name="password">Password for user</param>
+        public AgentHelper(ScxLogDelegate logger, string hostName, string userName, string password)
+        {
+            if (string.IsNullOrEmpty(hostName))
+            {
+                throw new ArgumentNullException("hostName not set");
+            }
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                throw new ArgumentNullException("userName not set");
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentNullException("password not set");
+            }
+
+            this.logger = logger;
+            this.hostName = hostName;
+            this.userName = userName;
+            this.password = password;
+        }
+
         /// <summary>
         /// Initializes a new instance of the AgentHelper class.
         /// </summary>
@@ -156,7 +186,7 @@ namespace Scx.Test.Common
         /// Need this for calling the public methods directly from the varmap.
         /// </summary>
         public AgentHelper() { }
-
+     
         #endregion Constructors
 
         #region Properties
@@ -217,6 +247,23 @@ namespace Scx.Test.Common
 
         #region Public Methods
 
+        /// <summary>
+        /// Run special cmd.
+        /// </summary>
+        /// <remarks>WaitForNewAgent is optional.  If it is not run, then FullMySQLPath must be set.</remarks>
+        public RunPosixCmd RunCmd(string cmd, string arguments = "")
+        {
+            // Begin cmd
+            RunPosixCmd execCmd = new RunPosixCmd(this.hostName, this.userName, this.password);
+
+            // Execute command
+            execCmd.FileName = cmd;
+            execCmd.Arguments = arguments;
+            this.logger(string.Format("Run Command {0} on host {1} ", execCmd.FileName, this.hostName));
+            execCmd.RunCmd();
+            this.logger(string.Format("Command {0} out: {1}", execCmd.FileName, execCmd.StdOut));
+            return execCmd;
+        }
         /// <summary>
         /// Execute 'echo' on the remote machine as a test of the ability to make an ssh connection.
         /// </summary>
@@ -491,6 +538,50 @@ namespace Scx.Test.Common
             }
         }
 
+        /// <summary>
+        /// restart omi agent
+        /// </summary>
+        public void RestartOmAgent(string restartOmAgentCmd)
+        {
+            try
+            {
+                this.RunCmd(restartOmAgentCmd);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Restart OM Agent failed: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// stop omi agent
+        /// </summary>
+        public void StopOmAgent(string stoptOmAgentCmd)
+        {
+            try
+            {
+                this.RunCmd(stoptOmAgentCmd);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Stop OM Agent failed: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// start omi agent
+        /// </summary>
+        public void StartOmAgent(string startOmAgentCmd)
+        {
+            try
+            {
+                this.RunCmd(startOmAgentCmd);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Start OM Agent failed: " + e.Message);
+            }
+        }
         #endregion Public Methods
 
         #region Private Methods

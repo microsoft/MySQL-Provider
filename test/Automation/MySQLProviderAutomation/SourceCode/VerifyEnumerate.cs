@@ -128,6 +128,10 @@ namespace Scx.Test.MySQL.Provider
 
         private bool useNonSuperUser = false;
 
+        private bool deleteCredentials = false;
+
+        private string deleteCredentialsCmd = "";
+
         /// <summary>
         /// 
         /// </summary>
@@ -269,6 +273,14 @@ namespace Scx.Test.MySQL.Provider
             {
                 this.enumerateresult = false;
             }
+            if(mcfContext.Records.HasKey("deleteCredentials") && mcfContext.Records.GetValue("deleteCredentials")=="true")
+            {
+                this.deleteCredentials = true;
+                this.deleteCredentialsCmd = mcfContext.Records.GetValue("deleteCredentialsCmd");
+                mcfContext.Trc(string.Format("Run deleteCredentialsCmd ..."));
+                RunCommand(this.deleteCredentialsCmd);
+                mcfContext.Trc(string.Format("Deleted Credentials Successfully ..."));
+            }
             this.ipaddress = new ClientInfo().GetHostIPv4Address(this.hostname);
 
             mcfContext.Trc(string.Format("Initialized enumeration test against {0}, ipaddr={1} for enumeration query {2}", this.hostname, this.ipaddress, this.queryClass));
@@ -305,6 +317,10 @@ namespace Scx.Test.MySQL.Provider
                 {
                     mcfContext.Trc("WSMAN Query failed: " + e.Message);
                     success = false;
+                    if (stopOmAgent)
+                    { 
+                        success = true; 
+                    } 
                 }
 
                 if (!success)

@@ -15,6 +15,9 @@
   <snippet id="MySQLAuthInfo">
     <rec key="MySQL.DefaultAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
   </snippet>
+  <snippet id="MultiMySQL">
+    <rec key="MultiMySQLAddAuth">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 };/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3307 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
+  </snippet>
   <snippet id="CommonVariables">
     <rec key="IpAddress">[0-9]{0,3}.[0-9]{0,3}.[0-9]{0,3}.[0-9]{0,3}</rec>
     <rec key="Port">3306</rec>
@@ -307,6 +310,16 @@
     <rec key="restartOmAgentCmd">scxadmin -restart</rec>
     <rec key="p:OperatingStatus">OK</rec>
   </var>
+  <!--TestCase 728351 Verify the provider return failed message if omiserverd process not running-->
+  <var set="2" lvl="0" vid="728351" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the provider return failed message if omiserverd process not running" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="enumerateresult">false</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="stopOmAgent">true</rec>
+    <rec key="stopOmAgentCmd">scxadmin -stop</rec>
+  </var>
   <!--TestCase 728360 Verify provider works fine after restart mysql service-->
   <var set="2" lvl="0" vid="728360" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify provider works fine after restart mysql service" act="true">
     <snipref id="LinuxInfo" />
@@ -336,7 +349,26 @@
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <rec key="stopMySQLServer">true</rec>
     <rec key="stopMySQLCmd">service mysql stop</rec>
-    <rec key="result">$</rec>
+  </var>
+  <!--TestCase 784102 Verify the enumeration not work after delete the authenticated credentials-->
+  <var set="2" lvl="0" vid="784102" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify the enumeration not work after delete the authenticated credentials" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <snipref id="CommonVariables" />
+    <rec key="enumerateresult">false</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="deleteCredentials">true</rec>
+    <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3306</rec>
+  </var>
+  <!--TestCase 728903 Verify the enumeration still works fine after delete one credentials for multi mysql instances environment-->
+  <var set="2" lvl="0" vid="728903" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify the enumeration still works fine after delete one credentials for multi mysql instances environment" act="true">
+    <snipref id="MultiMySQL" />
+    <snipref id="LinuxInfo" />
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
+    <snipref id="CommonVariables" />
+    <rec key="deleteCredentials">true</rec>
+    <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3307</rec>
+    <rec key="p:OperatingStatus">OK</rec>
   </var>
   <!-- Test Variables Definition -->
   <grp cls="Scx.Test.MySQL.Provider.GroupHelper">

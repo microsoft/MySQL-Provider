@@ -160,6 +160,9 @@ public:
     virtual void GetPortList(std::vector<unsigned int>& portList);
     virtual bool GetEntry(const unsigned int& port, MySQL_AuthenticationEntry& entry);
 
+    virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName(uid_t uid = geteuid()) const
+        { return m_deps->GetDefaultAuthFileName(uid); }
+
 private:
     std::wstring FormatPortSpecification(const std::string& binding, const std::string& user, const std::string& password);
     void ValidateDefaultRecordUpdate(const std::string& binding, const std::string& username, const std::string& password);

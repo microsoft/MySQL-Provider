@@ -10,6 +10,7 @@
 */
 
 #include <scxcorelib/scxcmn.h>
+#include <scxcorelib/scxfilesystem.h>
 #include <util/Base64Helper.h>
 #include <util/unique_ptr.h>
 
@@ -54,7 +55,8 @@ enum returnValues_t
     retParsingError,
     retCommandError,
     retInvalidArguments,
-    retInvalidAuth
+    retInvalidAuth,
+    retCannotSaveAuth
 };
 
 // Keep track if we updated the authentication database
@@ -136,6 +138,29 @@ int ParseCommand(commands_t &operation, vector<wstring>& options, const wstring&
     }
 
     return retOkay;
+}
+
+bool CommandHelper_SaveAuthenticationFile(MySQL_Authentication& auth)
+{
+    try
+    {
+        auth.Save();
+    }
+    catch (const SCXFilePathNotFoundException& e)
+    {
+        wcerr << L"Error 10002: Path not found when trying to save authentication file "
+              << auth.GetDefaultAuthFileName().Get() 
+              << L" - refer to documentation for more details"
+              << endl;
+        return false;
+    }
+    catch (SCXException& e)
+    {
+        wcerr << L"Error: Unexcpected exception when trying to save authentication file: " << e.What() << endl;
+        return false;
+    }
+
+    return true;
 }
 
 int CommandHandler_AutoUpdate(MySQL_Authentication& auth, const vector<wstring> command)
@@ -333,8 +358,7 @@ int CommandHandler_Exit(MySQL_Authentication& auth, const vector<wstring> comman
         return retInvalidArguments;
     }
 
-    auth.Save();
-    return retOkay;
+    return ( CommandHelper_SaveAuthenticationFile(auth) ? retOkay : retCannotSaveAuth );
 }
 
 int CommandHandler_Help(MySQL_Authentication& auth, const vector<wstring> command)
@@ -457,10 +481,15 @@ int CommandHandler_Save(MySQL_Authentication& auth, const vector<wstring> comman
         return retInvalidArguments;
     }
 
-    auth.Save();
-
-    sf_updatePending = false;
-    return retOkay;
+    if ( CommandHelper_SaveAuthenticationFile(auth) )
+    {
+        sf_updatePending = false;
+        return retOkay;
+    }
+    else
+    {
+        return retCannotSaveAuth;
+    }
 }
 
 int CommandHandler_Update(MySQL_Authentication& auth, const vector<wstring> command)
@@ -600,7 +629,10 @@ int main(int argc, char *argv[])
         // Command "save" isn't useful from command line, but not worth stopping it ...
         if ( 0 == exitStatus && op_exit != op && op_help != op && op_print != op && op_quit != op && op_save != op)
         {
-            auth.Save();
+            if ( !CommandHelper_SaveAuthenticationFile(auth) )
+            {
+                exitStatus = retCannotSaveAuth;
+            }
         }
     }
     else
@@ -609,6 +641,12 @@ int main(int argc, char *argv[])
         MySQL_Authentication auth;
         auth.Load();
 
+        // Pre-check if we'll have an obvious problem saving the authentication file
+        if ( !CommandHelper_SaveAuthenticationFile(auth) )
+        {
+            return retCannotSaveAuth;
+        }
+
         do {
             wstring parseLine;
 
@@ -616,7 +654,7 @@ int main(int argc, char *argv[])
             getline( wcin, parseLine );
 
             exitStatus = ProcessCommand(op, auth, parseLine);
-        } while ( ! (op_exit == op || op_quit == op) );
+        } while ( ! (op_exit == op || op_quit == op || exitStatus == retCannotSaveAuth ) );
     }
 
     return exitStatus;

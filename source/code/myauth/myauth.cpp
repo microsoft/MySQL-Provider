@@ -59,9 +59,23 @@ enum returnValues_t
     retCannotSaveAuth
 };
 
-// Keep track if we updated the authentication database
 
-static bool sf_updatePending = false;
+static bool sf_updatePending = false;   //<! Keep track if we updated the authentication database
+
+// Support code for -t (enabling unit tests for myauth).  Note that -t is an undocumented option.
+namespace
+{
+    class MySQL_TestableAuthenticationDependencies : public MySQL_AuthenticationDependencies
+    {
+    public:
+        virtual SCXCoreLib::SCXFilePath GetDefaultAuthFileName(uid_t /* uid */) const
+        {
+            return L"./mysql-auth";
+        }
+    };
+}
+
+static bool sf_testMode = false;        //<! Are we in test mode?
 
 
 
@@ -579,15 +593,19 @@ int main(int argc, char *argv[])
     }
 
     // Parse the arguments
-    while ((c = getopt(argc, argv, "hiv")) != -1) {
+    while ((c = getopt(argc, argv, "hitv")) != -1) {
         switch(c) {
             case 'h':                   /* Show extended help information */
-                show_usage(argv[0], false, retHelpOutput);
+                show_usage(argv[0], false, retOkay);
                 /*NOTREACHED*/
                 break;
 
             case 'i':                   /* Interactive (prompted) use */
                 interactive = true;
+                break;
+
+            case 't':                   /* Test mode (undocumented option) */
+                sf_testMode = true;
                 break;
 
             case 'v':                   /* Show version info */
@@ -606,9 +624,13 @@ int main(int argc, char *argv[])
         }
     }
 
+    MySQL_Authentication auth(
+        sf_testMode
+          ? SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_TestableAuthenticationDependencies())
+          : SCXHandle<MySQL_AuthenticationDependencies>(new MySQL_AuthenticationDependencies));
+
     if ( !interactive )
     {
-        MySQL_Authentication auth;
         auth.Load();
 
         // Handle any arguments on the command line
@@ -638,7 +660,6 @@ int main(int argc, char *argv[])
     else
     {
         commands_t op = op_unknown;
-        MySQL_Authentication auth;
         auth.Load();
 
         // Pre-check if we'll have an obvious problem saving the authentication file
@@ -652,6 +673,12 @@ int main(int argc, char *argv[])
 
             wcout << L"auth> ";
             getline( wcin, parseLine );
+
+            // In test mode, echo for more reasonable test output from SCXProcess::Run
+            if ( sf_testMode )
+            {
+                wcout << parseLine << std::endl;
+            }
 
             exitStatus = ProcessCommand(op, auth, parseLine);
         } while ( ! (op_exit == op || op_quit == op || exitStatus == retCannotSaveAuth ) );

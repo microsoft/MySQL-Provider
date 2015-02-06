@@ -273,7 +273,7 @@ namespace Scx.Test.MySQL.Provider
             {
                 this.enumerateresult = false;
             }
-            if(mcfContext.Records.HasKey("deleteCredentials") && mcfContext.Records.GetValue("deleteCredentials")=="true")
+            if (mcfContext.Records.HasKey("deleteCredentials") && mcfContext.Records.GetValue("deleteCredentials") == "true")
             {
                 this.deleteCredentials = true;
                 this.deleteCredentialsCmd = mcfContext.Records.GetValue("deleteCredentialsCmd");
@@ -318,9 +318,9 @@ namespace Scx.Test.MySQL.Provider
                     mcfContext.Trc("WSMAN Query failed: " + e.Message);
                     success = false;
                     if (stopOmAgent)
-                    { 
-                        success = true; 
-                    } 
+                    {
+                        success = true;
+                    }
                 }
 
                 if (!success)
@@ -377,15 +377,31 @@ namespace Scx.Test.MySQL.Provider
                     Console.WriteLine();
                 }
 
-                XmlNodeList nameNodeList = root.GetElementsByTagName("p:InstanceID");
-                string xmlDocumentName = nameNodeList.Count > 0 ? nameNodeList[0].InnerText : "unknown";
-                mcfContext.Trc("Processing new XML document: " + xmlDocumentName);
+                XmlNodeList nameNodeList = null;
+                System.Text.RegularExpressions.Regex criteriaPort = null;
+                string xmlDocumentName = string.Empty;
 
-                // this property used to be fillter multi instances
+                // this property used to be fillter multi instances InstanceID or ProductIdentifyingNumber
                 if (mcfContext.Records.HasKey("p:InstanceID"))
                 {
+                    nameNodeList = root.GetElementsByTagName("p:InstanceID");
+                    xmlDocumentName = nameNodeList.Count > 0 ? nameNodeList[0].InnerText : "unknown";
+                    mcfContext.Trc("Processing new XML document: " + xmlDocumentName);
                     string portRecordValue = mcfContext.Records.GetValue("p:InstanceID");
-                    System.Text.RegularExpressions.Regex criteriaPort = new Regex(portRecordValue);
+                    criteriaPort = new Regex(portRecordValue);
+
+                    if (!criteriaPort.IsMatch(nameNodeList[0].InnerText))
+                    {
+                        continue;
+                    }
+                }
+                else if (mcfContext.Records.HasKey("p:ProductIdentifyingNumber"))
+                {
+                    nameNodeList = root.GetElementsByTagName("p:ProductIdentifyingNumber");
+                    xmlDocumentName = nameNodeList.Count > 0 ? nameNodeList[0].InnerText : "unknown";
+                    mcfContext.Trc("Processing new XML document: " + xmlDocumentName);
+                    string productIdentifyingNumber = mcfContext.Records.GetValue("p:ProductIdentifyingNumber");
+                    criteriaPort = new Regex(productIdentifyingNumber);
 
                     if (!criteriaPort.IsMatch(nameNodeList[0].InnerText))
                     {

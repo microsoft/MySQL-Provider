@@ -99,6 +99,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="VerifyEnumerate.cs" />
+    <Compile Include="VerifyMySQLValue\VerifyMySQLValue.cs" />
   </ItemGroup>
   <ItemGroup>
     <Fakes Include="Fakes\Interop.sshcomLib.fakes" />

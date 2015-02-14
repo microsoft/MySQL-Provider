@@ -255,9 +255,13 @@ void MySQL_Server_Database_Class_Provider::GetInstance(
                                    "SUM(a.data_length) + SUM(a.index_length) as \"Size (Bytes)\""
                                " from information_schema.schemata b"
                                " left join information_schema.tables a on b.schema_name = a.table_schema"
-                               " where b.schema_name = \"" + database + "\" group by b.schema_name";
+                               " where b.schema_name = ? group by b.schema_name";
+        std::vector<std::string> parameters;
+        parameters.push_back(database);
+
         MySQL_QueryResults databases;
-        if ( ! pQuery->ExecuteQuery(strQuery.c_str()) || ! pQuery->GetMultiColumnResults(databases) )
+        if ( ! pQuery->ExecuteQuery(strQuery.c_str(), parameters)
+             || ! pQuery->GetMultiColumnResults(databases) )
         {
             std::stringstream ss;
             ss << "Failure executing query to get list of databases/table-count/disk-used against MySQL engine, error "

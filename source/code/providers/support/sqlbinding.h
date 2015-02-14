@@ -118,20 +118,26 @@ class MySQL_Query
 {
 public:
     explicit MySQL_Query(SCXCoreLib::SCXHandle<MySQL_Dependencies> deps)
-    : m_columnCount(0), m_sqlErrorNum(0), m_deps(deps)
+    : m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.query")),
+      m_columnCount(0), m_sqlErrorNum(0), m_deps(deps)
     { }
     virtual ~MySQL_Query() {}
 
     virtual bool ExecuteQuery( const char* query );
+    virtual bool ExecuteQuery( const char* query, const std::vector<std::string>& parameters );
 
     virtual bool GetResults(std::map<std::string, std::string>& results);
     virtual bool GetMultiColumnResults(MySQL_QueryResults& results);
+    virtual const std::vector<std::string>& GetColumnNames() { return m_columnNames; }
 
     virtual const std::string& GetErrorText() { return m_sqlErrorText; }
     virtual const std::string& GetErrorState() { return m_sqlState; }
     virtual unsigned int GetErrorNum() { return m_sqlErrorNum; }
 
 private:
+    SCXCoreLib::SCXLogHandle m_log;
+
+    std::vector< std::string > m_columnNames;
     std::map< std::string, std::vector<std::string> > m_queryResults;
     unsigned int m_columnCount;
 

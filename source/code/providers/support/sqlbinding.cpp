@@ -13,6 +13,8 @@
 
 #include <vector>
 
+#include "errmsg.h"
+
 #include "mycnf-paths.h"
 #include "sqlauth.h"
 #include "sqlbinding.h"
@@ -136,13 +138,29 @@ bool MySQL_Dependencies::Detach()
 
 bool MySQL_Query::ExecuteQuery( const char* query )
 {
+    std::vector<std::string> parameters;
+    return ExecuteQuery( query, parameters );
+}
+
+
+
+// Implementation note: Use prepared statements in API to avoid SQL injection attacks
+
+bool MySQL_Query::ExecuteQuery( const char* query, const std::vector<std::string>& parameters )
+{
+    bool returnStatus = true;
+    SCX_LOGINFO(m_log, std::string("Executing query: ") + query);
+
     // Clear the prior results, if any
+    m_columnNames.clear();
     m_queryResults.clear();
 
     m_sqlErrorText.clear();
     m_sqlState.clear();
     m_sqlErrorNum = 0;
 
+    MYSQL_STMT* sqlStatement = NULL;
+    long unsigned int* paramLength = NULL;
     try
     {
         MYSQL * sqlConnection = m_deps->m_sqlConnection;
@@ -153,72 +171,219 @@ bool MySQL_Query::ExecuteQuery( const char* query )
             return false;
         }
 
-        int sqlStatus = mysql_query( sqlConnection, query );
-        if ( sqlStatus )
+        // Initialize the statement
+        sqlStatement = mysql_stmt_init( sqlConnection );
+        if ( !sqlStatement )
         {
-            m_sqlErrorText = mysql_error(sqlConnection);
-            m_sqlState = mysql_sqlstate(sqlConnection);
-            m_sqlErrorNum = mysql_errno(sqlConnection);
+            m_sqlErrorText = "mysql_stmt_init() failed, out of memory";
+            m_sqlErrorNum = CR_OUT_OF_MEMORY; // Don't have sqlStatement to assign normally
 
-            throw SQLError( mysql_error(sqlConnection), SCXSRCLOCATION );
+            throw SQLError( m_sqlErrorText.c_str(), SCXSRCLOCATION );
         }
 
-        // Get the result set
-        MYSQL_RES *sqlResult = mysql_store_result( sqlConnection );
-        if ( NULL == sqlResult )
+        // Prepare the statement
+        if ( mysql_stmt_prepare(sqlStatement, query, strlen(query)) )
         {
-            // Query was valid, but no rows were returned
+            throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
+        }
+
+        //
+        // Now that the statement is prepared, we can pick up the column names.
+        // (If no columns, then statement must not have generated results)
+        //
+
+        if ( (m_columnCount = mysql_stmt_field_count(sqlStatement)) > 0 )
+        {
+            MYSQL_RES *resultSet = mysql_stmt_result_metadata(sqlStatement);
+            if ( !resultSet )
+            {
+                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
+            }
+
+            MYSQL_FIELD* field;
+            while ( (field = mysql_fetch_field(resultSet)) != 0 )
+            {
+                m_columnNames.push_back( field->name );
+            }
+
+            mysql_free_result(resultSet);
+        }
+
+        //
+        // Bind the parameters (passed in) to the statement if any exist
+        //
+
+        size_t parameterCount;
+        if ( (parameterCount = parameters.size()) > 0 )
+        {
+            MYSQL_BIND params[parameterCount];
+            paramLength = new long unsigned int[parameterCount];
+            memset( params, 0, sizeof(params) );
+
+            for (size_t i = 0; i < parameterCount; ++i)
+            {
+                params[i].buffer_type = MYSQL_TYPE_STRING;
+                params[i].buffer = (void *) ( parameters[i].c_str() );
+                params[i].buffer_length = static_cast<long unsigned int>( parameters[i].size() + 1 );
+                params[i].is_null = 0;
+                params[i].length = &paramLength[i];
+
+                paramLength[i] = parameters[i].size();
+            }
+
+            if ( mysql_stmt_bind_param(sqlStatement, params) )
+            {
+                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
+            }
+        }
+
+        //
+        // Bind the output parameters (passed in) to the statement if appropriate
+        //
+
+        if ( m_columnCount > 0 )
+        {
+            const unsigned int COLUMN_MAXLEN = 256; /* Arbitary value, raise if needed */
+
+            MYSQL_BIND results[m_columnCount];
+            char result_data[m_columnCount][COLUMN_MAXLEN];
+            unsigned long result_lengths[m_columnCount];
+
+            memset( results, 0, sizeof(results) );
+
+            for (size_t i = 0; i < m_columnCount; ++i)
+            {
+                results[i].buffer_type = MYSQL_TYPE_VAR_STRING;
+                results[i].buffer = result_data[i];
+                results[i].buffer_length = COLUMN_MAXLEN;
+                results[i].is_null = 0;
+                results[i].length = &result_lengths[i];
+            }
+
+            // Bind the results buffer ...
+            if ( mysql_stmt_bind_result(sqlStatement, results) )
+            {
+                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
+            }
+
+            // ... and execute the SQL statement
+            if ( mysql_stmt_execute(sqlStatement) )
+            {
+                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
+            }
+
+            // Finally collect up the results
+
+            if ( m_columnCount >= 2 )
+            {
+                SCX_LOGERROR(m_log, std::string("Results for query: ") + query);
+
+                /*
+                 * If the prepared statement result set contains somethning like this:
+                 *
+                 * +--------------------+--------+--------------+
+                 * | Database           | Tables | Size (Bytes) |
+                 * +--------------------+--------+--------------+
+                 * | information_schema |     28 |         8192 |
+                 * | mysql              |     23 |       641963 |
+                 * | test               |      0 |         NULL |
+                 * +--------------------+--------+--------------+
+                 *
+                 * then, unfortunately, mysql_stmt_fetch doesn't set up the last column
+                 * result bindings for the very last column. This causes programs looking
+                 * at the result bindings to believe that the size of the test database is
+                 * acutally 641963, which is wrong.
+                 *
+                 * Furthermore, it appears that the length (in result_lengths) isn't set
+                 * properly for numeric fields that undergo ASCII conversion. Thus, the
+                 * easist fix is to zero out the result memory (variable result_data),
+                 * making it appear that this last field is "", which is good enough.
+                 */
+
+                while ( memset( result_data, 0, sizeof(result_data) ),
+                        memset( result_lengths, 0, sizeof(result_lengths) ),
+                        mysql_stmt_fetch(sqlStatement) == 0 )
+                {
+                    // If key is NULL, then don't try to insert the record
+                    if ( results[0].is_null )
+                    {
+                        continue;
+                    }
+
+                    // Get the key (in lower case)
+                    std::string key = result_data[0];
+                    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+                    if ( m_queryResults.count(key) > 0 )
+                    {
+                        m_sqlErrorText = "Duplicate result " + key + " returned in result set";
+                        returnStatus = false;
+                        break;
+                    }
+
+                    for (unsigned int i = 1; i < m_columnCount; ++i)
+                    {
+                        if ( ! results[i].is_null )
+                        {
+                            result_data[i][result_lengths[i]] = '\0';
+                            m_queryResults[key].push_back( result_data[i] );
+                            SCX_LOGERROR(m_log, std::string("For key ") + key + ", pushed back " + result_data[i]);
+                            // TODO: gi wrong for test database on port 3399 - why?
+                            // Wrong because fetch returned different number of rows?
+                            // (memset at while loop resolved, but is this the right fix?)
+                        }
+                        else
+                        {
+                            m_queryResults[key].push_back( "" );
+                            SCX_LOGERROR(m_log, std::string("For key ") + key + ", pushed back EMPTY" );
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // We didn't get two columns of information back from query
+                
+                m_sqlErrorText = "Result set did not contain at least two columns of data";
+                returnStatus = false;
+            }
+        }
+        else
+        {
+            // No results to bind, so just execute (no data returned)
+            if ( mysql_stmt_execute(sqlStatement) )
+            {
+                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
+            }
 
             m_sqlErrorText = "Result set is empty";
-            return false;
+            returnStatus = false;
         }
 
-        m_columnCount = mysql_num_fields(sqlResult);
-        if ( m_columnCount < 2 )
-        {
-            // We didn't get two columns of information back from query
-
-            m_sqlErrorText = "Result set did not contain at least two columns of data";
-            mysql_free_result(sqlResult);
-            return false;
-        }
-
-        MYSQL_ROW sqlRow;
-        while ( NULL != (sqlRow = mysql_fetch_row(sqlResult)) )
-        {
-            // If key is NULL, then don't try to insert the record
-            if ( NULL == sqlRow[0] )
-            {
-                continue;
-            }
-
-            // Get the key (in lower case)
-            std::string key = sqlRow[0];
-            std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-
-            if ( m_queryResults.count(key) > 0 )
-            {
-                m_sqlErrorText = "Duplicate result " + key + " returned in result set";
-                mysql_free_result(sqlResult);
-                m_queryResults.clear();
-                return false;
-            }
-
-            for (unsigned int i = 1; i < m_columnCount; ++i)
-            {
-                m_queryResults[key].push_back( sqlRow[i] ? sqlRow[i] : "" );
-            }
-        }
-
-        mysql_free_result(sqlResult);
     }
     catch ( SQLError& e )
     {
         m_sqlErrorText = SCXCoreLib::StrToUTF8( e.What() );
+        SCX_LOGERROR(m_log, e.What());
+
+        if (NULL != sqlStatement)
+        {
+            m_sqlState = mysql_stmt_sqlstate(sqlStatement);
+            m_sqlErrorNum = mysql_stmt_errno(sqlStatement);
+            mysql_stmt_close(sqlStatement);
+        }
+
+        delete [] paramLength;
         return false;
     }
 
-    return true;
+    if (NULL != sqlStatement)
+    {
+        mysql_stmt_close(sqlStatement);
+    }
+    delete [] paramLength;
+
+    return returnStatus;
 }
 
 bool MySQL_Query::GetResults(std::map<std::string,std::string>& results)

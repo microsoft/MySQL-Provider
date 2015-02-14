@@ -44,6 +44,8 @@ class Binding_Test : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testSQLQuery_ShowGlobal_Status_Handler_read );
     CPPUNIT_TEST( testSQLQuery_ShowGlobal_Status_With_Credentials );
     CPPUNIT_TEST( testSQLQuery_With_Multiple_Columns );
+    CPPUNIT_TEST( testSQLQuery_With_Multiple_SQL_Statements_Fails );
+    CPPUNIT_TEST( testSQLQuery_Fetching_Column_Names );
     CPPUNIT_TEST( testSQLAuthentication_Construction );
 
     CPPUNIT_TEST_SUITE_END();
@@ -186,7 +188,7 @@ public:
         CPPUNIT_ASSERT_EQUAL( std::string("/var/lib/mysql/my.cnf"), paths[2] );
         CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/mysql/data/my.cnf"), paths[3] );
         CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/var/my.cnf"), paths[4] );
-		CPPUNIT_ASSERT_EQUAL( std::string("/usr/my.cnf"), paths[5] );
+                CPPUNIT_ASSERT_EQUAL( std::string("/usr/my.cnf"), paths[5] );
     }
 
     void testSQLQuery_With_No_Attach()
@@ -306,6 +308,60 @@ public:
         CPPUNIT_ASSERT( contents.size() == 2);
         CPPUNIT_ASSERT_EQUAL( std::string("c2"), contents[0] );
         CPPUNIT_ASSERT_EQUAL( std::string("c3"), contents[1] );
+    }
+
+    void testSQLQuery_With_Multiple_SQL_Statements_Fails()
+    {
+        // SQL injection bugs can result if multiple SQL statements are allowed
+        // to be executed as part of a single query.
+        //
+        // The query code was reworked to use MySQL Prepared Statements, which
+        // eliminates the possibility of SQL injection bugs. Verify that multiple
+        // SQL statements aren't allowed.
+
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
+        util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
+
+        MySQL_QueryResults resultSet;
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+
+        const char *sqlQuery = "select 1 as 'Result 1, Column 1', 2 as 'Result 1, Column 2'; "
+                               "select 3 as 'Result 2, Column 1', 4 as 'Result 2, Column 2';";
+
+        fSuccess = pQuery->ExecuteQuery(sqlQuery);
+        std::string sqlError = pQuery->GetErrorText();
+        CPPUNIT_ASSERT_MESSAGE( sqlError, ! fSuccess );
+        CPPUNIT_ASSERT_MESSAGE( sqlError, sqlError.find("You have an error in your SQL syntax") != std::string::npos ); 
+    }
+
+    void testSQLQuery_Fetching_Column_Names()
+    {
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
+        util::unique_ptr<MySQL_Query> pQuery(g_pFactory->GetQuery());
+
+        MySQL_QueryResults resultSet;
+        bool fSuccess = pBinding->Attach(sqlPort, sqlHostname, sqlUsername, sqlPassword);
+        CPPUNIT_ASSERT_MESSAGE( pBinding->GetErrorText(), fSuccess );
+        fSuccess = pQuery->ExecuteQuery("select \"c1\" as \"Column 1\", \"c2\" as \"Column 2\", \"c3\" as \"Column 3\"");
+        CPPUNIT_ASSERT_MESSAGE( pQuery->GetErrorText(), fSuccess );
+        fSuccess = pQuery->GetMultiColumnResults(resultSet);
+        CPPUNIT_ASSERT_MESSAGE( pQuery->GetErrorText(), fSuccess );
+
+        // Verify the result set
+        CPPUNIT_ASSERT( resultSet.size() == 1 );
+        CPPUNIT_ASSERT( resultSet.count("c1") > 0 );
+
+        std::vector<std::string> contents = resultSet["c1"];
+        CPPUNIT_ASSERT( contents.size() == 2);
+        CPPUNIT_ASSERT_EQUAL( std::string("c2"), contents[0] );
+        CPPUNIT_ASSERT_EQUAL( std::string("c3"), contents[1] );
+
+        std::vector<std::string> columnNames = pQuery->GetColumnNames();
+        CPPUNIT_ASSERT_EQUAL( static_cast<size_t>(3), columnNames.size() );
+        CPPUNIT_ASSERT_EQUAL( std::string("Column 1"), columnNames[0] );
+        CPPUNIT_ASSERT_EQUAL( std::string("Column 2"), columnNames[1] );
+        CPPUNIT_ASSERT_EQUAL( std::string("Column 3"), columnNames[2] );
     }
 
     void testSQLAuthentication_Construction()

@@ -226,6 +226,29 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         #region HelpMethod
 
         /// <summary>
+        /// Run remote command using root acount.
+        /// </summary>
+        /// <param name="cmd">The command need to be executed</param>
+        /// <param name="password">root password</param>
+        /// <returns>Command execute result</returns>
+        public string RunCommandAsRoot(string cmd, string password)
+        {
+            string result = string.Empty;
+            RunPosixCmd rPC = new RunPosixCmd(this.HostName, "root", password);
+            try
+            {
+                rPC.RunCmd(cmd);
+                result = string.Format("Command executed with output \"{0}\" or Error \"{1}\"", rPC.StdOut, rPC.StdErr);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(string.Format("An exception \"{0}\" occured when executing command \"{1}\"", e.Message + ":" + rPC.StdOut + ":" + rPC.StdErr, cmd));
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Verify Installation logs.
         /// </summary>
         /// <param name="commandStdOut">Installation command stdOut put</param>

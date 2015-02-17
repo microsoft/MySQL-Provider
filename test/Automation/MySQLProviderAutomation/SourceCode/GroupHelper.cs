@@ -128,7 +128,7 @@ namespace Scx.Test.MySQL.Provider
 
                 this.mySQLHelper = new MySQLHelper(ctx.Trc, this.hostName, this.userName, this.password);
 
-                this.mySQLHelper.CheckMySQLServiceStatus(this.checkServiceCmd);
+                //  this.mySQLHelper.CheckMySQLServiceStatus(this.checkServiceCmd);
 
                 this.SetMySQLAgentPath(ctx);
 

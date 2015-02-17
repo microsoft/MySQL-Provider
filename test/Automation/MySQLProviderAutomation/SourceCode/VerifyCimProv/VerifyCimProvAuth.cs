@@ -110,7 +110,12 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         /// <param name="ctx"></param>
         public void Cleanup(IContext ctx)
         {
-            // the uninstall will be down via group clean up.
+            if (ctx.Records.HasKey("removeMySQLAuthCmd"))
+            {
+                string removeMySQLAuthCmd = ctx.Records.GetValue("removeMySQLAuthCmd");
+                string password = ctx.ParentContext.Records.GetValue("password");
+                this.RunCommandAsRoot(removeMySQLAuthCmd, password);
+            }
         }
     }
 }

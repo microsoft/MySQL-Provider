@@ -19,7 +19,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
     /// <summary>
     /// VerifyMySQLValue
     /// </summary>
-    class VerifyMySQLValue : VerifyCimProvHelper, ISetup, IRun, IVerify, ICleanup
+    class VerifyMySQLValue : VerifyEnumerateBase, ISetup, IRun, IVerify, ICleanup
     {
         /// <summary>
         /// XML fragment returned by query
@@ -62,6 +62,9 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         /// </summary>
         Dictionary<string, string> propertyLists = new Dictionary<string, string>();
 
+        string hostIp = "127.0.0.1";
+        string defaultPort = "3307";
+
 
         /// <summary>
         /// set up
@@ -69,26 +72,28 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         /// <param name="ctx">Context</param>
         public void Setup(IContext ctx)
         {
-            this.GetValueFromVarList(ctx);
-            IVarContext varContext = (IVarContext)ctx;
-            this.queryClass = varContext.CustomID;
-            if (String.IsNullOrEmpty(this.queryClass))
+            this.InitializeHelper(ctx);
+
+            if (this.QueryClass == "MySQL_Server")
             {
-                throw new VarAbort("cid field not specified, specify query class in cid");
+                this.GetExpectedMySQLServerValues(ctx);
+                this.InsertMySQLServerValues(ctx);
+                // Can't get the configuration file path so skip this verify.
+                int start = this.ResultTemplate.IndexOf("<ConfigurationFile>", 0);
+                int end = this.ResultTemplate.IndexOf("</ConfigurationFile>", 0);
+                int count = end - start + "</ConfigurationFile>".Length;
+                this.ResultTemplate = this.ResultTemplate.Remove(start, count);
+            }
+            else if (this.QueryClass == "MySQL_ServerStatistics")
+            {
+                this.InsertMySQLServerStatisticsValues(ctx);
+            }
+            else if (this.QueryClass == "MySQL_Server_Database")
+            {
+                this.InsertMySQLDataBaseValues(ctx);
             }
 
-            if (this.queryClass == "MySQL_Server")
-            {
-                GetMySQLServerMap();
-            }
-            else if (this.queryClass == "MySQL_ServerStatistics")
-            {
-                GetMySQLServerStatisticsMap();
-            }
-            else if (this.queryClass == "MySQL_Server_Database")
-            {
-                GetMySQLServerDataBasesMap();
-            }
+            ctx.Trc("Expected Result: " + this.ResultTemplate);
         }
 
         /// <summary>
@@ -97,155 +102,38 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         /// <param name="mcfContext">Context</param>
         public void Run(IContext mcfContext)
         {
-            mcfContext.Trc("Run entered");
-            string debugRecord = null;
-            bool requiredInstanceFound = false;
-            bool printDebug = false;
-            string[] recordKeys = mcfContext.Records.GetKeys();
-
-            // Check records for DebugXML record flag from mcf command line. For example: MCF.exe /m:%VarMap%.xml /debugxml:true
-            if (string.IsNullOrEmpty(debugRecord) == false)
+            if (this.QueryClass == "MySQL_Server")
             {
-                printDebug = bool.Parse(debugRecord);
+                GetMySQLServerMap();
             }
-            // Enumerate through context variation records and execute record values as regular expressions
-            foreach (string wsmanQuery in this.queryXmlResult)
+            else if (this.QueryClass == "MySQL_ServerStatistics")
             {
-                XmlDocument queryXmlDoc = new XmlDocument();
-                queryXmlDoc.LoadXml(wsmanQuery);
-                XmlElement root = queryXmlDoc.DocumentElement;
-                bool matchingInstance = true;
-
-                // Pretty-print XML
-                if (printDebug == true)
-                {
-                    XmlTextWriter xmlWriter = new XmlTextWriter(Console.Out);
-                    xmlWriter.Formatting = Formatting.Indented;
-                    queryXmlDoc.WriteContentTo(xmlWriter);
-                    xmlWriter.Flush();
-                    Console.WriteLine();
-                }
-
-                XmlNodeList nameNodeList = root.GetElementsByTagName("InstanceID");
-                string xmlDocumentName = nameNodeList.Count > 0 ? nameNodeList[0].InnerText : "unknown";
-                mcfContext.Trc("Processing new XML document: " + xmlDocumentName);
-
-                // this property used to be fillter multi instances
-                if (mcfContext.Records.HasKey("InstanceID"))
-                {
-                    string portRecordValue = mcfContext.Records.GetValue("InstanceID");
-                    System.Text.RegularExpressions.Regex criteriaPort = new Regex(portRecordValue);
-
-                    if (!criteriaPort.IsMatch(nameNodeList[0].InnerText))
-                    {
-                        continue;
-                    }
-                }
-
-                // Test entries in MCF variation map records agains fields returned by WSMAN
-                // The WSMAN fields will be start with 'p:','wsa:','wsman:'.
-                // WSMAN XML query may return 'parameter' nodes.  These are ignored.
-                foreach (string recordKey in recordKeys)
-                {
-                    // If we want to get the inner text of node which has node name wsman:Selector, we need 2 properties.
-                    // so we has 2 properties in such recordkey. Once we read the recordkey, we get 2 properties by splitting it with ','.
-                    // So that we need a string array to save those 2 properties.
-                    string[] recordKeyForEPR = new string[2];
-                    string recordValue = mcfContext.Records.GetValue(recordKey);
-                    XmlNodeList nodes = root.GetElementsByTagName(recordKey);
-
-                    // If the recordkey contains "wsman:Selector",we try to get the nodes by the tagname.
-                    if (recordKey.Contains("stopMySQLServer"))
-                    {
-                        continue;
-                    }
-
-                    if (nodes != null)
-                    {
-                        // A matching recordKey result in 1 or more XML nodes from search
-                        if (nodes.Count > 0)
-                        {
-                            foreach (XmlNode node in nodes)
-                            {
-                                System.Text.RegularExpressions.Regex criteria = new Regex(recordValue);
-                                if (criteria != null)
-                                {
-                                    if (recordKeyForEPR[0] != null)
-                                    {
-                                        if (node.Attributes[0].Value.Equals(recordKeyForEPR[1]))
-                                        {
-                                            if (criteria.IsMatch(node.InnerText))
-                                            {
-                                                mcfContext.Trc(recordKey + " passed criteria check");
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (criteria.IsMatch(node.InnerText) == true)
-                                        {
-                                            mcfContext.Trc(recordKey + " passed criteria check");
-                                        }
-                                        else
-                                        {
-                                            matchingInstance = false;
-                                            mcfContext.Err(string.Format("{0}.{1} with value '{2}' failed criteria check, McfRecord='{3}', regex='{4}'", this.queryClass, node.LocalName, node.InnerText, recordKey, recordValue));
-                                            mcfContext.Err("Outer XML=" + node.OuterXml);
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    mcfContext.Err("Error: test " + recordKey + "Invalid Regex '" + recordValue + "'");
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Non-query record-value pairs are ignored
-                            if ((recordKey.StartsWith("p:") == true) || (recordKey.StartsWith("wsa:") == true) || (recordKey.StartsWith("wsman:") == true))
-                            {
-                                matchingInstance = false;
-                                mcfContext.Err("Expected to find " + recordKey + " in WSMAN query");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        mcfContext.Alw("'nodes' == null for " + recordKey);
-                    }
-                }
-
-                if (this.requiredInstance)
-                {
-                    if (matchingInstance)
-                    {
-                        requiredInstanceFound = true;
-                        break;
-                    }
-                }
-                else
-                {
-                    if (!matchingInstance)
-                    {
-                        throw new VarAbort("Values in WSMAN query failed criteria check");
-                    }
-                }
+                GetMySQLServerStatisticsMap();
             }
-
-            if (this.requiredInstance &&
-                requiredInstanceFound == false)
+            else if (this.QueryClass == "MySQL_Server_Database")
             {
-                throw new VarAbort("Required instance of WSMAN object not found");
+                GetMySQLServerDataBasesMap();
+            }
+            foreach (var item in this.QueryXmlResult)
+            {
+                mcfContext.Trc("Actual Result: " + item.ToString());
             }
         }
+
         /// <summary>
         /// Verify
         /// </summary>
         /// <param name="ctx"></param>
         public void Verify(IContext ctx)
         {
-            // the verify running in run method.
+            if (this.QueryClass == "MySQL_Server")
+            {
+                VerifyWSMANValues(ctx, this.ResultTemplate, "ProductIdentifyingNumber");
+            }
+            else
+            {
+                VerifyWSMANValues(ctx, this.ResultTemplate, "InstanceID");
+            }
         }
 
         /// <summary>
@@ -254,7 +142,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         /// <param name="ctx"></param>
         public void Cleanup(IContext ctx)
         {
-            // the clean up will be done in Group Clean up Method.
+            // will removed agent in Goup Clean up.
         }
 
         /// <summary>
@@ -262,28 +150,27 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         /// </summary>
         private void GetMySQLServerMap()
         {
-            string productIdentifyingNumber = "p:ProductIdentifyingNumber";
-            string productName = "p:ProductName";
-            string productVendor = "p:ProductVendor";
-            string productVersion = "p:ProductVersion";
-            string errorLogFile = "p:ErrorLogFile";
-            string socketFile = "p:SocketFile";
-            string dataDirectory = "p:DataDirectory";
-            string port = "p:Port";
             XmlDocument xdoc = new XmlDocument();
             XmlElement root = xdoc.CreateElement("p:MySQL_Server");
             root.SetAttribute("xmlns:p", string.Concat(this.xmlSchemaPrefix, queryClass));
             root.SetAttribute("xmlns:xsi", xsi);
             root.SetAttribute("xml:lang", lang);
             xdoc.AppendChild(root);
-            propertyLists.Add(productIdentifyingNumber, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"hostname\"").ToLower());
-            propertyLists.Add(productName, "MySQL");
-            propertyLists.Add(productVendor, "Oracle");
-            propertyLists.Add(productVersion, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"version\""));
-            propertyLists.Add(errorLogFile, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"log_error\";"));
-            propertyLists.Add(socketFile, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"socket\";"));
-            propertyLists.Add(dataDirectory, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"datadir\";"));
-            propertyLists.Add(port, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"port\";"));
+            propertyLists.Add("ProductIdentifyingNumber", string.Format("{0}:{1}:{2}", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"hostname\"").ToLower(), hostIp, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"port\";")));
+            propertyLists.Add("ProductName", "MySQL");
+            propertyLists.Add("ProductVendor", "Oracle");
+            propertyLists.Add("ProductVersion", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"version\""));
+            propertyLists.Add("SystemID", "[0-9]");
+            propertyLists.Add("CollectionID", "linux");
+            // Can't get the configuration file path so skip this verify.
+            // propertyLists.Add("ConfigurationFile", "/etc/my.cnf");
+            propertyLists.Add("ErrorLogFile", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"log_error\";"));
+            propertyLists.Add("Hostname", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"hostname\"").ToLower());
+            propertyLists.Add("BindAddress", hostIp);
+            propertyLists.Add("Port", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"port\";"));
+            propertyLists.Add("SocketFile", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"socket\";"));
+            propertyLists.Add("DataDirectory", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"datadir\";"));
+            propertyLists.Add("OperatingStatus", "OK");
 
             foreach (var item in propertyLists)
             {
@@ -291,7 +178,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 element.InnerText = item.Value;
                 root.AppendChild(element);
             }
-            queryXmlResult.Add(xdoc.InnerXml);
+            this.QueryXmlResult.Add(xdoc.InnerXml);
         }
 
         /// <summary>
@@ -384,6 +271,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             {
                 keyCacheUsePct = 0;
             }
+
             // QCacheHitPct
             string qCacheHitsValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where Variable_name= \"QCache_hits\";");
             double qCacheHits = double.Parse(qCacheHitsValue);
@@ -496,27 +384,29 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             {
                 fullTableScanPct = 0;
             }
-            propertyLists.Add("p:InstanceID", string.Format("{0}:127.0.0.1:3306", this.HostName));
-            propertyLists.Add("p:CurrentNumConnections", currentNumConnections);
-            propertyLists.Add("p:MaxConnections", maxConnections);
-            propertyLists.Add("p:Uptime", upTime);
-            propertyLists.Add("p:ServerDiskUseInBytes", serverDiskUseInBytes);
-            propertyLists.Add("p:ConnectionsUsePct", connectionsUsePct.ToString());
-            propertyLists.Add("p:AbortedConnectionPct", abortedConnnetionPct.ToString());
-            propertyLists.Add("p:SlowQueryPct", slowQueryPct.ToString());
-            propertyLists.Add("p:KeyCacheHitPct", keyCacheHitPct.ToString());
-            propertyLists.Add("p:KeyCacheWritePct", keyCacheWritePct.ToString());
-            propertyLists.Add("p:KeyCacheUsePct", keyCacheUsePct.ToString());
-            propertyLists.Add("p:QCacheHitPct", qCacheHitPct.ToString());
-            propertyLists.Add("p:QCachePrunesPct", qCachePrunesPct.ToString());
-            propertyLists.Add("p:QCacheUsePct", qCacheUsePct.ToString());
-            propertyLists.Add("p:TCacheHitPct", tCacheHitPct.ToString());
-            propertyLists.Add("p:TableLockContentionPct", tableLockContentionPct.ToString());
-            propertyLists.Add("p:TableCacheUsePct", tableCacheUsePct.ToString());
-            propertyLists.Add("p:IDB_BP_HitPct", idbBpHitPct.ToString());
-            propertyLists.Add("p:IDB_BP_WriteWaitPct", idbBpWriteWaitPct.ToString());
-            propertyLists.Add("p:IDB_BP_UsePct", idbBpUsePct.ToString());
-            propertyLists.Add("p:FullTableScanPct", fullTableScanPct.ToString());
+            propertyLists.Add("InstanceID", string.Format("{0}:127.0.0.1:3306", this.HostName));
+            propertyLists.Add("CurrentNumConnections", currentNumConnections);
+            propertyLists.Add("MaxConnections", maxConnections);
+            // todo this part.after confirm with redmond.
+            propertyLists.Add("FailedConnections", "0");
+            propertyLists.Add("Uptime", upTime);
+            propertyLists.Add("ServerDiskUseInBytes", serverDiskUseInBytes);
+            propertyLists.Add("ConnectionsUsePct", connectionsUsePct.ToString());
+            propertyLists.Add("AbortedConnectionPct", abortedConnnetionPct.ToString());
+            propertyLists.Add("SlowQueryPct", slowQueryPct.ToString());
+            propertyLists.Add("KeyCacheHitPct", keyCacheHitPct.ToString());
+            propertyLists.Add("KeyCacheWritePct", keyCacheWritePct.ToString());
+            propertyLists.Add("KeyCacheUsePct", keyCacheUsePct.ToString());
+            propertyLists.Add("QCacheHitPct", qCacheHitPct.ToString());
+            propertyLists.Add("QCachePrunesPct", qCachePrunesPct.ToString());
+            propertyLists.Add("QCacheUsePct", qCacheUsePct.ToString());
+            propertyLists.Add("TCacheHitPct", tCacheHitPct.ToString());
+            propertyLists.Add("TableLockContentionPct", tableLockContentionPct.ToString());
+            propertyLists.Add("TableCacheUsePct", tableCacheUsePct.ToString());
+            propertyLists.Add("IDB_BP_HitPct", idbBpHitPct.ToString());
+            propertyLists.Add("IDB_BP_WriteWaitPct", idbBpWriteWaitPct.ToString());
+            propertyLists.Add("IDB_BP_UsePct", idbBpUsePct.ToString());
+            propertyLists.Add("FullTableScanPct", fullTableScanPct.ToString());
 
             XmlDocument xdoc = new XmlDocument();
             XmlElement root = xdoc.CreateElement("p:MySQL_ServerStatistics");
@@ -531,7 +421,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 element.InnerText = item.Value;
                 root.AppendChild(element);
             }
-            queryXmlResult.Add(xdoc.InnerXml);
+            this.QueryXmlResult.Add(xdoc.InnerXml);
         }
 
         /// <summary>
@@ -552,10 +442,17 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 root.SetAttribute("xml:lang", lang);
                 xdoc.AppendChild(root);
 
-                propertyLists.Add("p:InstanceID", string.Format("{0}:127.0.0.1:3306:{1}", this.HostName, database));
-                propertyLists.Add("p:DatabaseName", database);
-                propertyLists.Add("p:NumberOfTables", this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;SELECT count(*) FROM information_schema.tables WHERE TABLE_SCHEMA = \"{0}\"", database), "count"));
-                propertyLists.Add("p:DiskSpaceInBytes", this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;select concat(round(sum(data_length),2)) as data from tables where table_schema=\"{0}\";", database), "data"));
+                propertyLists.Add("InstanceID", string.Format("{0}:127.0.0.1:3306:{1}", this.HostName, database));
+                propertyLists.Add("DatabaseName", database);
+                propertyLists.Add("NumberOfTables", this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;SELECT count(*) FROM information_schema.tables WHERE TABLE_SCHEMA = \"{0}\"", database), "count"));
+
+                string diskSpaceInBytes=this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;select concat(round(sum(data_length),2)) as data from tables where table_schema=\"{0}\";", database), "data");
+                if (diskSpaceInBytes.ToUpper()=="NULL")
+                {
+                    diskSpaceInBytes = "0";
+                }
+                propertyLists.Add("DiskSpaceInBytes", diskSpaceInBytes);
+
                 foreach (var item in propertyLists)
                 {
                     XmlElement element = xdoc.CreateElement(item.Key);
@@ -563,7 +460,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                     root.AppendChild(element);
                 }
                 propertyLists.Clear();
-                queryXmlResult.Add(xdoc.InnerXml);
+                this.QueryXmlResult.Add(xdoc.InnerXml);
             }
         }
 
@@ -583,7 +480,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 RunPosixCmd execCmd = new RunPosixCmd(this.HostName, this.UserName, this.Password);
                 string cmd = string.Format(mysqlCmd, getVariablesCmd, value) + "| awk '{print $2}'";
                 execCmd.FileName = cmd;
-                execCmd.RunCmd(cmd);
+                execCmd.RunCmd();
                 cmdoutput = execCmd.StdOut;
             }
             catch

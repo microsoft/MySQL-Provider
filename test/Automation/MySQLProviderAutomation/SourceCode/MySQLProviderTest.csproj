@@ -98,7 +98,10 @@
     <Compile Include="VerifyCimProv\VerifyCimProvHelper.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="VerifyEnumerate.cs" />
+    <Compile Include="VerifyEnumerate\VerifyEnumerateBase.cs" />
+    <Compile Include="VerifyEnumerate\VerifyEnumerateMySQLServer.cs" />
+    <Compile Include="VerifyEnumerate\VerifyEnumerateMySQLServerStatistics.cs" />
+    <Compile Include="VerifyEnumerate\VerifyEnumerateMySQLServerDataBases.cs" />
     <Compile Include="VerifyMySQLValue\VerifyMySQLValue.cs" />
   </ItemGroup>
   <ItemGroup>

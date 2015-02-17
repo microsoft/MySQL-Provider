@@ -3,7 +3,6 @@
         assembly="..\MySQL.dll"
         dsc="MySQL Automation Test"
         owner="v-jeali" contact="v-jeali">
-
   <snippet id="MySQLInstallInfo">
     <rec key="MySQL.InstallCmd">sh /tmp/{0}</rec>
     <rec key="MySQL.VerifyFolderExistCmd"><![CDATA[/bin/ls /opt/microsoft/|grep -ic "MySQL";/bin/ls /var/opt/microsoft/|grep -ic "MySQL";/bin/ls /etc/opt/microsoft/|grep -ic "MySQL"]]></rec>
@@ -14,33 +13,366 @@
   </snippet>
   <snippet id="MySQLAuthInfo">
     <rec key="MySQL.DefaultAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
+    <rec key="MySQL.DeleteAuthCmd">rm -rf /var/opt/microsoft/mysql-cimprov/auth/*</rec>
   </snippet>
   <snippet id="MultiMySQL">
     <rec key="MultiMySQLAddAuth">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 };/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3307 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
   </snippet>
-  <snippet id="CommonVariables">
-    <rec key="IpAddress">[0-9]{0,3}.[0-9]{0,3}.[0-9]{0,3}.[0-9]{0,3}</rec>
-    <rec key="Port">3306</rec>
-    <rec key="ConfigurationFile">/etc/mysql/my.cnf</rec>
-    <rec key="ErrorLogFile">/var/log/mysql/error.log</rec>
-    <rec key="SocketFile">/var/run/mysqld/mysqld.sock</rec>
-    <rec key="DataDirectory">/var/lib/mysql/</rec>
-    <rec key="ProductVersion">5.0.96-community</rec>
-    <rec key="Port_multi">3307</rec>
-    <rec key="CollectionID">pc-linux-gnu</rec>
-    <rec key="ConfigurationFile_multi">/etc/my.cnf</rec>
-    <rec key="ErrorLogFile_multi_1">/usr/log/mysql/error1.log</rec>
-    <rec key="ErrorLogFile_multi_2">/usr/log/mysql/error2.log</rec>
-    <rec key="SocketFile_multi_1">/usr/local/mysql/mysql.sock1</rec>
-    <rec key="SocketFile_multi_2">/usr/local/mysql/mysql.sock2</rec>
-    <rec key="DataDirectory_multi_1">/usr/local/mysql/data/</rec>
-    <rec key="DataDirectory_multi_2">/usr/local/mysql/data2/</rec>
+  <snippet id="GenralStopedOneInstanceInMultiEnvMySQLServerDataBasesProperties">
+    <rec key="expectedStopedOneInstanceInMultiEnvDatabase">
+      <![CDATA[
+      <databases>
+        <database>
+           <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:data</InstanceID>
+           <DatabaseName>data</DatabaseName>
+           <NumberOfTables>[0-9]</NumberOfTables>
+           <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+           <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:employees</InstanceID>
+           <DatabaseName>employees</DatabaseName>
+           <NumberOfTables>[0-9]</NumberOfTables>
+           <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:information_schema</InstanceID>
+          <DatabaseName>information_schema</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:mysql</InstanceID>
+          <DatabaseName>mysql</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+            <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:{DiffDataBase}</InstanceID>
+            <DatabaseName>{DiffDataBase}</DatabaseName>
+            <NumberOfTables>[0-9]</NumberOfTables>
+            <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+      </databases>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralStopedOneInstanceInMultiEnvMySQLServerProperties">
+    <rec key="expectedStopedOneInstanceInMultiEnvMySQLServer">
+      <![CDATA[
+      <MySQLServers>
+        <MySQLServer>
+        <ProductIdentifyingNumber>{MachineName}:{LocalIP}:{DefaultPort}</ProductIdentifyingNumber> 
+        <ProductName>MySQL</ProductName> 
+        <ProductVendor>Oracle</ProductVendor> 
+        <ProductVersion>{ProductVersionInfo}</ProductVersion> 
+        <SystemID>[0-9]</SystemID> 
+        <CollectionID>[lL]inux</CollectionID> 
+        <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
+        <ErrorLogFile>{ErrorLogFileInfo}</ErrorLogFile> 
+        <Hostname>{MachineName}</Hostname> 
+        <BindAddress>{LocalIP}</BindAddress> 
+        <Port>{DefaultPort}</Port> 
+        <SocketFile>{SocketFileInfo}</SocketFile> 
+        <DataDirectory>{DataDirectoryInfo}</DataDirectory> 
+        <OperatingStatus>{ExpectedStatus}</OperatingStatus> 
+        </MySQLServer>
+        <MySQLServer>
+        <ProductIdentifyingNumber>{MachineName}:{LocalIP}:{MultiDefaultPort}</ProductIdentifyingNumber> 
+        <ProductName>MySQL</ProductName> 
+        <ProductVendor>Oracle</ProductVendor> 
+        <ProductVersion>^$</ProductVersion> 
+        <SystemID>^$</SystemID> 
+        <CollectionID>^$</CollectionID> 
+        <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
+        <Hostname>{MachineName}</Hostname> 
+        <BindAddress>{LocalIP}</BindAddress> 
+        <Port>{MultiDefaultPort}</Port> 
+        <OperatingStatus>No Contact</OperatingStatus> 
+        </MySQLServer>
+      </MySQLServers>
+      ]]>
+    </rec>
+  </snippet>
+  <snippet id="GenralOneInstanceMySQLServerDataBasesProperties">
+    <rec key="expectedDatabase">
+      <![CDATA[
+      <databases>
+        <database>
+         <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:data</InstanceID>
+         <DatabaseName>data</DatabaseName>
+         <NumberOfTables>[0-9]</NumberOfTables>
+         <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+           <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:employees</InstanceID>
+           <DatabaseName>employees</DatabaseName>
+           <NumberOfTables>[0-9]</NumberOfTables>
+           <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:information_schema</InstanceID>
+          <DatabaseName>information_schema</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:mysql</InstanceID>
+          <DatabaseName>mysql</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+            <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:{DiffDataBase}</InstanceID>
+            <DatabaseName>{DiffDataBase}</DatabaseName>
+            <NumberOfTables>[0-9]</NumberOfTables>
+            <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+      </databases>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralOneInstanceMySQLServerStatisticsProperties">
+    <rec key="expectedMySQLServerStatistics">
+      <![CDATA[
+      <MySQLServerStatistics>
+        <MySQLServerStatistic>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}</InstanceID>  
+          <CurrentNumConnections>[0-9]</CurrentNumConnections> 
+          <MaxConnections>[0-9]</MaxConnections> 
+          <FailedConnections>[0-9]</FailedConnections> 
+          <Uptime>[0-9]</Uptime> 
+          <ServerDiskUseInBytes>[0-9]</ServerDiskUseInBytes> 
+          <ConnectionsUsePct>[0-9]</ConnectionsUsePct> 
+          <AbortedConnectionPct>[0-9]</AbortedConnectionPct> 
+          <SlowQueryPct>[0-9]</SlowQueryPct> 
+          <KeyCacheHitPct>[0-9]</KeyCacheHitPct> 
+          <KeyCacheWritePct>[0-9]</KeyCacheWritePct> 
+          <KeyCacheUsePct>[0-9]</KeyCacheUsePct> 
+          <QCacheHitPct>[0-9]</QCacheHitPct> 
+          <QCachePrunesPct>[0-9]</QCachePrunesPct> 
+          <QCacheUsePct>[0-9]</QCacheUsePct> 
+          <TCacheHitPct>[0-9]</TCacheHitPct> 
+          <TableLockContentionPct>[0-9]</TableLockContentionPct> 
+          <TableCacheUsePct>[0-9]</TableCacheUsePct> 
+          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct> 
+          <IDB_BP_WriteWaitPct>[0-9]</IDB_BP_WriteWaitPct> 
+          <IDB_BP_UsePct>[0-9]</IDB_BP_UsePct> 
+          <FullTableScanPct>[0-9]</FullTableScanPct> 
+        </MySQLServerStatistic>
+      </MySQLServerStatistics>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralBadStatusMySQLServerProperties">
+    <rec key="expectedBadMySQLServer">
+      <![CDATA[
+      <MySQLServers>
+        <MySQLServer>
+        <ProductIdentifyingNumber>{MachineName}:{LocalIP}:{DefaultPort}</ProductIdentifyingNumber> 
+        <ProductName>MySQL</ProductName> 
+        <ProductVendor>Oracle</ProductVendor> 
+        <ProductVersion>^$</ProductVersion> 
+        <SystemID>^$</SystemID> 
+        <CollectionID>^$</CollectionID> 
+        <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
+        <Hostname>{MachineName}</Hostname> 
+        <BindAddress>{LocalIP}</BindAddress> 
+        <Port>{DefaultPort}</Port> 
+        <OperatingStatus>{ExpectedStatus}</OperatingStatus> 
+        </MySQLServer>
+      </MySQLServers>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralOneInstanceMySQLServerProperties">
+    <rec key="expectedMySQLServer">
+      <![CDATA[
+      <MySQLServers>
+        <MySQLServer>
+        <ProductIdentifyingNumber>{MachineName}:{LocalIP}:{DefaultPort}</ProductIdentifyingNumber> 
+        <ProductName>MySQL</ProductName> 
+        <ProductVendor>Oracle</ProductVendor> 
+        <ProductVersion>{ProductVersionInfo}</ProductVersion> 
+        <SystemID>[0-9]</SystemID> 
+        <CollectionID>[lL]inux</CollectionID> 
+        <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
+        <ErrorLogFile>{ErrorLogFileInfo}</ErrorLogFile> 
+        <Hostname>{MachineName}</Hostname> 
+        <BindAddress>{LocalIP}</BindAddress> 
+        <Port>{DefaultPort}</Port> 
+        <SocketFile>{SocketFileInfo}</SocketFile> 
+        <DataDirectory>{DataDirectoryInfo}</DataDirectory> 
+        <OperatingStatus>{ExpectedStatus}</OperatingStatus> 
+        </MySQLServer>
+      </MySQLServers>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralMultiInstanceMySQLServerDataBasesProperties">
+    <rec key="expectedMultiInstancesDatabase">
+      <![CDATA[
+      <databases>
+        <database>
+         <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:data</InstanceID>
+         <DatabaseName>data</DatabaseName>
+         <NumberOfTables>[0-9]</NumberOfTables>
+         <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+         <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:employees</InstanceID>
+         <DatabaseName>employees</DatabaseName>
+         <NumberOfTables>[0-9]</NumberOfTables>
+         <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:information_schema</InstanceID>
+          <DatabaseName>information_schema</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:mysql</InstanceID>
+          <DatabaseName>mysql</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}:{DiffDataBase}</InstanceID>
+          <DatabaseName>{DiffDataBase}</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{MultiDefaultPort}:information_schema</InstanceID>
+          <DatabaseName>information_schema</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{MultiDefaultPort}:mysql</InstanceID>
+          <DatabaseName>mysql</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+        <database>
+          <InstanceID>{MachineName}:{LocalIP}:{MultiDefaultPort}:{DiffDataBase}</InstanceID>
+          <DatabaseName>{DiffDataBase}</DatabaseName>
+          <NumberOfTables>[0-9]</NumberOfTables>
+          <DiskSpaceInBytes>[0-9]</DiskSpaceInBytes>
+        </database>
+      </databases>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralMultiInstanceMySQLServerStatisticsProperties">
+    <rec key="expectedMultiInstancesMySQLServerStatistics">
+      <![CDATA[
+      <MySQLServerStatistics>
+        <MySQLServerStatistic>
+          <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}</InstanceID>  
+          <CurrentNumConnections>[0-9]</CurrentNumConnections> 
+          <MaxConnections>[0-9]</MaxConnections> 
+          <FailedConnections>[0-9]</FailedConnections> 
+          <Uptime>[0-9]</Uptime> 
+          <ServerDiskUseInBytes>[0-9]</ServerDiskUseInBytes> 
+          <ConnectionsUsePct>[0-9]</ConnectionsUsePct> 
+          <AbortedConnectionPct>[0-9]</AbortedConnectionPct> 
+          <SlowQueryPct>[0-9]</SlowQueryPct> 
+          <KeyCacheHitPct>[0-9]</KeyCacheHitPct> 
+          <KeyCacheWritePct>[0-9]</KeyCacheWritePct> 
+          <KeyCacheUsePct>[0-9]</KeyCacheUsePct> 
+          <QCacheHitPct>[0-9]</QCacheHitPct> 
+          <QCachePrunesPct>[0-9]</QCachePrunesPct> 
+          <QCacheUsePct>[0-9]</QCacheUsePct> 
+          <TCacheHitPct>[0-9]</TCacheHitPct> 
+          <TableLockContentionPct>[0-9]</TableLockContentionPct> 
+          <TableCacheUsePct>[0-9]</TableCacheUsePct> 
+          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct> 
+          <IDB_BP_WriteWaitPct>[0-9]</IDB_BP_WriteWaitPct> 
+          <IDB_BP_UsePct>[0-9]</IDB_BP_UsePct> 
+          <FullTableScanPct>[0-9]</FullTableScanPct> 
+        </MySQLServerStatistic>
+        <MySQLServerStatistic>
+          <InstanceID>{MachineName}:{LocalIP}:{MultiDefaultPort}</InstanceID>  
+          <CurrentNumConnections>[0-9]</CurrentNumConnections> 
+          <MaxConnections>[0-9]</MaxConnections> 
+          <FailedConnections>[0-9]</FailedConnections> 
+          <Uptime>[0-9]</Uptime> 
+          <ServerDiskUseInBytes>[0-9]</ServerDiskUseInBytes> 
+          <ConnectionsUsePct>[0-9]</ConnectionsUsePct> 
+          <AbortedConnectionPct>[0-9]</AbortedConnectionPct> 
+          <SlowQueryPct>[0-9]</SlowQueryPct> 
+          <KeyCacheHitPct>[0-9]</KeyCacheHitPct> 
+          <KeyCacheWritePct>[0-9]</KeyCacheWritePct> 
+          <KeyCacheUsePct>[0-9]</KeyCacheUsePct> 
+          <QCacheHitPct>[0-9]</QCacheHitPct> 
+          <QCachePrunesPct>[0-9]</QCachePrunesPct> 
+          <QCacheUsePct>[0-9]</QCacheUsePct> 
+          <TCacheHitPct>[0-9]</TCacheHitPct> 
+          <TableLockContentionPct>[0-9]</TableLockContentionPct> 
+          <TableCacheUsePct>[0-9]</TableCacheUsePct> 
+          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct> 
+          <IDB_BP_WriteWaitPct>[0-9]</IDB_BP_WriteWaitPct> 
+          <IDB_BP_UsePct>[0-9]</IDB_BP_UsePct> 
+          <FullTableScanPct>[0-9]</FullTableScanPct> 
+        </MySQLServerStatistic>
+      </MySQLServerStatistics>
+      ]]>
+    </rec>
+  </snippet>
+
+  <snippet id="GenralMultiInstanceMySQLServerProperties">
+    <rec key="expectedMultiInstancesMySQLServer">
+      <![CDATA[
+      <MySQLServers>
+        <MySQLServer>
+        <ProductIdentifyingNumber>{MachineName}:{LocalIP}:{DefaultPort}</ProductIdentifyingNumber> 
+        <ProductName>MySQL</ProductName> 
+        <ProductVendor>Oracle</ProductVendor> 
+        <ProductVersion>{ProductVersionInfo}</ProductVersion> 
+        <SystemID>[0-9]</SystemID> 
+        <CollectionID>{CollectionIDInfo}</CollectionID> 
+        <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
+        <ErrorLogFile>{ErrorLogFileInfo}</ErrorLogFile> 
+        <Hostname>{MachineName}</Hostname> 
+        <BindAddress>{LocalIP}</BindAddress> 
+        <Port>{DefaultPort}</Port> 
+        <SocketFile>{SocketFileInfo}</SocketFile> 
+        <DataDirectory>{DataDirectoryInfo}</DataDirectory> 
+        <OperatingStatus>{ExpectedStatus}</OperatingStatus> 
+        </MySQLServer>
+        <MySQLServer>
+        <ProductIdentifyingNumber>{MachineName}:{LocalIP}:{MultiDefaultPort}</ProductIdentifyingNumber> 
+        <ProductName>MySQL</ProductName> 
+        <ProductVendor>Oracle</ProductVendor> 
+        <ProductVersion>{MultiProductVersionInfo}</ProductVersion> 
+        <SystemID>[0-9]</SystemID> 
+        <CollectionID>{CollectionIDInfo}</CollectionID> 
+        <ConfigurationFile>{MultiConfigurationFileInfo}</ConfigurationFile> 
+        <ErrorLogFile>{MultiErrorLogFileInfo}</ErrorLogFile> 
+        <Hostname>{MachineName}</Hostname> 
+        <BindAddress>{LocalIP}</BindAddress> 
+        <Port>{MultiDefaultPort}</Port> 
+        <SocketFile>{MultiSocketFileInfo}</SocketFile> 
+        <DataDirectory>{MultiDataDirectoryInfo}</DataDirectory> 
+        <OperatingStatus>{ExpectedStatus}</OperatingStatus> 
+        </MySQLServer>
+      </MySQLServers>
+      ]]>
+    </rec>
   </snippet>
 
   <!-- 779296-VerifynonprivilegedAccountEnumeratedMySQL_Server -->
   <var set="1" lvl="0" vid="779296" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the non-privileged account can enumerated for MySQL_Server" act="true">
     <snipref id="MySQLAuthInfo" />
     <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
+    <rec key="removeMySQLAuthCmd">rm -rf /var/opt/microsoft/mysql-cimprov/auth/scxuser</rec>
     <rec key="useNonSuperUser">true</rec>
     <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
     <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic scxuser</rec>
@@ -55,6 +387,7 @@
   <var set="1" lvl="0" vid="779297" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the privileged account can enumerated for MySQL_Server" act="true">
     <snipref id="MySQLAuthInfo" />
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
     <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic mysql-auth</rec>
     <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth|grep -i mysql-auth</rec>
@@ -165,502 +498,229 @@
 
   <!-- VerifyEnumerate Test Case information -->
   <!-- Verify MySQL_Server works fine by comparing info from provider to wsman-->
-  <var set="2" lvl="0" vid="728316" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify MySQL_Server works fine by comparing info from provider to wsman." act="true">
+  <var set="2" lvl="0" vid="728316" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify MySQL_Server works fine by comparing info from provider to wsman." act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <rec key="p:InstanceID">^$</rec>
-    <rec key="p:Caption">^$</rec>
-    <rec key="p:Description">^$</rec>
-    <rec key="p:ElementName">^$</rec>
-    <rec key="p:ProductIdentifyingNumber">[0-9]</rec>
-    <rec key="p:ProductName">MySQL</rec>
-    <rec key="p:ProductVendor">Oracle</rec>
-    <rec key="p:ProductVersion">[0-9].[0-9].[0-9]+</rec>
-    <rec key="p:SystemID">[0-9]</rec>
-    <rec key="p:CollectionID">Linux</rec>
-    <rec key="p:Name">^$</rec>
-    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
-    <rec key="p:ErrorLogFile">%ErrorLogFile%</rec>
-    <rec key="p:Hostname">%Linux.Host%</rec>
-    <rec key="p:BindAddress">%IpAddress%</rec>
-    <rec key="p:Port">%Port%</rec>
-    <rec key="p:SocketFile">%SocketFile%</rec>
-    <rec key="p:DataDirectory">%DataDirectory%</rec>
-    <rec key="p:OperatingStatus">OK</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+  </var>
+
+  <!-- Verify MySQL_ServerStatistics works fine by comparing info from provider to wsman-->
+  <var set="2" lvl="0" vid="728331" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="Verify MySQL_ ServerStatistics works fine by comparing info from provider to wsman" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo"/>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
   </var>
 
   <!-- Verify MySQL_Server_Database works fine by comparing info from provider to wsman-->
-  <var set="2" lvl="0" vid="728331" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify MySQL_ ServerStatistics works fine by comparing info from provider to wsman" act="true">
+  <var set="2" lvl="0" vid="728336" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="Verify MySQL_Server_Database works fine by comparing info from provider to wsman" act="true">
     <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables" />
     <snipref id="MySQLAuthInfo"/>
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <rec key="p:InstanceID">%Linux.Host%:%IpAddress%:%Port%</rec>
-    <rec key="p:CurrentNumConnections">[0-9]</rec>
-    <rec key="p:MaxConnections">[0-9]</rec>
-    <rec key="p:FailedConnections">[0-9]</rec>
-    <rec key="p:Uptime">[0-9]</rec>
-    <rec key="p:ServerDiskUseInBytes">[0-9]</rec>
-    <rec key="p:ConnectionsUsePct">[0-9]</rec>
-    <rec key="p:AbortedConnectionPct">[0-9]</rec>
-    <rec key="p:SlowQueryPct">[0-9]</rec>
-    <rec key="p:KeyCacheHitPct">[0-9]</rec>
-    <rec key="p:KeyCacheWritePct">[0-9]</rec>
-    <rec key="p:KeyCacheUsePct">[0-9]</rec>
-    <rec key="p:QCacheHitPct">[0-9]</rec>
-    <rec key="p:QCachePrunesPct">[0-9]</rec>
-    <rec key="p:QCacheUsePct">[0-9]</rec>
-    <rec key="p:TCacheHitPct">[0-9]</rec>
-    <rec key="p:TableLockContentionPct">[0-9]</rec>
-    <rec key="p:TableCacheUsePct">[0-9]</rec>
-    <rec key="p:IDB_BP_HitPct">[0-9]</rec>
-    <rec key="p:IDB_BP_WriteWaitPct">[0-9]</rec>
-    <rec key="p:IDB_BP_UsePct">[0-9]</rec>
-    <rec key="p:FullTableScanPct">[0-9]</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
   </var>
 
-  <!-- Verify MySQL_Server_Database works fine by comparing info from provider to wsman-->
-  <var set="2" lvl="0" vid="728336" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify MySQL_Server_Database works fine by comparing info from provider to wsman" act="true" permutation="rows">
-    <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables" />
-    <snipref id="MySQLAuthInfo"/>
-    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <recm key="p:InstanceID">
-      <val>%Linux.Host%:%IpAddress%:%Port%:information_schema</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:mysql</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:performance_schema</val>
-    </recm>
-    <recm key="p:DatabaseName">
-      <val>information_schema</val>
-      <val>mysql</val>
-      <val>performance_schema</val>
-    </recm>
-    <recm key="p:NumberOfTables">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:DiskSpaceInBytes">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-  </var>
-  
   <!--Verify MySQL_Server works fine by comparing info from SQL commands to provider -->
-  <var set="5" lvl="0" vid="728341" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="[MySQL]Verify MySQL_Server works fine by comparing info from SQL commands to provider" act="true">
-    <snipref id="LinuxInfo"/>
-    <snipref id="MySQLAuthInfo"/>
-    <snipref id="CommonVariables"/>
-    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <rec key="ProductIdentifyingNumber">%Linux.Host%</rec>
-    <rec key="ProductName">MySQL</rec>
-    <rec key="ProductVendor">Oracle</rec>
-    <rec key="ProductVersion">%ProductVersion%</rec>
-    <rec key="ErrorLogFile">%ErrorLogFile%</rec>
-    <rec key="Port">%Port%</rec>
-    <rec key="SocketFile">%SocketFile%</rec>
-    <rec key="DataDirectory">%DataDirectory%</rec>
+  <var set="2" lvl="0" vid="728341" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="[MySQL]Verify MySQL_Server works fine by comparing info from SQL commands to provider" act="true">
   </var>
-  
-<!--Verify MySQL_ ServerStatistics works fine by comparing info from SQL commands to provider-->
-  <var set="5" lvl="0" vid="728346" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="Verify MySQL_ ServerStatistics works fine by comparing info from SQL commands to provider" act="true">
-    <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables" />
-    <snipref id="MySQLAuthInfo"/>
-    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <rec key="InstanceID">%Linux.Host%:%IpAddress%:%Port%</rec>
-    <rec key="CurrentNumConnections">[0-9]</rec>
-    <rec key="MaxConnections">[0-9]</rec>
-    <rec key="FailedConnections">[0-9]</rec>
-    <rec key="Uptime">[0-9]</rec>
-    <rec key="ServerDiskUseInBytes">[0-9]</rec>
-    <rec key="ConnectionsUsePct">[0-9]</rec>
-    <rec key="AbortedConnectionPct">[0-9]</rec>
-    <rec key="SlowQueryPct">[0-9]</rec>
-    <rec key="KeyCacheHitPct">[0-9]</rec>
-    <rec key="KeyCacheWritePct">[0-9]</rec>
-    <rec key="KeyCacheUsePct">[0-9]</rec>
-    <rec key="QCacheHitPct">[0-9]</rec>
-    <rec key="QCachePrunesPct">[0-9]</rec>
-    <rec key="QCacheUsePct">[0-9]</rec>
-    <rec key="TCacheHitPct">[0-9]</rec>
-    <rec key="TableLockContentionPct">[0-9]</rec>
-    <rec key="TableCacheUsePct">[0-9]</rec>
-    <rec key="IDB_BP_HitPct">[0-9]</rec>
-    <rec key="IDB_BP_WriteWaitPct">[0-9]</rec>
-    <rec key="IDB_BP_UsePct">[0-9]</rec>
-    <rec key="FullTableScanPct">[0-9]</rec>
+
+  <!--Verify MySQL_ ServerStatistics works fine by comparing info from SQL commands to provider-->
+  <var set="2" lvl="0" vid="728346" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="Verify MySQL_ ServerStatistics works fine by comparing info from SQL commands to provider" act="true">
   </var>
 
   <!-- Verify MySQL_Server_Database works fine by comparing info from SQL commands to provider-->
-  <var set="5" lvl="0" vid="728348" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="Verify MySQL_Server_Database works fine by comparing info from SQL commands to provider" act="true" permutation="rows">
-    <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables" />
-    <snipref id="MySQLAuthInfo"/>
-    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <recm key="InstanceID">
-      <val>%Linux.Host%:%IpAddress%:%Port%:employees</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:information_schema</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:mysql</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:test</val>
-    </recm>
-    <recm key="DatabaseName">
-      <val>employees</val>
-      <val>information_schema</val>
-      <val>mysql</val>
-      <val>test</val>
-    </recm>
-    <recm key="NumberOfTables">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="DiskSpaceInBytes">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
+  <var set="2" lvl="0" vid="728348" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyMySQLValue.VerifyMySQLValue" dsc="Verify MySQL_Server_Database works fine by comparing info from SQL commands to provider" act="true">
   </var>
 
   <!--728898-Verify the enumeration of CIM instance info failed if mysql service is not running-->
-  <var set="2" lvl="0" vid="728898" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify the enumeration of CIM instance info failed if mysql service is not running" act="true">
+  <var set="2" lvl="0" vid="728898" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="Verify the enumeration of CIM instance info failed if mysql service is not running" act="true">
     <rec key="enumerateresult">false</rec>
-    <rec key="stopServer">true</rec>
+    <rec key="stopMySQLServer">true</rec>
     <rec key="stopMySQLCmd">service mysql stop</rec>
   </var>
 
   <!-- 728899-Verify the property 'OperatingStatus' will be 'Authentication File in Error' when not set Credentials for MySQL instance -->
-  <var set="2" lvl="0" vid="728899" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify the property 'OperatingStatus' will be 'Authentication File in Error' when not set Credentials for MySQL instance" act="true">
+  <var set="2" lvl="0" vid="728899" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the property 'OperatingStatus' will be 'Authentication File in Error' when not set Credentials for MySQL instance" act="true">
     <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables" />
-    <rec key="p:ProductIdentifyingNumber">%Linux.Host%:%IpAddress%:%Port%</rec>
-    <rec key="p:ProductName">MySQL</rec>
-    <rec key="p:ProductVendor">Oracle</rec>
-    <rec key="p:ProductVersion">^$</rec>
-    <rec key="p:SystemID">^$</rec>
-    <rec key="p:CollectionID">^$</rec>
-    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
-    <rec key="p:Hostname">%Linux.Host%</rec>
-    <rec key="p:BindAddress">%IpAddress%</rec>
-    <rec key="p:Port">%Port%</rec>
-    <rec key="p:OperatingStatus">Authentication File in Error</rec>
+    <rec key="enumerateresult">false</rec>
+    <rec key="IsBadStatus">true</rec>
+    <rec key="expecteStatusValue">Authentication File in Error</rec>
   </var>
 
   <!-- 728900-MySQL_ServerStatistics:Verify the enumeration of CIM instance info failed if not set Credentials for MySQL instance-->
-  <var set="2" lvl="0" vid="728900" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="MySQL_ServerStatistics:Verify The enumeration of CIM instance info failed if not set Credentials for MySQL instance" act="true">
+  <var set="2" lvl="0" vid="728900" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="MySQL_ServerStatistics:Verify The enumeration of CIM instance info failed if not set Credentials for MySQL instance" act="true">
     <rec key="enumerateresult">false</rec>
   </var>
 
   <!--728901-MySQL_Server_Database:Verify the enumeration of CIM instance info failed if not set Credentials for MySQL instance-->
-  <var set="2" lvl="0" vid="728901" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="MySQL_Server_Database:Verify the enumeration of CIM instance info failed if not set Credentials for MySQL instance" act="true">
+  <var set="2" lvl="0" vid="728901" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="MySQL_Server_Database:Verify the enumeration of CIM instance info failed if not set Credentials for MySQL instance" act="true">
     <rec key="enumerateresult">false</rec>
   </var>
-  
+
   <!--TestCase 728909 Verify provider works fine when multi mysql instances are configured-->
-  <var set="2" lvl="0" vid="728909" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true" permutation="rows">
+  <var set="4" lvl="0" vid="728909" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
     <snipref id="MultiMySQL"/>
     <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables"/>
     <snipref id="MySQLAuthInfo"/>
     <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <recm key="p:ProductIdentifyingNumber">
-      <val>%Linux.Host%:%IpAddress%:%Port%</val>
-      <val>%Linux.Host%:%IpAddress%:%Port_multi%</val>
-    </recm>
-    <recm key="p:ProductName">
-      <val>MySQL</val>
-      <val>MySQL</val>
-    </recm>
-    <recm key="p:ProductVendor">
-      <val>Oracle</val>
-      <val>Oracle</val>
-    </recm>
-    <recm key="p:ProductVersion">
-      <val>5.0.96-community</val>
-      <val>5.0.96-community-log</val>
-    </recm>
-    <recm key="p:SystemID">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:CollectionID">
-      <val>%CollectionID%</val>
-      <val>%CollectionID%</val>
-    </recm>
-    <recm key="p:ConfigurationFile">
-      <val>%ConfigurationFile_multi%</val>
-      <val>%ConfigurationFile_multi%</val>
-    </recm>
-    <recm key="p:ErrorLogFile">
-      <val>%ErrorLogFile_multi_1%</val>
-      <val>%ErrorLogFile_multi_2%</val>
-    </recm>
-    <recm key="p:Hostname">
-      <val>%Linux.Host%</val>
-      <val>%Linux.Host%</val>
-    </recm>
-    <recm key="p:BindAddress">
-      <val>%IpAddress%</val>
-      <val>%IpAddress%</val>
-    </recm>
-    <recm key="p:Port">
-      <val>%Port%</val>
-      <val>%Port_multi%</val>
-    </recm>
-    <recm key="p:SocketFile">
-      <val>%SocketFile_multi_1%</val>
-      <val>%SocketFile_multi_2%</val>
-    </recm>
-    <recm key="p:DataDirectory">
-      <val>%DataDirectory_multi_1%</val>
-      <val>%DataDirectory_multi_2%</val>
-    </recm>
-    <recm key ="p:OperatingStatus">
-      <val>OK</val>
-      <val>OK</val>
-    </recm>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
   </var>
-  
+
   <!--TestCase 728910 Verify provider works fine when multi mysql instances are configured-->
-  <var set="2" lvl="0" vid="728910" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true" permutation="rows">
+  <var set="4" lvl="0" vid="728910" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
     <snipref id="MultiMySQL"/>
     <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables"/>
     <snipref id="MySQLAuthInfo"/>
     <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <recm key="p:InstanceID">
-      <val>%Linux.Host%:%IpAddress%:%Port%</val>
-      <val>%Linux.Host%:%IpAddress%:%Port_multi%</val>
-    </recm>
-    <recm key="p:CurrentNumConnections">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:MaxConnections">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:FailedConnections">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:Uptime">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:ServerDiskUseInBytes">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:AbortedConnectionPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:SlowQueryPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:KeyCacheHitPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:KeyCacheWritePct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:KeyCacheUsePct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:QCacheHitPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:QCachePrunesPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:QCacheUsePct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:TCacheHitPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:TableLockContentionPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:TableCacheUsePct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:IDB_BP_HitPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:IDB_BP_WriteWaitPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:IDB_BP_UsePct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:FullTableScanPct">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
   </var>
-  
+
   <!--TestCase 728911 Verify provider works fine when multi mysql instances are configured-->
-  <var set="2" lvl="0" vid="728911" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true" permutation="rows">
-    <snipref id="MultiMySQL"/>
+  <var set="4" lvl="0" vid="728911" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
     <snipref id="LinuxInfo" />
-    <snipref id="CommonVariables" />
     <snipref id="MySQLAuthInfo"/>
+    <snipref id="MultiMySQL"/>
     <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <recm key="p:InstanceID">
-      <val>%Linux.Host%:%IpAddress%:%Port%:employees</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:information_schema</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:mysql</val>
-      <val>%Linux.Host%:%IpAddress%:%Port%:test</val>
-      <val>%Linux.Host%:%IpAddress%:%Port_multi%:information_schema</val>
-      <val>%Linux.Host%:%IpAddress%:%Port_multi%:mysql</val>
-      <val>%Linux.Host%:%IpAddress%:%Port_multi%:test</val>
-    </recm>
-    <recm key="p:DatabaseName">
-      <val>employees</val>
-      <val>information_schema</val>
-      <val>mysql</val>
-      <val>test</val>
-      <val>information_schema</val>
-      <val>mysql</val>
-      <val>test</val>
-    </recm>
-    <recm key="p:NumberOfTables">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
-    <recm key="p:DiskSpaceInBytes">
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-      <val>[0-9]</val>
-    </recm>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
   </var>
-  
+
   <!-- Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman-->
-  <var set="2" lvl="0" vid="779298" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman" act="true">
+  <var set="2" lvl="0" vid="779298" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
-    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
+    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxtest Password scxtest}</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="useNonSuperUser">true</rec>
-    <rec key="p:InstanceID">^$</rec>
-    <rec key="p:Caption">^$</rec>
-    <rec key="p:Description">^$</rec>
-    <rec key="p:ElementName">^$</rec>
-    <rec key="p:ProductIdentifyingNumber">%Linux.Host%:%IpAddress%:%Port%</rec>
-    <rec key="p:ProductName">MySQL</rec>
-    <rec key="p:ProductVendor">Oracle</rec>
-    <rec key="p:ProductVersion">^$</rec>
-    <rec key="p:SystemID">^$</rec>
-    <rec key="p:CollectionID">^$</rec>
-    <rec key="p:Name">^$</rec>
-    <rec key="p:ConfigurationFile">%ConfigurationFile%</rec>
-    <rec key="p:ErrorLogFile">^$</rec>
-    <rec key="p:Hostname">%Linux.Host%</rec>
-    <rec key="p:BindAddress">%IpAddress%</rec>
-    <rec key="p:Port">%Port%</rec>
-    <rec key="p:SocketFile">^$</rec>
-    <rec key="p:DataDirectory">^$</rec>
-    <rec key="p:OperatingStatus">Insufficient Privileges</rec>
+    <rec key="IsBadStatus">true</rec>
+    <rec key="expecteStatusValue">Insufficient Privileges</rec>
   </var>
+
   <!--TestCase 728349 Verify the provider works fine after restart the scx agent-->
-  <var set="2" lvl="0" vid="728349" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the provider works fine after restart the scx agent" act="true">
+  <var set="2" lvl="0" vid="728349" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL]Verify the provider works fine after restart the scx agent" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="restartOmAgent">true</rec>
     <rec key="restartOmAgentCmd">scxadmin -restart</rec>
-    <rec key="p:OperatingStatus">OK</rec>
   </var>
+
   <!--TestCase 728351 Verify the provider return failed message if omiserverd process not running-->
-  <var set="2" lvl="0" vid="728351" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the provider return failed message if omiserverd process not running" act="true">
+  <var set="2" lvl="0" vid="728351" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL]Verify the provider return failed message if omiserverd process not running" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
     <rec key="enumerateresult">false</rec>
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="stopOmAgent">true</rec>
     <rec key="stopOmAgentCmd">scxadmin -stop</rec>
   </var>
+
   <!--TestCase 728360 Verify provider works fine after restart mysql service-->
-  <var set="2" lvl="0" vid="728360" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify provider works fine after restart mysql service" act="true">
+  <var set="2" lvl="0" vid="728360" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL]Verify provider works fine after restart mysql service" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="restartMySQLServer">true</rec>
     <rec key="restartMySQLCmd">service mysql restart</rec>
-    <rec key="p:OperatingStatus">OK</rec>
   </var>
+
   <!--TestCase 728896 Verify the property 'OperatingStatus' will be 'No Contact' if mysql servive not running-->
-  <var set="2" lvl="0" vid="728896" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the property 'OperatingStatus' will be 'No Contact' if mysql servive not running" act="true">
+  <var set="2" lvl="0" vid="728896" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL]Verify the property 'OperatingStatus' will be 'No Contact' if mysql servive not running" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="stopMySQLServer">true</rec>
     <rec key="stopMySQLCmd">service mysql stop</rec>
-    <rec key="p:OperatingStatus">No Contact</rec>
+    <rec key="IsBadStatus">true</rec>
+    <rec key="expecteStatusValue">No Contact</rec>
   </var>
+
   <!--TestCase 728897 Verify the enumeration of CIM instance info failed if mysql service is not running-->
-  <var set="2" lvl="0" vid="728897" cid="MySQL_ServerStatistics"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL]Verify the enumeration of CIM instance info failed if mysql service is not running" act="true">
+  <var set="2" lvl="0" vid="728897" cid="MySQL_ServerStatistics"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="[MySQL]Verify the enumeration of CIM instance info failed if mysql service is not running" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
     <rec key="enumerateresult">false</rec>
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="stopMySQLServer">true</rec>
     <rec key="stopMySQLCmd">service mysql stop</rec>
   </var>
+
   <!--TestCase 784102 Verify the enumeration not work after delete the authenticated credentials-->
-  <var set="2" lvl="0" vid="784102" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify the enumeration not work after delete the authenticated credentials" act="true">
+  <var set="2" lvl="0" vid="784102" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify the enumeration not work after delete the authenticated credentials" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <snipref id="CommonVariables" />
+    <rec key="enumerateresult">false</rec>
+    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="deleteCredentials">true</rec>
+    <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3306</rec>
+  </var>
+
+  <!--TestCase 784102 Verify the enumeration not work after delete the authenticated credentials-->
+  <var set="2" lvl="0" vid="784102" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify the enumeration not work after delete the authenticated credentials" act="true">
+    <snipref id="LinuxInfo"/>
+    <snipref id="MySQLAuthInfo"/>
     <rec key="enumerateresult">false</rec>
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <rec key="deleteCredentials">true</rec>
     <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3306</rec>
   </var>
+
   <!--TestCase 728903 Verify the enumeration still works fine after delete one credentials for multi mysql instances environment-->
-  <var set="2" lvl="0" vid="728903" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerate" dsc="[MySQL] Verify the enumeration still works fine after delete one credentials for multi mysql instances environment" act="true">
+  <var set="4" lvl="0" vid="728903" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify the enumeration still works fine after delete one credentials for multi mysql instances environment" act="true">
     <snipref id="MultiMySQL" />
     <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo"/>
     <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <snipref id="CommonVariables" />
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="deleteCredentials">true</rec>
     <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3307</rec>
-    <rec key="p:OperatingStatus">OK</rec>
   </var>
+
+  <!--778552-Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment-->
+  <var set="4" lvl="0" vid="778552" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment" act="true">
+    <snipref id="MultiMySQL" />
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo"/>
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
+    <rec key="IsStopOneInstance">true</rec>
+    <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
+    <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+  </var>
+
+  <!--778553-Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment-->
+  <var set="4" lvl="0" vid="778553" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment" act="true">
+    <snipref id="MultiMySQL"/>
+    <snipref id="MySQLAuthInfo"/>
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
+    <rec key="IsStopOneInstance">true</rec>
+    <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
+    <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+  </var>
+  <!--778554-Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment-->
+  <var set="4" lvl="0" vid="778554" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment" act="true">
+    <snipref id="MultiMySQL"/>
+    <snipref id="MySQLAuthInfo"/>
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
+    <rec key="IsStopOneInstance">true</rec>
+    <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
+    <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+  </var>
+
   <!-- Test Variables Definition -->
   <grp cls="Scx.Test.MySQL.Provider.GroupHelper">
     <snipref id="LinuxInfo" />
@@ -668,8 +728,8 @@
     <rec key="omserver">osst-w12r2-01</rec>
     <rec key="username">root</rec>
     <rec key="password">OpsMgr2007R2</rec>
-    <rec key="nonsuperuser">scxuser</rec>
-    <rec key="nonsuperuserpwd">scxuser</rec>
+    <rec key="nonsuperuser">scxtest</rec>
+    <rec key="nonsuperuserpwd">scxtest</rec>
     <rec key="MySQLTag">universal.1.i686</rec>
     <rec key="InstallOMCmd">sh /tmp/{0} --install</rec>
     <rec key="UninstallOMCmd">sh /tmp/{0} --purge</rec>
@@ -694,8 +754,48 @@
     <rec key="startOmAgentCmd">scxadmin -start</rec>
     <rec key="checkMySQLInstalled">dpkg -l |grep -i mysql</rec>
 
-    <!-- Skip agent deployment: run WSMAN tests without attempting to install a new agent on the client machine, and don't uninstall the agent when testing is done-->
-    <!--<rec key="skipagentdeploy">false</rec>-->
+    <rec key="getOSVersionCmd">python -c "import platform; print platform.dist()"</rec>
+    <rec key="getMySQLVersionCmd">mysql -V | awk '{print $5}' | sed -e 's/,$//'</rec>
+
+    <!--Expected MySQL Properties-->
+    <!--One Instance-->
+    <snipref id="GenralOneInstanceMySQLServerDataBasesProperties" />
+    <snipref id="GenralOneInstanceMySQLServerStatisticsProperties" />
+    <snipref id="GenralOneInstanceMySQLServerProperties" />
+    <!--Multi Instances-->
+    <snipref id="GenralMultiInstanceMySQLServerDataBasesProperties" />
+    <snipref id="GenralMultiInstanceMySQLServerStatisticsProperties" />
+    <snipref id="GenralMultiInstanceMySQLServerProperties" />
+    <!--Stop One Instance in Multi Env. the MySQLServerStatistics properties should same as GenralOneInstanceMySQLServerStatisticsProperties So Don't need add this one. -->
+    <snipref id="GenralStopedOneInstanceInMultiEnvMySQLServerProperties" />
+    <snipref id="GenralStopedOneInstanceInMultiEnvMySQLServerDataBasesProperties" />
+
+    <!--One Instance But Bad Status-->
+    <snipref id="GenralBadStatusMySQLServerProperties"/>
+
+    <!--Expected MySQL hostIP and Ports-->
+    <rec key="hostIP">127.0.0.1</rec>
+    <rec key="defaultPortID">3306</rec>
+    <rec key="multiDefaultPortID">3307</rec>
+
+    <!--Expected MySQL Version-->
+    <rec key="DiffDataBase50">test</rec>
+    <rec key="DiffDataBase55">performance_schema</rec>
+
+    <!--Expected MySQL CollectionID-->
+    <rec key="defaultCollectionID">[lL]inux</rec>
+
+    <!--Expected MySQL M50P-ORA5-01 Version-->
+    <rec key="ProductVersionM50PORA5">5.0.96-community</rec>
+    <rec key="defaultConfigurationFileM50PORA5">/etc/my.cnf</rec>
+    <rec key="defaultErrorLogFileM50PORA5">/var/log/mysql/error.log</rec>
+    <rec key="defaultSocketFileM50PORA5">/var/lib/mysql/mysql.sock</rec>
+    <rec key="defaultDataDirectoryM50PORA5">/var/lib/mysql/</rec>
+    <rec key="defaultMultiProductVersionM50PORA5">5.0.96-community-log</rec>
+    <rec key="defaultMultiConfigurationFileM50PORA5">/etc/my.cnf</rec>
+    <rec key="defaultMultiErrorLogFileM50PORA5">/var/log/mysql/error2.log</rec>
+    <rec key="defaultMultiSocketFileM50PORA5">/var/lib/mysql/mysql2.sock</rec>
+    <rec key="defaultMultiDataDirectoryM50PORA5">/var/lib/mysql/data/</rec>
     <varref />
   </grp>
 </varmap>

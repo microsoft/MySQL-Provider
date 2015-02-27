@@ -183,6 +183,20 @@ namespace Scx.Test.MySQL.Provider
         private string ipaddress;
 
         /// <summary>
+        /// isMySql5. default should be false.
+        /// </summary>
+        private bool isMySql5 = false;
+
+        /// <summary>
+        /// isMySql5. default should be false.
+        /// </summary>
+        public bool IsMySql5
+        {
+            get { return isMySql5; }
+            set { isMySql5 = value; }
+        }
+
+        /// <summary>
         /// enumerateresult. default should be true.
         /// </summary>
         private bool shouldEnumerateResult = true;
@@ -472,7 +486,7 @@ namespace Scx.Test.MySQL.Provider
 
             string platflag = GetPlatformInfo();
 
-            if (platflag.ToLower()=="m50ora5")
+            if (platflag.ToLower() == "m50ora5")
             {
                 this.version = mcfContext.ParentContext.Records.GetValue("ProductVersionM50PORA5");
                 this.defaultConfigFile = mcfContext.ParentContext.Records.GetValue("defaultConfigurationFileM50PORA5");
@@ -494,18 +508,39 @@ namespace Scx.Test.MySQL.Provider
         private string GetPlatformInfo()
         {
             string platflag = string.Empty;
+            string osVersion = GetOSInfo();
+            string mysqlVersion = GetMySqlVersion();
+            platflag = mysqlVersion + osVersion;
+            return platflag;
+        }
+
+        /// <summary>
+        /// GetMySqlVersion
+        /// </summary>
+        /// <returns>GetMySqlVersion</returns>
+        public string GetMySqlVersion()
+        {
+            string mysqlVersion = this.RunCommandAsRoot(this.GetMySQLVersionCmd, this.RootPassword);
+            if (mysqlVersion.ToLower().Contains("5.0"))
+            {
+                mysqlVersion = "m50";
+                IsMySql5 = true;
+            }
+            return mysqlVersion;
+        }
+
+        /// <summary>
+        /// Get OS Info
+        /// </summary>
+        /// <returns>os version</returns>
+        private string GetOSInfo()
+        {
             string osVersion = this.RunCommandAsRoot(this.GetOSVersionCmd, this.RootPassword);
             if (osVersion.ToLower().Contains("redhat") && osVersion.ToLower().Contains("5"))
             {
                 osVersion = "ora5";
             }
-            string mysqlVersion = this.RunCommandAsRoot(this.GetMySQLVersionCmd, this.RootPassword);
-            if (mysqlVersion.ToLower().Contains("5.0"))
-            {
-                mysqlVersion = "m50";
-            }
-            platflag = mysqlVersion + osVersion;
-            return platflag;
+            return osVersion;
         }
 
         /// <summary>

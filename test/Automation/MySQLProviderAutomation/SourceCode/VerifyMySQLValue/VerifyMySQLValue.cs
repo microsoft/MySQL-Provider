@@ -217,7 +217,8 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
 
             // slowQueryPct
             double queries = 0;
-            if (this.HostName.ToLower().Contains("m50"))
+            GetMySqlVersion();
+            if (this.IsMySql5)
             {
                 string questions = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where variable_name=\"Questions\"");
                 string comStmtClose = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where variable_name=\"Com_stmt_close\"");
@@ -326,7 +327,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             }
             // TableCacheUsePct
             string tablesOpenCacheValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL Variables where Variable_name= \"table_open_cache\";");
-            if (this.HostName.ToLower().Contains("m50"))
+            if (this.IsMySql5)
             {
                 tablesOpenCacheValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL Variables where Variable_name= \"table_cache\";");
             }
@@ -446,8 +447,8 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 propertyLists.Add("DatabaseName", database);
                 propertyLists.Add("NumberOfTables", this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;SELECT count(*) FROM information_schema.tables WHERE TABLE_SCHEMA = \"{0}\"", database), "count"));
 
-                string diskSpaceInBytes=this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;select concat(round(sum(data_length),2)) as data from tables where table_schema=\"{0}\";", database), "data");
-                if (diskSpaceInBytes.ToUpper()=="NULL")
+                string diskSpaceInBytes = this.GetVariablesValueFromMySQLCmd(string.Format("use information_schema;select concat(round(sum(data_length),2)) as data from tables where table_schema=\"{0}\";", database), "data");
+                if (diskSpaceInBytes.ToUpper() == "NULL")
                 {
                     diskSpaceInBytes = "0";
                 }

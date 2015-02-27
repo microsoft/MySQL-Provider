@@ -34,6 +34,11 @@ namespace Scx.Test.MySQL.Provider
         private string addMySQLAuthCmd;
 
         /// <summary>
+        /// addMySQLAuthCmd eg./opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username test Password test }
+        /// </summary>
+        private string addBadMySQLAuthCmd;
+
+        /// <summary>
         /// expecte Status Value
         /// </summary>
         private string expecteStatusValue = "OK";
@@ -48,6 +53,11 @@ namespace Scx.Test.MySQL.Provider
         /// Stop OMI agent
         /// </summary>
         private bool stopOmAgent = false;
+
+        /// <summary>
+        /// isAddBadAuthor.
+        /// </summary>
+        private bool isAddBadAuthor = false;
 
         #endregion Private Fields
 
@@ -135,7 +145,20 @@ namespace Scx.Test.MySQL.Provider
                 string restartOmAgentCmd = mcfContext.ParentContext.Records.GetValue("restartOmAgentCmd");
                 this.AgentHelper.RestartOmAgent(restartOmAgentCmd);
             }
-
+            // Verfy add bad autor file can't enumerate.
+            if (mcfContext.Records.HasKey("addBadMySQLAuthCmd"))
+            {
+                mcfContext.Trc("Run add Bad MySQLAuth Cmd ...");
+                try
+                {
+                    this.addBadMySQLAuthCmd = mcfContext.Records.GetValue("addBadMySQLAuthCmd");
+                    this.MySQLHelper.SetupMySqlAuth(this.addBadMySQLAuthCmd);
+                }
+                catch (Exception e)
+                {
+                    this.isAddBadAuthor = true;
+                }
+            }
             // Get the WSMANQuery.
             try
             {
@@ -160,6 +183,13 @@ namespace Scx.Test.MySQL.Provider
         /// <param name="mcfContext">MCF context</param>
         public void Verify(IContext mcfContext)
         {
+            // Don't need verify the values when we added the BadMySQLAuthCmd
+            if (mcfContext.Records.HasKey("addBadMySQLAuthCmd") && this.isAddBadAuthor)
+            {
+                mcfContext.Trc("Verfiy add bad mysql auth file using mycimprovauth will throw error Passed.");
+                return;
+            }
+
             // Verify the Enumerate Result Is Null
             if (this.ShouldEnumerateresult == false)
             {

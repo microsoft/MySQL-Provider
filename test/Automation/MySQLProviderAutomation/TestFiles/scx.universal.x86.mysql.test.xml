@@ -10,6 +10,10 @@
   </snippet>
   <snippet id="LinuxInfo">
     <rec key="Linux.Host">m50p-ora5-01</rec>
+    <rec key="LocalIP">127.0.0.1</rec>
+    <rec key="DefaultPort">3306</rec>
+    <rec key="DefaultAuthorUser">root</rec>
+    <rec key="DefaultAuthorPassWord">OpsMgr2007R2</rec>
   </snippet>
   <snippet id="MySQLAuthInfo">
     <rec key="MySQL.DefaultAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
@@ -719,6 +723,23 @@
     <rec key="IsStopOneInstance">true</rec>
     <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
     <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+  </var>
+
+  <!--728902-Verify the method 'UpdateCredentials' works fine-->
+  <var set="2" lvl="0" vid="728902" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the method 'UpdateCredentials' works fine." act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <rec key="addMySQLAuthCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth update %DefaultPort% %LocalIP% %DefaultAuthorUser% %DefaultAuthorPassWord% </rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+  </var>
+
+  <!--784101-Verify the enumeration not work if set unauthenticated credentials for MySQL CIM Provider-->
+  <var set="2" lvl="0" vid="784101" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the enumeration not work if set unauthenticated credentials for MySQL CIM Provider." act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <rec key="addBadMySQLAuthCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth update 3306 127.0.0.1 test test</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="enumerateresult">false</rec>
   </var>
 
   <!-- Test Variables Definition -->

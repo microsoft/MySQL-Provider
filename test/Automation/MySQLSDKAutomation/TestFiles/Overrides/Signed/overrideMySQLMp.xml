@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?><ManagementPack ContentReadable="true" SchemaVersion="2.0" OriginalSchemaVersion="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <Manifest>
+    <Identity>
+      <ID>overrideMySQLMp</ID>
+      <Version>1.0.0.0</Version>
+    </Identity>
+    <Name>overrideMySQLMp</Name>
+    <References>
+      <Reference Alias="MySQLServer">
+        <ID>Microsoft.MySQLServer.Library</ID>
+        <Version>7.5.1050.0</Version>
+        <PublicKeyToken>9396306c2be7fcc4</PublicKeyToken>
+      </Reference>
+      <Reference Alias="SystemCenter">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8434.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Linux">
+        <ID>Microsoft.Linux.Library</ID>
+        <Version>7.6.1032.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Unix">
+        <ID>Microsoft.Unix.Library</ID>
+        <Version>7.6.1032.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <Monitoring>
+    <Overrides>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixServerStatusMonitorForContextMicrosoftMySQLServerManagedServerUnix8a02b5f456534b78aa7e424df1d98f53" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.ServerStatus.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixAbortedConnectionPctMonitorForContextMicrosoftMySQLServerManagedServerUnix674e6a14be8243fb88d664803a485077" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.AbortedConnectionPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixConnectionsUsePctMonitorForContextMicrosoftMySQLServerManagedServerUnixc660cf534600460480ef5255d549518a" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.ConnectionsUsePct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixInnoDBBufferPoolHitPctMonitorForContextMicrosoftMySQLServerManagedServerUnix2d425a67f89a47e9a87d28ced481d9f3" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_HitPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixInnoDBBufferPoolUsePctMonitorForContextMicrosoftMySQLServerManagedServerUnixd326c864104b42949e2280da79e4fd08" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_UsePct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixInnoDBBufferPoolWriteWaitPctMonitorForContextMicrosoftMySQLServerManagedServerUnix599e195343c041bf949205663f9b2cfb" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_WriteWaitPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixKeyCacheHitPctMonitorForContextMicrosoftMySQLServerManagedServerUnix0d5466c1fd69468fa822c6ed20b3bb8c" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.KeyCacheHitPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixKeyCacheUsePctMonitorForContextMicrosoftMySQLServerManagedServerUnixdea00344eb6547c3823aa5e0e4d1dde0" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.KeyCacheUsePct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixKeyCacheWritePctMonitorForContextMicrosoftMySQLServerManagedServerUnix15f38c717fd044899b5c0cadfaac9450" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.KeyCacheWritePct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixQueryCacheHitPctMonitorForContextMicrosoftMySQLServerManagedServerUnixad06b8980d4e4309aee3d1971e008313" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.QueryCacheHitPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixQueryCachePrunesPctMonitorForContextMicrosoftMySQLServerManagedServerUnix888fff1149d049efbd9ced1d6ad6ec6b" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.QueryCachePrunesPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixQueryCacheUsePctMonitorForContextMicrosoftMySQLServerManagedServerUnixb91735436cd444cd9346eac1adf50e77" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.QueryCacheUsePct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixFullTableScanPctMonitorForContextMicrosoftMySQLServerManagedServerUnix237387fc7a734183b77f079334ebb641" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.FullTableScanPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixSlowQueryPctMonitorForContextMicrosoftMySQLServerManagedServerUnixfb3ff1b9ca0a49518ebdd54b61a8df08" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.SlowQueryPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixTableCacheHitPctMonitorForContextMicrosoftMySQLServerManagedServerUnix676d7e96592c4191be1a73525964e925" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.TableCacheHitPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixTableCacheUsePctMonitorForContextMicrosoftMySQLServerManagedServerUnixae539df3780b4b9bab1ede645f810200" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.TableCacheUsePct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <MonitorConfigurationOverride ID="OverrideForMonitorMicrosoftMySQLServerManagedServerUnixTableLockContentionPctMonitorForContextMicrosoftMySQLServerManagedServerUnix60d3e6c4d8fb43fcad2d8616c896979b" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Monitor="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.TableLockContentionPct.Monitor" Parameter="Interval">
+        <Value>30</Value>
+      </MonitorConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixTableCacheHitPctCollectionForContextMicrosoftMySQLServerManagedServerUnixb901b370acf0452a9e28e4e46b581381" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.TableCacheHitPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixKeyCacheUsePctCollectionForContextMicrosoftMySQLServerManagedServerUnix209270ba440b484797f96f59340d9776" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.KeyCacheUsePct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixInnoDBBufferPoolWriteWaitPctCollectionForContextMicrosoftMySQLServerManagedServerUnix10bfbea032d14a6d9cbedad71713fa46" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_WriteWaitPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixQueryCacheUsePctCollectionForContextMicrosoftMySQLServerManagedServerUnixc458edaccce140a8ae70e770069d77bd" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.QueryCacheUsePct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixInnoDBBufferPoolHitPctCollectionForContextMicrosoftMySQLServerManagedServerUnix5e373bb5d8084a6a9ad9e923b5d3887d" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_HitPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixKeyCacheWritePctCollectionForContextMicrosoftMySQLServerManagedServerUnixf1e42bf4467f4cf9a8e7714ce7298601" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.KeyCacheWritePct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixSlowQueryPctCollectionForContextMicrosoftMySQLServerManagedServerUnixf3746bc8816a45f69faf1e3dea0fef58" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.SlowQueryPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixServerDiskUseInBytesCollectionForContextMicrosoftMySQLServerManagedServerUnix29d67ad7c08b4b16bc8ac44ce0ac3e44" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.ServerDiskUseInBytes.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixInnoDBBufferPoolUsePctCollectionForContextMicrosoftMySQLServerManagedServerUnixc3b530cc7dbe47e8897a418f2b4b8020" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_UsePct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixKeyCacheHitPctCollectionForContextMicrosoftMySQLServerManagedServerUnix6abfca9386c0475fb4229f58ad1c3387" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.KeyCacheHitPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixQueryCacheHitPctCollectionForContextMicrosoftMySQLServerManagedServerUnix85585e914132441288604d2e03f86a02" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.QueryCacheHitPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixAbortedConnectionPctCollectionForContextMicrosoftMySQLServerManagedServerUnixbf349b0e5f104ff5ad2e1e49f51d01bf" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.AbortedConnectionPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixQueryCachePrunesPctCollectionForContextMicrosoftMySQLServerManagedServerUnix39286b6af33d47acbc0b676cfea3fe88" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.QueryCachePrunesPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixConnectionsUsePctCollectionForContextMicrosoftMySQLServerManagedServerUnix29cafb7bee7e4050a2101996b14b0b0b" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.ConnectionsUsePct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixTableLockContentionPctCollectionForContextMicrosoftMySQLServerManagedServerUnix8d7235932e9348ed955068ff9badf092" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.TableLockContentionPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixFullTableScanPctCollectionForContextMicrosoftMySQLServerManagedServerUnix478deb6aadba4eca8b6d87ec0fa4f3a1" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.FullTableScanPct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <RuleConfigurationOverride ID="OverrideForRuleMicrosoftMySQLServerManagedServerUnixTableCacheUsePctCollectionForContextMicrosoftMySQLServerManagedServerUnix0174843d20b54107b2bc89fe4eb6bb8c" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Rule="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix.TableCacheUsePct.Collection" Parameter="Interval" Module="DS">
+        <Value>30</Value>
+      </RuleConfigurationOverride>
+      <DiscoveryConfigurationOverride ID="OverrideForDiscoveryMicrosoftMySQLServerManagedServerDiscoveryUnixForContextMicrosoftUnixComputer6375963af6304d2abe75f898b5ca1a1d" Context="Unix!Microsoft.Unix.Computer" Enforced="false" Discovery="MySQLServer!Microsoft.MySQLServer.ManagedServer.Discovery.Unix" Parameter="Interval" Module="DS">
+        <Value>60</Value>
+      </DiscoveryConfigurationOverride>
+      <DiscoveryConfigurationOverride ID="OverrideForDiscoveryMicrosoftMySQLServerInstallationScriptDiscoveryUnixForContextMicrosoftLinuxComputerb8a28f143ea54bcea60ce13e6b2e2879" Context="Linux!Microsoft.Linux.Computer" Enforced="false" Discovery="MySQLServer!Microsoft.MySQLServer.Installation.ScriptDiscovery.Unix" Parameter="Interval" Module="DS">
+        <Value>60</Value>
+      </DiscoveryConfigurationOverride>
+      <DiscoveryConfigurationOverride ID="OverrideForDiscoveryMicrosoftMySQLServerDatabaseDiscoveryUnixForContextMicrosoftMySQLServerManagedServerUnix45f7d2e368ad45a7951e90b735f0647a" Context="MySQLServer!Microsoft.MySQLServer.ManagedServer.Unix" Enforced="false" Discovery="MySQLServer!Microsoft.MySQLServer.Database.Discovery.Unix" Parameter="Interval" Module="DS">
+        <Value>60</Value>
+      </DiscoveryConfigurationOverride>
+    </Overrides>
+  </Monitoring>
+  <Presentation>
+    <Folders>
+      <Folder ID="Folder_84beeefc35c44ad4a666b28ca3d669d4" Accessibility="Public" ParentFolder="SystemCenter!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="false">
+      <DisplayStrings>
+        <DisplayString ElementID="overrideMySQLMp">
+          <Name>overrideMySQLMp</Name>
+        </DisplayString>
+        <DisplayString ElementID="Folder_84beeefc35c44ad4a666b28ca3d669d4">
+          <Name>overrideMySQLMp</Name>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

@@ -104,7 +104,7 @@
   <ItemGroup>
     <Compile Include="AlertsHelper.cs" />
     <Compile Include="AccountHelper.cs" />
-    <Compile Include="ApacheAgentHelper.cs" />
+    <Compile Include="MySQLAgentHelper.cs" />
     <Compile Include="Credential.cs" />
     <Compile Include="ManageAccountHelper.cs" />
     <Compile Include="ManageAccounts.cs" />

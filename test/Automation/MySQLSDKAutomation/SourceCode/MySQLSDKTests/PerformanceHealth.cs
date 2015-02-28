@@ -32,7 +32,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <summary>
         /// Creating ports script name.
         /// </summary>
-        private string PortScriptName = "createPortforApache.sh";
+        private string PortScriptName = "createPortforMySQL.sh";
 
         /// <summary>
         /// break PerMinutsServerMonitor scripts.
@@ -42,7 +42,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <summary>
         /// Reverting ports script name.
         /// </summary>
-        private string revertScriptName = "revertapacheconf.sh";
+        private string revertScriptName = "revertmysqlconf.sh";
         /// <summary>
         /// Initializes a new instance of the PerformanceHealth class
         /// </summary>
@@ -58,7 +58,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ISetup.Setup(IContext ctx)
         {
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Setup");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Setup");
 
             try
             {
@@ -92,11 +92,11 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.OverrideHelper = new OverrideHelper(ctx.Trc, this.Info, ctx.ParentContext.Records.GetValue("testingoverride"));
 
-                this.ApacheAgentHelper = new ApacheAgentHelper(this.Info, this.ClientInfo) {Logger = ctx.Trc};
+                this.MySQLAgentHelper = new MySQLAgentHelper(this.Info, this.ClientInfo) {Logger = ctx.Trc};
 
                 string instanceID = ctx.Records.GetValue("InstanceID");
 
-                this.ComputerObject = this.GetVitualHostMonitor(this.ClientInfo.HostName , instanceID);
+                this.ComputerObject = this.GetDataBaseMonitor(this.ClientInfo.HostName , instanceID);
 
                 //this.RecoverMonitorIfFailed(ctx);
 
@@ -124,7 +124,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Setup complete");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Setup complete");
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Run with entity " + entity);
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Run with entity " + entity);
 
             try
             {
@@ -186,7 +186,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 Fail(ctx, ex.ToString());
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Run complete");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Run complete");
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Verify complete");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Verify complete");
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 RunCmd("rm -rf /tmp/*.sh");
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Cleanup finished");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Cleanup finished");
         }
 
         #endregion Test Framework Methods

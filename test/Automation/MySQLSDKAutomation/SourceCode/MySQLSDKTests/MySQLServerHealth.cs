@@ -1,9 +1,9 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="ApacheHTTPServerHealth.cs" company="Microsoft">
+// <copyright file="MySQLServerHealth.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation.  All rights reserved.
 // </copyright>
 // <author>v-litin</author>
-// <description>ApacheHTTPServerHealth</description>
+// <description>MySQLServerHealth</description>
 //-----------------------------------------------------------------------
 
 namespace Scx.Test.MySQL.SDK.MySQLSDKTests
@@ -17,12 +17,12 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
     using Microsoft.EnterpriseManagement.Monitoring;
     using Scx.Test.Common;
     using Scx.Test.MySQL.SDK.MySQLSDKHelper;
-    class ApacheHTTPServerHealth : PerformanceHealthBase, ISetup, IRun, IVerify, ICleanup
+    class MySQLServerHealth : PerformanceHealthBase, ISetup, IRun, IVerify, ICleanup
     {
          /// <summary>
         /// Initializes a new instance of the PerformanceHealth class
         /// </summary>
-        public ApacheHTTPServerHealth()
+        public MySQLServerHealth()
         {
         }
 
@@ -34,7 +34,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ISetup.Setup(IContext ctx)
         {
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Setup");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Setup");
 
             try
             {
@@ -86,7 +86,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Setup complete");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Setup complete");
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Run with entity " + entity);
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Run with entity " + entity);
 
             try
             {
@@ -149,7 +149,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 Fail(ctx, ex.ToString());
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Run complete");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Run complete");
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Verify complete");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Verify complete");
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
             this.VerifyAlert(ctx, false);
            
-            ctx.Trc("Apache.SDKTests.PerformanceHealth.Cleanup finished");
+            ctx.Trc("MySQL.SDKTests.PerformanceHealth.Cleanup finished");
         }
 
         #endregion Test Framework Methods

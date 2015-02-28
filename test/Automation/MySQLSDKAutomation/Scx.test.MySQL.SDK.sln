@@ -15,7 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScxCommon", "..\ScxCommon\S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{D9C4F726-5728-43CF-B1BC-860146CAD6D3}"
 	ProjectSection(SolutionItems) = preProject
-		TestFiles\scx.test.apache.sdk.source.universald_x64.xml = TestFiles\scx.test.apache.sdk.source.universald_x64.xml
+		TestFiles\scx.test.mysql.sdk.source.x64.xml = TestFiles\scx.test.mysql.sdk.source.x64.xml
+		TestFiles\scx.test.mysql.sdk.sources.xml = TestFiles\scx.test.mysql.sdk.sources.xml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySQLSDKHelper", "SourceCode\MySQLSDKHelper\MySQLSDKHelper.csproj", "{80405EEB-CD80-4131-BB83-CD8C8516EC48}"

@@ -88,9 +88,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         private Exception executeActionCommandException = null;
 
         /// <summary>
-        /// Apache agent helper class
+        /// MySQL agent helper class
         /// </summary>
-        private ApacheAgentHelper apacheAgentHelper;
+        private MySQLAgentHelper mysqlAgentHelper;
 
         #endregion
 
@@ -151,12 +151,12 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         }
 
         /// <summary>
-        /// Gets or sets the ApacheAgentHelper
+        /// Gets or sets the MySQLAgentHelper
         /// </summary>
-        public ApacheAgentHelper ApacheAgentHelper
+        public MySQLAgentHelper MySQLAgentHelper
         {
-            get { return apacheAgentHelper; }
-            set { apacheAgentHelper = value; }
+            get { return mysqlAgentHelper; }
+            set { mysqlAgentHelper = value; }
         }
 
 
@@ -604,24 +604,21 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         }
 
         /// <summary>
-        /// GetVirtualHost monitor.
+        /// GetDataBaseMonitor
         /// </summary>
-        /// <param name="ctx">Current context</param>
-        protected MonitoringObject GetVitualHostMonitor(string hostname, string instanceID)
+        /// <param name="hostname">hostname:BindAddress:Port:DataBaseName</param>
+        /// <param name="instanceID">DataBaseName</param>
+        /// <returns>monitor</returns>
+        protected MonitoringObject GetDataBaseMonitor(string hostname, string instanceID)
         {
             MonitoringObject monitor = null;
             try
             {
-                monitor = this.apacheAgentHelper.GetVirtualHostMonitor(hostname + "," + instanceID);
+                monitor = this.mysqlAgentHelper.GetDataBaseMonitor(hostname + ":" + instanceID);
             }
             catch (Exception)
             {
-                if (hostname.Contains(".scx.com"))
-                {
-                    int index = hostname.IndexOf(".scx.com");
-                    string tempHost = hostname.Substring(0, index);
-                    monitor = this.apacheAgentHelper.GetVirtualHostMonitor(tempHost + "," + instanceID);
-                }
+              //TODO
             }
 
             return monitor;

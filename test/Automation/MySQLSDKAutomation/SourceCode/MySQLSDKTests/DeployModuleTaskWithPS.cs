@@ -18,7 +18,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
     /// <summary>
     /// Description for DeployModuleTask with powershell.
-    /// Test Case 724163: [Apache]<SDK><Task>Verify if install Apache CIM Module works by running task "Install/Upgrade Apache CIM Module" with valid root account.
+    /// Test Case 798925: [MySQL]<SDK><Task> Verify the MySQL Server Provide installation failed  by running task "Install/Upgrade MySQL Server Provider" with root account which password is incorrect.
     /// </summary>
     public class DeployModuleTaskWithPS : ISetup, IRun, IVerify, ICleanup
     {
@@ -35,14 +35,14 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         private ClientInfo clientInfo;
         
         /// <summary>
-        /// Apache agent helper class
+        /// MySQL agent helper class
         /// </summary>
-        private ApacheAgentHelper apacheAgentHelper;
+        private MySQLAgentHelper mysqlAgentHelper;
         
         /// <summary>
-        /// The Location of Apache Cim module
+        /// The Location of MySQL Cim module
         /// </summary>
-        private string tempApacheCIMModuleLocation= @"C:\Windows\Temp\ApacheCimProv";
+        private string tempMySQLCIMModuleLocation= @"C:\Windows\Temp\MySQLCimProv";
 
         private PsHelper psHelper;
 
@@ -69,7 +69,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ISetup.Setup(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Setup");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Setup");
 
             try
             {
@@ -107,25 +107,25 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 string monitorInstanceClass = ctx.Records.GetValue("InstanceClass");
 
-                this.apacheInstance = this.monitorHelper.GetMonitoringObject(monitorInstanceClass,this.clientInfo.HostName);*/
+                this.mysqlInstance = this.monitorHelper.GetMonitoringObject(monitorInstanceClass,this.clientInfo.HostName);*/
 
-                //Uninstall Apache CIm Module
-                this.apacheAgentHelper = new ApacheAgentHelper(this.info, this.clientInfo) { Logger = ctx.Trc };
-                string fullApacheAgentPath = tempApacheCIMModuleLocation;
-                if (ctx.ParentContext.Records.HasKey("useTaskInstallApacheAgent") &&
-                    ctx.ParentContext.Records.GetValue("useTaskInstallApacheAgent").ToLower() == "false")
+                //Uninstall MySQL CIm Module
+                this.mysqlAgentHelper = new MySQLAgentHelper(this.info, this.clientInfo) { Logger = ctx.Trc };
+                string fullMySQLAgentPath = tempMySQLCIMModuleLocation;
+                if (ctx.ParentContext.Records.HasKey("useTaskInstallMySQLAgent") &&
+                    ctx.ParentContext.Records.GetValue("useTaskInstallMySQLAgent").ToLower() == "false")
                 {
-                    fullApacheAgentPath = ctx.ParentContext.Records.GetValue("apacheAgentPath");
+                    fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
                 }
-                string tag = ctx.ParentContext.Records.GetValue("apacheTag");
-                this.apacheAgentHelper.UninstallApacheAgentWihCommand(fullApacheAgentPath, tag);
+                string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
+                this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
              }
             catch (Exception ex)
             {
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Setup complete");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Setup complete");
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void IRun.Run(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Run");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Run");
 
             string scripts = ctx.Records.GetValue("scripts");
             string[] scriptArray = scripts.Split(';');
@@ -148,7 +148,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Run complete");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Run complete");
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void IVerify.Verify(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Verify");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Verify");
             try
             {
                 string key = ctx.Records.GetValue("expectedOutputKey");
@@ -165,8 +165,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 psHelper.CheckOutput(key , value);
 
-                bool apacheAgentInstalled = this.apacheAgentHelper.VerifyApacheAgentInstalled();
-                if (!apacheAgentInstalled)
+                bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
+                if (!mysqlAgentInstalled)
                 {
                     this.Fail(ctx, "Fail: didn't find CIM prov installed on client");
                 }
@@ -176,7 +176,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Fail(ctx, ex.Message);
             }
 
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Verify.Complete!");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Verify.Complete!");
         }
 
         /// <summary>
@@ -185,38 +185,38 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ICleanup.Cleanup(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Cleanup");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Cleanup");
 
-            bool useTaskInstallApacheAgent = false;
-            if (ctx.Records.HasKey("useTaskInstallApacheAgent") &&
-               ctx.Records.GetValue("useTaskInstallApacheAgent") == "true")
+            bool useTaskInstallMySQLAgent = false;
+            if (ctx.Records.HasKey("useTaskInstallMySQLAgent") &&
+               ctx.Records.GetValue("useTaskInstallMySQLAgent") == "true")
             {
-                useTaskInstallApacheAgent = true;
+                useTaskInstallMySQLAgent = true;
             }
            
-            bool apacheAgentInstalled = this.apacheAgentHelper.VerifyApacheAgentInstalled();
+            bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
 
-            if (useTaskInstallApacheAgent)
+            if (useTaskInstallMySQLAgent)
             {
-                if(!apacheAgentInstalled)
+                if(!mysqlAgentInstalled)
                 {
-                    this.apacheAgentHelper.InstallApacheAgentWihTask();
+                    this.mysqlAgentHelper.InstallMySQLAgentWihTask();
                 }
             }
             else
             {
-                string fullApacheAgentPath = tempApacheCIMModuleLocation;
-                string tag = ctx.ParentContext.Records.GetValue("apacheTag");
-                if (apacheAgentInstalled)
+                string fullMySQLAgentPath = tempMySQLCIMModuleLocation;
+                string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
+                if (mysqlAgentInstalled)
                 {
-                    this.apacheAgentHelper.UninstallApacheAgentWihCommand(fullApacheAgentPath, tag);              
+                    this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);              
                 }
 
-                fullApacheAgentPath = ctx.ParentContext.Records.GetValue("apacheAgentPath");
-                this.apacheAgentHelper.InstallApacheAgentWihCommand(fullApacheAgentPath, tag);
+                fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
+                this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
             }
 
-            ctx.Trc("ApacheSDKTests.DeployModuleTaskWithPS.Cleanup finished");
+            ctx.Trc("MySQLSDKTests.DeployModuleTaskWithPS.Cleanup finished");
         }
 
         #endregion Test Framework Methods

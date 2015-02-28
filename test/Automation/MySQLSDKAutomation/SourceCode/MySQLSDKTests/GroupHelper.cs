@@ -51,9 +51,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         private DiscoveryHelper discoveryHelper;
 
         /// <summary>
-        /// Apache agent helper class
+        /// MySQL agent helper class
         /// </summary>
-        private ApacheAgentHelper apacheAgentHelper;
+        private MySQLAgentHelper mysqlAgentHelper;
 
         /// <summary>
         /// AgentHelper class from ScxCommon for manual finding agent on server.
@@ -69,16 +69,26 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// A MonitoroingObject representing the Operating System.
         /// </summary>
         private MonitoringObject OperatingSystemObject;
-         
+
         /// <summary>
         /// Full path to the old agent
         /// </summary>
         private string fullNewAgentPath;
 
         /// <summary>
-        /// Full path to the apache Agent
+        /// mySQL Add Auth Cmd
         /// </summary>
-        private string fullApacheAgentPath;
+        private string mySQLAddAuthCmd;
+
+        /// <summary>
+        /// mySQL Add NonSuperUser Auth Cmd.
+        /// </summary>
+        private string mySQLAddNonSuperUserAuthCmd;
+
+        /// <summary>
+        /// Full path to the mysql Agent
+        /// </summary>
+        private string fullMySQLAgentPath;
 
         /// <summary>
         /// Path to the agent cache; deployment tasks cannot deploy directly from a network share.
@@ -106,10 +116,10 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         private const int posixCommandTimeoutMS = 5000;
 
         /// <summary>
-        /// The Location of Apache Cim module
+        /// The Location of MySQL Cim module
         /// </summary>
-        private string tempApacheCIMModuleLocation = @"C:\Windows\Temp\ApacheCimProv";
-        
+        private string tempMySQLCIMModuleLocation = @"C:\Windows\Temp\MySQLCimProv";
+
         /// <summary>
         /// Setting the installonly option
         /// </summary>
@@ -137,7 +147,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         {
             try
             {
-                ctx.Trc("ApacheSDKTests.GroupHelper.Setup");
+                ctx.Trc("MySQLSDKTests.GroupHelper.Setup");
 
                 this.testGroupStart = DateTime.Now;
 
@@ -177,14 +187,14 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     ctx.Records.GetValue("superuserpwd"),
                     ctx.Records.GetValue("packagename"),
                     ctx.Records.GetValue("cleanupcommand"),
-                    ctx.Records.GetValue("platformtag"));
+                    GetPlatformTag(ctx.Records.GetValue("hostname")));
 
                 ctx.Alw("OMInfo: " + Environment.NewLine + this.info);
                 ctx.Alw("ClientInfo: " + Environment.NewLine + this.clientInfo);
 
-                this.discoveryHelper = new DiscoveryHelper(this.info, this.clientInfo) {Logger = ctx.Trc};
+                this.discoveryHelper = new DiscoveryHelper(this.info, this.clientInfo) { Logger = ctx.Trc };
 
-                this.apacheAgentHelper = new ApacheAgentHelper(this.info, this.clientInfo) {Logger = ctx.Trc};
+                this.mysqlAgentHelper = new MySQLAgentHelper(this.info, this.clientInfo) { Logger = ctx.Trc };
 
                 this.monitorHelper = new MonitorHelper(this.info);
                 this.agentHelper = new AgentHelper(
@@ -223,7 +233,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                                                 ManagementPackDirectory =
                                                     Path.Combine(Environment.CurrentDirectory, "Overrides")
                                             };
-                         
+
                         // import test override
                         this.manageMP.ImportManagementPacks(overrideMp + ".xml");
                     }
@@ -256,11 +266,11 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     throw new GroupAbort("Error! Both latestOnly and useLocalAgents value is 'false'. Please specify use local agents or latest agents to test!");
                 }
 
-                 if (ctx.Records.HasKey("installonly") &&
-                    ctx.Records.GetValue("installonly") == "true")
-                 {
-                     this.installOnly = true;
-                 }
+                if (ctx.Records.HasKey("installonly") &&
+                   ctx.Records.GetValue("installonly") == "true")
+                {
+                    this.installOnly = true;
+                }
 
                 bool clientDiscovered = this.discoveryHelper.VerifySystemInOM();
 
@@ -270,7 +280,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     {
                         IList<Microsoft.EnterpriseManagement.Runtime.TaskResult> agentList = this.discoveryHelper.GetAvailableAgentList();
                         if (agentList == null)
-                        {                            
+                        {
                             Abort(ctx, "No available agent list found!");
                         }
 
@@ -330,32 +340,39 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.WaitForClientVerification(ctx);
 
-                bool apacheAgentInstalled = this.apacheAgentHelper.VerifyApacheAgentInstalled();
+                bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
 
-                if (!apacheAgentInstalled)
+                if (!mysqlAgentInstalled)
                 {
-                    bool useTaskInstallApacheAgent = false ;
-                     if (ctx.Records.HasKey("useTaskInstallApacheAgent") &&
-                        ctx.Records.GetValue("useTaskInstallApacheAgent") == "true")
-                     {
-                         useTaskInstallApacheAgent = true;
-                     }
+                    bool useTaskInstallMySQLAgent = false;
+                    if (ctx.Records.HasKey("useTaskInstallMySQLAgent") &&
+                       ctx.Records.GetValue("useTaskInstallMySQLAgent") == "true")
+                    {
+                        useTaskInstallMySQLAgent = true;
+                    }
 
-                     if (useTaskInstallApacheAgent)
-                     {
-                         this.apacheAgentHelper.InstallApacheAgentWihTask();
-                     }
-                     else
-                     { 
-                         this.fullApacheAgentPath = ctx.Records.GetValue("apacheAgentPath");
-                         string tag = ctx.Records.GetValue("apacheTag");
-                         this.apacheAgentHelper.InstallApacheAgentWihCommand(fullApacheAgentPath, tag);
-                     }
+                    if (useTaskInstallMySQLAgent)
+                    {
+                        this.mysqlAgentHelper.InstallMySQLAgentWihTask();
+                    }
+                    else
+                    {
+                        this.fullMySQLAgentPath = ctx.Records.GetValue("mysqlAgentPath");
+                        string tag = ctx.Records.GetValue("mysqlTag");
+                        this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
+                    }
                 }
+                // Add the mySQL Auth for superuser and nonsuperuser
+                this.mySQLAddAuthCmd = ctx.Records.GetValue("mySQLAddAuthCmd");
+                this.mysqlAgentHelper.SetupMySqlAuth(this.mySQLAddAuthCmd);
+
+                this.mySQLAddNonSuperUserAuthCmd = ctx.Records.GetValue("mySQLAddNonSuperUserAuthCmd");
+                this.mysqlAgentHelper.SetupMySqlAuthForNonSuperUser(this.mySQLAddNonSuperUserAuthCmd);
 
                 this.computerObject = this.monitorHelper.GetComputerObject(this.clientInfo.HostName);
 
-                this.VerifyHostIsCompletelyDiscoveried(ctx);
+                // Blocked by bug 831295
+                // this.VerifyHostIsCompletelyDiscoveried(ctx);
 
             }
             catch (Exception ex)
@@ -365,7 +382,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Test framework cleanup method
         /// </summary>
         /// <param name="ctx">Current context</param>
@@ -373,7 +390,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         {
             try
             {
-                ctx.Trc("ApacheSDKTests.GroupHelper.Cleanup");
+                ctx.Trc("MySQLSDKTests.GroupHelper.Cleanup");
 
                 // Check for Warnings in SCX logs
                 //this.agentHelper.ScxLogHelper("sdk", "Warning", true, ctx.Records.GetValue("platformtag"), ctx.Records.GetValue("zonename"));
@@ -383,21 +400,21 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 if (this.installOnly != true)
                 {
-                    //Uninstall Apache CIm Module
-                    string fullApacheAgentPath = tempApacheCIMModuleLocation;
-                    if (ctx.Records.HasKey("useTaskInstallApacheAgent") &&
-                        ctx.Records.GetValue("useTaskInstallApacheAgent").ToLower() == "false")
+                    //Uninstall MySQL CIm Module
+                    string fullMySQLAgentPath = tempMySQLCIMModuleLocation;
+                    if (ctx.Records.HasKey("useTaskInstallMySQLAgent") &&
+                        ctx.Records.GetValue("useTaskInstallMySQLAgent").ToLower() == "false")
                     {
-                        fullApacheAgentPath = ctx.Records.GetValue("apacheAgentPath");
+                        fullMySQLAgentPath = ctx.Records.GetValue("mysqlAgentPath");
                     }
-                    string tag = ctx.Records.GetValue("apacheTag");
-                    this.apacheAgentHelper.UninstallApacheAgentWihCommand(fullApacheAgentPath, tag);
+                    string tag = ctx.Records.GetValue("mysqlTag");
+                    this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
 
                     this.UninstallAgent(ctx);
                     ctx.Trc("Deleting System from OM...");
                     this.discoveryHelper.DeleteSystemFromOM();
                 }
-             
+
                 TimeSpan testDuration = DateTime.Now - this.testGroupStart;
 
                 ctx.Alw("Test group complete after " + testDuration);
@@ -670,7 +687,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                                 numTries + " / " + maxServerWaitCount + " times...");
                         continue;
                     }
-                    
+
                     if (isManaged.Equals("True") && healthState.Equals("Success"))
                     {
                         ctx.Trc("The host " + this.clientInfo.HostName + " is completely discovered after trying " +
@@ -687,6 +704,40 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             {
                 Abort(ctx, ex.ToString());
             }
+        }
+
+        /// <summary>
+        /// GetPlatformTag
+        /// </summary>
+        /// <param name="hostName">hostName</param>
+        /// <returns>platformtag</returns>
+        private string GetPlatformTag(string hostName)
+        {
+            string platformtagstr = string.Empty;
+            if (hostName.ToLower().Contains("rhel") || hostName.ToLower().Contains("sles"))
+            {
+                string[] names = hostName.Split('-');
+                platformtagstr = names[1].Substring(0, 4) + "." + (hostName.ToLower().Contains("sles") ? names[1].Substring(4, 2) : names[1].Substring(4, 1));
+            }
+            else if (hostName.ToLower().Contains("deb") || hostName.ToLower().Contains("ubun"))
+            {
+                platformtagstr = ".universald.1";
+            }
+            else
+            {
+                platformtagstr = ".universalr.1";
+            }
+
+            if (hostName.Contains("64"))
+            {
+                platformtagstr = platformtagstr + ".x64";
+            }
+            else
+            {
+                platformtagstr = platformtagstr + ".x86";
+            }
+
+            return platformtagstr;
         }
         #endregion Private Methods
 

@@ -556,7 +556,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
                     }
                 }
 
-                if (monitor.Name.Contains("Certificate") && !monitor.Name.Contains("Apache"))
+                if (monitor.Name.Contains("Certificate"))
                 {
                     if (monitor.Health == HealthState.Success)
                     {

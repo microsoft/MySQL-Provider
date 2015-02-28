@@ -78,8 +78,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
         /// Returns an instance of a monitoring object by specified Monitoring Class and Name.
         /// </summary>
         /// <param name="monitoringClass">A monitor class name</param>
-        /// <param name="name">A monitoring object name, e.g. :Microsoft.JEE.WebSphere.Windows.Profile</param>
-        /// <returns>A MonitoringObject instance: e.g. AppSrv01.SCXOMT-WS7-08Node01Cell.SCXOMT-WS7-08Node01</returns>
+        /// <param name="name">A monitoring object name </param>
+        /// <returns>A MonitoringObject instance</returns>
         public MonitoringObject GetMonitoringObject(string monitoringClass, string name)
         {
             ManagementPackClass managementPackClass = this.GetMonitoringClass(monitoringClass);
@@ -99,9 +99,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
         /// <summary>
         /// Returns an instance of a monitoring object by specified Monitoring Class, DisplayName and Path.
         /// </summary>
-        /// <param name="monitoringClass">A monitor class name, e.g. :Microsoft.JEE.Tomcat.Managed.Windows.Configuration</param>
-        /// <param name="displayName">A monitoring object displayName, e.g. :Managed-Tomcat|C:\apache-tomcat-6.0.29</param>
-        /// <param name="path">A monitoring object path, e.g. :SCXOMT-WS7-25.SCX.com;c:\apache-tomcat-6.0.29</param>
+        /// <param name="monitoringClass">A monitor class name</param>
+        /// <param name="displayName">A monitoring object displayName</param>
+        /// <param name="path">A monitoring object path</param>
         /// <returns>Return the monitoring object</returns>
         public MonitoringObject GetMonitoringObject(string monitoringClass, string displayName, string path)
         {

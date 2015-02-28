@@ -18,7 +18,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
     using Scx.Test.MySQL.SDK.MySQLSDKHelper;
     class PerformanceWithTwoStateHealth : PerformanceHealthBase, ISetup, IRun, IVerify, ICleanup
     {
- /// <summary>
+        /// <summary>
         /// Initializes a new instance of the PerformanceWithTwoStateHealth class
         /// </summary>
         public PerformanceWithTwoStateHealth()
@@ -88,15 +88,15 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     this.actionCmdType = ctx.Records.GetValue("ActionType");
                     if (this.actionCmdType.Equals("Server"))
                     {
-                        if(ctx.ParentContext.Records.HasKey("apacheHelperABPath"))
+                        if (ctx.ParentContext.Records.HasKey("mysqlHelperABPath"))
                         {
-                            string abPath = ctx.ParentContext.Records.GetValue("apacheHelperABPath");
-                            if(!Directory.Exists(abPath))
+                            string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
+                            if (!Directory.Exists(abPath))
                                 throw new VarAbort("Could not find the ab.exe under " + abPath);
                         }
                         else
                         {
-                            throw new VarAbort("Please set apacheHelperABPath in VarMap");
+                            throw new VarAbort("Please set mysqlHelperABPath in VarMap");
                         }
                     }
                 }
@@ -105,7 +105,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.AlertHelper = new AlertsHelper(this.Info);
 
-                this.ApacheAgentHelper = new ApacheAgentHelper(this.Info, this.ClientInfo) { Logger = ctx.Trc };
+                this.MySQLAgentHelper = new MySQLAgentHelper(this.Info, this.ClientInfo) { Logger = ctx.Trc };
 
                 this.OverrideHelper = new OverrideHelper(ctx.Trc, this.Info, ctx.ParentContext.Records.GetValue("testingoverride"));
 
@@ -117,7 +117,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 }
                 else
                 {
-                    this.ComputerObject = this.GetVitualHostMonitor(this.ClientInfo.HostName, instanceID);
+                    this.ComputerObject = this.GetDataBaseMonitor(this.ClientInfo.HostName, instanceID);
                 }
 
                 //this.RecoverMonitorIfFailed(ctx);
@@ -137,7 +137,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 //copy all ssl certificate script to '/tmp/'
                 PosixCopy copyToHost = new PosixCopy(this.ClientInfo.HostName, this.ClientInfo.SuperUser, this.ClientInfo.SuperUserPassword);
                 copyToHost.CopyTo(scriptsLocation + "/" + breakScriptName, "/tmp/" + breakScriptName);
-            
+
             }
             catch (Exception ex)
             {
@@ -178,7 +178,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     try
                     {
                         /*RunWinCmd winCmd = new RunWinCmd();
-                        string abPath = ctx.ParentContext.Records.GetValue("apacheHelperABPath");
+                        string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
                         winCmd.WorkingDirectory = abPath;
                         string[] cmds = actionCmd.Split(' ');
                         winCmd.FileName = cmds[0];
@@ -186,23 +186,23 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                         winCmd.Arguments = arguments;
                         winCmd.RunCmd();*/
                         this.RunWinCMDWithThread(ctx);
-                }
+                    }
                     catch (Exception)
                     {
 
                     }
                 }
-                else 
+                else
                 {
-                RunCmd(actionCmd);
+                    RunCmd(actionCmd);
                 }
 
                 string ExpectedState = ctx.Records.GetValue("ExpectedState");
                 HealthState requiredState = this.GetRequiredState(ExpectedState);
- 
+
                 //// Waiting for 5 minutes directly to make sure that OM can get the latest monitor state
                 //// because the latest monitor state might be the same as the initial state
-                if (ctx.Records.GetValue("ExpectedState").Equals("success",  StringComparison.CurrentCultureIgnoreCase))
+                if (ctx.Records.GetValue("ExpectedState").Equals("success", StringComparison.CurrentCultureIgnoreCase))
                 {
                     this.Wait(ctx, 300);
 
@@ -220,11 +220,11 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 // Run the recovery command
                 if (!(string.IsNullOrEmpty(recoveryCmd)))
                 {
-                ctx.Trc("Running recovery command: " + recoveryCmd);
-                this.PosixCmd(ctx, recoveryCmd);
+                    ctx.Trc("Running recovery command: " + recoveryCmd);
+                    this.PosixCmd(ctx, recoveryCmd);
 
-                this.VerifyAlert(ctx, false);
-            }
+                    this.VerifyAlert(ctx, false);
+                }
             }
             catch (Exception ex)
             {
@@ -280,7 +280,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         {
             IContext ctx = (IContext)parObject;
             RunWinCmd winCmd = new RunWinCmd();
-            string abPath = ctx.ParentContext.Records.GetValue("apacheHelperABPath");
+            string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
             string actionCmd = ctx.Records.GetValue("ActionCmd");
             winCmd.WorkingDirectory = abPath;
             string[] cmds = actionCmd.Split(' ');

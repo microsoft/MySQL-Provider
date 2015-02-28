@@ -19,16 +19,16 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
     public class AvailabilityHealth : PerformanceHealthBase, ISetup, IRun, IVerify, ICleanup
     {
         /// <summary>
-        /// Initializes a new instance of the HTTPServerHealth class
+        /// Initializes a new instance of the AvailabilityHealth class
         /// </summary>
         public AvailabilityHealth()
         {
         }
 
         /// <summary>
-        /// Apache agent helper class
+        /// MySQL agent helper class
         /// </summary>
-        private ApacheAgentHelper apacheAgentHelper;
+        private MySQLAgentHelper mysqlAgentHelper;
 
         #region Test Framework Methods
 
@@ -44,7 +44,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Setup");
+            ctx.Trc("SDKTests.MySQLServerHealth.Setup");
 
             try
             {
@@ -73,7 +73,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 ctx.Trc("ClientInfo: " + Environment.NewLine + this.ClientInfo.ToString());
 
-                this.apacheAgentHelper = new ApacheAgentHelper(this.Info, this.ClientInfo);
+                this.mysqlAgentHelper = new MySQLAgentHelper(this.Info, this.ClientInfo);
 
                 this.MonitorHelper = new MonitorHelper(this.Info);
 
@@ -87,17 +87,17 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.CloseMatchingAlerts(ctx);
 
-                //Because of there is a active bug 727207, so disable the steps
+                //Because of there is a active bug 831295, so disable the steps
                 //this.VerifyMonitor(ctx, HealthState.Success);
 
                 //this.VerifyAlert(ctx, false);
 
-                if (ctx.Records.HasKey("needUninstallApache") &&
-                    ctx.Records.GetValue("needUninstallApache") == "true")
+                if (ctx.Records.HasKey("needUninstallMySQL") &&
+                    ctx.Records.GetValue("needUninstallMySQL") == "true")
                 {
-                    string fullApacheAgentPath = ctx.ParentContext.Records.GetValue("apacheAgentPath");
-                    string tag = ctx.ParentContext.Records.GetValue("apacheTag");
-                    this.apacheAgentHelper.UninstallApacheAgentWihCommand(fullApacheAgentPath, tag);
+                    string fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
+                    string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
+                    this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
                 }
 
             }
@@ -106,7 +106,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Setup complete");
+            ctx.Trc("SDKTests.MySQLServerHealth.Setup complete");
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Run with entity " + entity);
+            ctx.Trc("SDKTests.MySQLServerHealth.Run with entity " + entity);
 
             try
             {
@@ -171,7 +171,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Fail(ctx, ex.ToString());
             }
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Run complete");
+            ctx.Trc("SDKTests.MySQLServerHealth.Run complete");
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Verify");
+            ctx.Trc("SDKTests.MySQLServerHealth.Verify");
 
             try
             {
@@ -197,7 +197,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Fail(ctx, ex.ToString());
             }
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Verify complete");
+            ctx.Trc("SDKTests.MySQLServerHealth.Verify complete");
         }
 
         /// <summary>
@@ -211,17 +211,17 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            if (ctx.Records.HasKey("needUninstallApache") &&
-                ctx.Records.GetValue("needUninstallApache") == "true")
+            if (ctx.Records.HasKey("needUninstallMySQL") &&
+                ctx.Records.GetValue("needUninstallMySQL") == "true")
             {
-                string fullApacheAgentPath = ctx.ParentContext.Records.GetValue("apacheAgentPath");
-                string tag = ctx.ParentContext.Records.GetValue("apacheTag");
-                this.apacheAgentHelper.InstallApacheAgentWihCommand(fullApacheAgentPath, tag);
+                string fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
+                string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
+                this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
             }
             //remove all scripts
             RunCmd("rm -rf /tmp/*.sh");
 
-            ctx.Trc("SDKTests.HTTPServerHealth.Cleanup finished");
+            ctx.Trc("SDKTests.MySQLServerHealth.Cleanup finished");
         }
 
         #endregion Test Framework Methods

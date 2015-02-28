@@ -12,13 +12,13 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Text.RegularExpressions;    
+    using System.Text.RegularExpressions;
     using Infra.Frmwrk;
     using Microsoft.EnterpriseManagement.Configuration;
     using Microsoft.EnterpriseManagement.Monitoring;
     using Scx.Test.Common;
     using Scx.Test.MySQL.SDK.MySQLSDKHelper;
-    
+
     /// <summary>
     /// Class for testing performance collection rules
     /// </summary>
@@ -47,9 +47,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         private MonitorHelper monitorHelper;
 
         /// <summary>
-        /// Apache agent helper class
+        /// MySQL agent helper class
         /// </summary>
-        private ApacheAgentHelper apacheAgentHelper;
+        private MySQLAgentHelper mysqlAgentHelper;
 
         /// <summary>
         /// Maximum number of times to wait for server state change
@@ -90,7 +90,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Scx.Test.Apache.SDK.ApacheSDKTests.PerformanceCollectionHealth.Setup");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Setup");
 
             try
             {
@@ -121,7 +121,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.monitorHelper = new MonitorHelper(this.info);
 
-                this.apacheAgentHelper = new ApacheAgentHelper(this.info, this.clientInfo) { Logger = ctx.Trc };
+                this.mysqlAgentHelper = new MySQLAgentHelper(this.info, this.clientInfo) { Logger = ctx.Trc };
 
                 this.overrideHelper = new OverrideHelper(ctx.Trc, this.info, ctx.ParentContext.Records.GetValue("testingoverride"));
 
@@ -130,7 +130,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 if (monitorTarget.Equals("VirtualHost"))
                 {
                     string instanceID = ctx.Records.GetValue("InstanceID");
-                    this.monitorObject = this.GetVitualHostMonitor(this.clientInfo.HostName, instanceID);
+                    this.monitorObject = this.GetDataBaseMonitor(this.clientInfo.HostName, instanceID);
                 }
                 else
                 {
@@ -144,7 +144,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("Scx.Test.Apache.SDK.ApacheSDKTests.PerformanceCollectionHealth.Setup complete");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Setup complete");
         }
 
         /// <summary>
@@ -158,8 +158,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Scx.Test.Apache.SDK.ApacheSDKTests.PerformanceCollectionHealth.Verify");
-            
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Verify");
+
             try
             {
                 this.VerifyPerformanceData(ctx);
@@ -169,7 +169,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Fail(ctx, ex.ToString());
             }
 
-            ctx.Trc("Scx.Test.Apache.SDK.ApacheSDKTests.PerformanceCollectionHealth.Verify complete");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Verify complete");
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ICleanup.Cleanup(IContext ctx)
         {
-            ctx.Trc("Scx.Test.Apache.SDK.ApacheSDKTests.PerformanceCollectionHealth.Cleanup");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Cleanup");
             if (this.SkipThisTest(ctx))
             {
                 return;
@@ -186,7 +186,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
             this.DeleteCollectionRuleOverride(ctx);
 
-            ctx.Trc("Scx.Test.Apache.SDK.ApacheSDKTests.PerformanceCollectionHealth.Cleanup finished");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Cleanup finished");
         }
 
         #endregion Test Framework Methods
@@ -194,24 +194,21 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         #region Private Methods
 
         /// <summary>
-        /// GetVirtualHost monitor.
+        /// GetDataBaseMonitor
         /// </summary>
-        /// <param name="ctx">Current context</param>
-        private MonitoringObject GetVitualHostMonitor(string hostname, string instanceID)
+        /// <param name="hostname">Hostname:BindAddress:Port:DataBaseName</param>
+        /// <param name="instanceID">instanceID</param>
+        /// <returns>Monitor</returns>
+        private MonitoringObject GetDataBaseMonitor(string hostname, string instanceID)
         {
             MonitoringObject monitor = null;
             try
             {
-                monitor = this.apacheAgentHelper.GetVirtualHostMonitor(hostname + "," + instanceID);
+                monitor = this.mysqlAgentHelper.GetDataBaseMonitor(hostname + ":" + instanceID);
             }
             catch (Exception)
             {
-                if (hostname.Contains(".scx.com"))
-                {
-                    int index = hostname.IndexOf(".scx.com");
-                    string tempHost = hostname.Substring(0, index);
-                    monitor = this.apacheAgentHelper.GetVirtualHostMonitor(tempHost + "," + instanceID);
-                }
+                //todo.
             }
 
             return monitor;
@@ -275,7 +272,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 ReadOnlyCollection<MonitoringPerformanceDataValue> sampleValues = perfData.GetValues(startTime, endTime);
                 sampleValueCount = sampleValues.Count;
                 foreach (MonitoringPerformanceDataValue dataValue in sampleValues)
-                {                    
+                {
                     string pattern = ctx.Records.GetValue("pattern");
                     if (String.IsNullOrEmpty(pattern))
                     {
@@ -337,7 +334,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     }
 
                     MonitoringPerformanceDataCriteria dataCriteria = new MonitoringPerformanceDataCriteria(string.Format("MonitoringRuleId='{0}'", rules[0].Id.ToString()));
-                    perfDataCollection = monitoringObject.GetMonitoringPerformanceData(dataCriteria);                         
+                    perfDataCollection = monitoringObject.GetMonitoringPerformanceData(dataCriteria);
                 }
                 catch (Exception)
                 {
@@ -353,7 +350,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
             return perfDataCollection;
         }
-        
+
         /// <summary>
         /// Wrapper method to enable executing RunPosixCmd with a single parameter containing
         /// both file name and arguments. This runs binary commands only - shell scripts

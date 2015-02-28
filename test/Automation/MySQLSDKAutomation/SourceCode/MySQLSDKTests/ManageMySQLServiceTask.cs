@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="ManageApacheServiceTask.cs" company="Microsoft">
+// <copyright file="ManageMySQLServiceTask.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // </copyright>
 // <author>v-yabo</author>
@@ -17,13 +17,13 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
     using Scx.Test.MySQL.SDK.MySQLSDKHelper;
 
     /// <summary>
-    /// Description for ManageApacheServiceTask.
-    /// Test Case 725217 Verify Reload Apache HTTP Server (Graceful) task works.
-    /// Test Case 725218 Verify Restart Apache HTTP Server task works.
+    /// Description for ManageMySQLServiceTask.
+    /// Test Case 725217 Verify Reload MySQL Server (Graceful) task works.
+    /// Test Case 725218 Verify Restart MySQL  Server task works.
     /// Test Case 725219 Verify Update Discovered Properties task works
     /// </summary>
     /// 
-    public class ManageApacheServiceTask : ISetup, IRun, IVerify, ICleanup
+    public class ManageMySQLServiceTask : ISetup, IRun, IVerify, ICleanup
     {
 
         #region Private Fields
@@ -46,7 +46,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <summary>
         /// A MonitoroingObject representing the client machine.
         /// </summary>
-        private MonitoringObject apacheInstance;
+        private MonitoringObject mysqlInstance;
 
         /// <summary>
         /// Helper class to run task
@@ -65,7 +65,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <summary>
         /// Initializes a new instance of the DiscoverServerTask class.
         /// </summary>
-        public ManageApacheServiceTask()
+        public ManageMySQLServiceTask()
         {
         }
 
@@ -81,7 +81,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ISetup.Setup(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.DeployModuleTask.Setup");
+            ctx.Trc("MySQLSDKTests.DeployModuleTask.Setup");
 
             try
             {
@@ -116,7 +116,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 string monitorInstanceClass = ctx.Records.GetValue("InstanceClass");
 
-                this.apacheInstance = this.monitorHelper.GetMonitoringObject(monitorInstanceClass, this.clientInfo.HostName);
+                this.mysqlInstance = this.monitorHelper.GetMonitoringObject(monitorInstanceClass, this.clientInfo.HostName);
                 
             }
             catch (Exception ex)
@@ -124,7 +124,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("ApacheSDKTests.DeployModuleTask.Setup complete");
+            ctx.Trc("MySQLSDKTests.DeployModuleTask.Setup complete");
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void IRun.Run(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.ReloadApacheTask.Run");
+            ctx.Trc("MySQLSDKTests.ReloadMySQLTask.Run");
 
             string entity = ctx.Records.GetValue("entityname");
             string consumerTask = ctx.Records.GetValue("taskname");
@@ -142,14 +142,14 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
             try
             {
-                this.taskResult = this.tasksHelper.RunConsumerTask(this.apacheInstance, consumerTask);
+                this.taskResult = this.tasksHelper.RunConsumerTask(this.mysqlInstance, consumerTask);
             }
             catch (Exception ex)
             {
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("ApacheSDKTests.ReloadApacheTask.Run complete");
+            ctx.Trc("MySQLSDKTests.ReloadMySQLTask.Run complete");
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void IVerify.Verify(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.ReloadApacheTask.Verify");
+            ctx.Trc("MySQLSDKTests.ReloadMySQLTask.Verify");
             try
             {
                 Microsoft.EnterpriseManagement.Runtime.TaskStatus expectedTaskStatus = this.GetExpectedTaskStatus(ctx.Records.GetValue("expectedTaskStatus"));
@@ -197,7 +197,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.Fail(ctx, ex.Message);
             }
 
-            ctx.Trc("ApacheSDKTests.ReloadApacheTask.Verify.Complete!");
+            ctx.Trc("MySQLSDKTests.ReloadMySQLTask.Verify.Complete!");
         }
 
         /// <summary>
@@ -206,8 +206,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ICleanup.Cleanup(IContext ctx)
         {
-            ctx.Trc("ApacheSDKTests.ReloadApacheTask.Cleanup");
-            ctx.Trc("ApacheSDKTests.ReloadApacheTask.Cleanup finished");
+            ctx.Trc("MySQLSDKTests.ReloadMySQLTask.Cleanup");
+            ctx.Trc("MySQLSDKTests.ReloadMySQLTask.Cleanup finished");
         }
 
         #endregion Test Framework Methods

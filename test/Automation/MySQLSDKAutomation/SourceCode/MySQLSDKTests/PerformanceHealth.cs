@@ -96,7 +96,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 string instanceID = ctx.Records.GetValue("InstanceID");
 
-                this.ComputerObject = this.GetDataBaseMonitor(this.ClientInfo.HostName , instanceID);
+                this.ComputerObject = this.GetMySQLServerMonitor(this.ClientInfo.HostName , instanceID);
 
                 //this.RecoverMonitorIfFailed(ctx);
 

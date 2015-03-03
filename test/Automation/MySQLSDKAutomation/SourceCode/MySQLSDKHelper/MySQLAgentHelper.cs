@@ -151,14 +151,14 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
         /// </summary>
         /// <param name="instanceID">The MySql Data Base instance</param>
         /// <returns>MySql Data Base.Monitor</returns>
-        public MonitoringObject GetDataBaseMonitor(string instanceID)
+        public MonitoringObject GetMySQLServerMonitor(string instanceID)
         {
-            MonitoringObject mysqlDataBaseInstance;
+            MonitoringObject mysqlServerInstance;
 
             try
             {
                 //IPHostEntry hostList = Dns.GetHostEntry(this.clientInfo.HostName);
-                mysqlDataBaseInstance = this.monitorHelper.GetMonitoringObject("Microsoft.MySQLServer.Database.Unix", instanceID);
+                mysqlServerInstance = this.monitorHelper.GetMonitoringObject("Microsoft.MySQLServer.Installation.Unix", instanceID);
             }
             catch (Exception e)
             {
@@ -166,7 +166,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
                 throw e;
             }
 
-            return mysqlDataBaseInstance;
+            return mysqlServerInstance;
         }
 
         /// <summary>

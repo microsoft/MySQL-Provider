@@ -2,9 +2,9 @@
 // <copyright file="PerformanceCollectionHealth.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation.  All rights reserved.
 // </copyright>
-// <author>v-ashu</author>
+// <author>v-jeyin</author>
 // <description></description>
-// <history>8/26/2011 12:00:00 AM: Created</history>
+// <history>3/2/2015 12:00:00 AM: Created</history>
 //-----------------------------------------------------------------------
 
 namespace Scx.Test.MySQL.SDK.MySQLSDKTests
@@ -20,9 +20,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
     using Scx.Test.MySQL.SDK.MySQLSDKHelper;
 
     /// <summary>
-    /// Class for testing performance collection rules
+    /// Class for testing case 800271
     /// </summary>
-    public class PerformanceCollectionHealth : ISetup, IVerify, ICleanup
+    public class DiskUseInBytesChangePerformanceCollection : ISetup, IRun, IVerify, ICleanup
     {
         #region Private Fields
 
@@ -66,13 +66,20 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// </summary>
         private MonitoringObject monitorObject;
 
+        private string setupCommand = "";
+        private string runCommand = "";
+        private string verifyCommand = "";
+        private string cleanupCommand = "";
+
+        private double defaultPerformanceData = 0;
+        private double changedPerformanceData = 0;
 
         #endregion
 
         /// <summary>
         /// Initializes a new instance of the PerformanceCollectionHealth class
         /// </summary>
-        public PerformanceCollectionHealth()
+        public DiskUseInBytesChangePerformanceCollection()
         {
         }
 
@@ -90,7 +97,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Setup");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Setup");
 
             try
             {
@@ -137,14 +144,52 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     this.monitorObject = this.monitorHelper.GetMonitoringObject(monitorContext, this.clientInfo.HostName);
                 }
 
+                setupCommand = ctx.Records.GetValue("setupcommand"); ;
+                runCommand = ctx.Records.GetValue("runcommand"); ;
+                verifyCommand = ctx.Records.GetValue("verifycommand"); ;
+                cleanupCommand = ctx.Records.GetValue("cleanupcommand"); ;
+
                 this.ApplyCollectionRuleOverride(ctx);
+
+                this.PosixCmd(ctx, setupCommand);
+
+                defaultPerformanceData = this.GetPerformanceData(ctx);
+
             }
             catch (Exception ex)
             {
                 this.Abort(ctx, ex.ToString());
             }
 
-            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Setup complete");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Setup complete");
+        }
+
+        /// <summary>
+        /// Framework Run method
+        /// </summary>
+        /// <param name="ctx">Current context</param>
+        void IRun.Run(IContext ctx)
+        {
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Run");
+
+            try
+            {
+                this.PosixCmd(ctx, runCommand);
+
+                changedPerformanceData = this.GetPerformanceData(ctx);
+            }
+            catch (Exception ex)
+            {
+                this.Fail(ctx, ex.ToString());
+            }
+
+            if (changedPerformanceData >= defaultPerformanceData)
+            {
+                this.Fail(ctx, "The performanceData should be smaller than the value before deleting database.");
+            }
+
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Run complete");
+
         }
 
         /// <summary>
@@ -158,18 +203,27 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 return;
             }
 
-            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Verify");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Verify");
+
+            double performacneData = 0;
 
             try
             {
-                this.VerifyPerformanceData(ctx);
+                this.PosixCmd(ctx, verifyCommand);
+
+                performacneData = this.GetPerformanceData(ctx);
             }
             catch (Exception ex)
             {
                 this.Fail(ctx, ex.ToString());
             }
 
-            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Verify complete");
+            if (performacneData != defaultPerformanceData)
+            {
+                this.Fail(ctx, "The performanceData should be same as value before deleting database.");
+            }
+
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Verify complete");
         }
 
         /// <summary>
@@ -178,15 +232,15 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ICleanup.Cleanup(IContext ctx)
         {
-            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Cleanup");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Cleanup");
             if (this.SkipThisTest(ctx))
             {
                 return;
             }
-
+            this.PosixCmd(ctx, cleanupCommand);
             this.DeleteCollectionRuleOverride(ctx);
 
-            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth.Cleanup finished");
+            ctx.Trc("Scx.Test.MySQL.SDK.MySQLSDKTests.DiskUseInBytesChangePerformanceCollection.Cleanup finished");
         }
 
         #endregion Test Framework Methods
@@ -194,10 +248,10 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         #region Private Methods
 
         /// <summary>
-        /// GetMySQLServerMonitor
+        /// GetDataBaseMonitor
         /// </summary>
-        /// <param name="hostname">Hostname:BindAddress:Port</param>
-        /// <param name="instanceID">instance ID</param>
+        /// <param name="hostname">Hostname:BindAddress:Port:DataBaseName</param>
+        /// <param name="instanceID">instanceID</param>
         /// <returns>Monitor</returns>
         private MonitoringObject GetMySQLServerMonitor(string hostname, string instanceID)
         {
@@ -208,12 +262,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             }
             catch (Exception)
             {
-                if (hostname.Contains("."))
-                {
-                    int index = hostname.IndexOf(".", 0);
-                    string tempHost = hostname.Substring(0, index);
-                    monitor = this.mysqlAgentHelper.GetMySQLServerMonitor(tempHost + "," + instanceID);
-                }
+                //todo.
             }
 
             return monitor;
@@ -245,8 +294,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// Verify the performance data.
         /// </summary>
         /// <param name="ctx">Current context</param>
-        private void VerifyPerformanceData(IContext ctx)
+        private double GetPerformanceData(IContext ctx)
         {
+            System.Threading.Thread.Sleep(new TimeSpan(0, 2, 0));
             // According to specified time range, verify sample performance data
             DateTime baseTime;
             TimeSpan startRange;
@@ -258,7 +308,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             }
 
             TimeSpan.TryParse(ctx.ParentContext.Records.GetValue("startrange"), out startRange);
-            DateTime startTime = baseTime + startRange;
+            DateTime startTime = baseTime;
             TimeSpan.TryParse(ctx.ParentContext.Records.GetValue("endrange"), out endRange);
             DateTime endTime = baseTime + endRange;
             ctx.Trc(string.Format("Verify sample performance date in the range: '{0}' - '{1}'", startTime, endTime));
@@ -276,26 +326,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             {
                 ReadOnlyCollection<MonitoringPerformanceDataValue> sampleValues = perfData.GetValues(startTime, endTime);
                 sampleValueCount = sampleValues.Count;
-                foreach (MonitoringPerformanceDataValue dataValue in sampleValues)
-                {
-                    string pattern = ctx.Records.GetValue("pattern");
-                    if (String.IsNullOrEmpty(pattern))
-                    {
-                        throw new ApplicationException("The value of pattern key is not set!");
-                    }
-                    else
-                    {
-                        Regex regex = new Regex(pattern);
-                        if (regex.IsMatch(dataValue.SampleValue.ToString()))
-                        {
-                            ctx.Trc(String.Format("Performance Collection Rule '{0}': Sample Value '{1}' does match pattern '{2}' as expected.", ruleName, dataValue.SampleValue, pattern));
-                        }
-                        else
-                        {
-                            throw new VarFail(String.Format("Performance Collection Rule '{0}': Sample Value '{1}' does not match pattern '{2}' unexpectedly.", ruleName, dataValue.SampleValue, pattern));
-                        }
-                    }
-                }
+                return sampleValues[sampleValueCount - 1].SampleValue.Value;
             }
 
             if (sampleValueCount == 0)
@@ -303,7 +334,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 throw new VarFail(string.Format("FAIL: Collection Rule '{0}' not found", ruleName));
             }
 
-            ctx.Alw(String.Format("PASS: Performance Collection Rule '{0}': {1} Sample Value found during '{2} - {3}'as expected.", ruleName, sampleValueCount, startTime, endTime));
+            return 0;
         }
 
         /// <summary>

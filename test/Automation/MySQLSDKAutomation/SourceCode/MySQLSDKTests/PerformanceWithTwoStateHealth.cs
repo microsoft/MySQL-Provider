@@ -33,14 +33,14 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         private string scriptsLocation = System.Environment.CurrentDirectory;
 
         /// <summary>
-        /// Creating ports script name.
-        /// </summary>
-        private string breakScriptName = "breakWebRequestTotalResponseConf.sh";
-
-        /// <summary>
         /// Where to run action cmd.
         /// </summary>
         private string actionCmdType = "Client";
+
+        /// <summary>
+        /// New Thread.
+        /// </summary>
+        private Thread t = null;
 
         /// <summary>
         /// Framework setup method
@@ -48,12 +48,6 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">Current context</param>
         void ISetup.Setup(IContext ctx)
         {
-            if (this.SkipThisTest(ctx))
-            {
-                ctx.Trc("BYPASSING TEST CASE (ISetup.Setup): " + ctx.Records.GetValue("entityname"));
-                return;
-            }
-
             ctx.Trc("SDKTests.PerformanceWithTwoStateHealth.Setup");
 
             try
@@ -88,15 +82,15 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     this.actionCmdType = ctx.Records.GetValue("ActionType");
                     if (this.actionCmdType.Equals("Server"))
                     {
-                        if (ctx.ParentContext.Records.HasKey("mysqlHelperABPath"))
+                        if (ctx.ParentContext.Records.HasKey("mysqlHelperSqlTestPath"))
                         {
-                            string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
-                            if (!Directory.Exists(abPath))
-                                throw new VarAbort("Could not find the ab.exe under " + abPath);
+                            string SqlTestPath = ctx.ParentContext.Records.GetValue("mysqlHelperSqlTestPath");
+                            if (!Directory.Exists(SqlTestPath))
+                                throw new VarAbort("Could not find the sql batch files under " + SqlTestPath);
                         }
                         else
                         {
-                            throw new VarAbort("Please set mysqlHelperABPath in VarMap");
+                            throw new VarAbort("Please set mysqlHelperSqlTestPath in VarMap");
                         }
                     }
                 }
@@ -117,10 +111,11 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 }
                 else
                 {
-                    this.ComputerObject = this.GetDataBaseMonitor(this.ClientInfo.HostName, instanceID);
+                    this.ComputerObject = this.GetMySQLServerMonitor(this.ClientInfo.HostName, instanceID);
                 }
 
-                //this.RecoverMonitorIfFailed(ctx);
+                // Run the recovery command
+                this.RecoverMonitor(ctx);
 
                 this.OverridePerformanceMonitor(ctx, true);
 
@@ -133,10 +128,6 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 this.VerifyMonitor(ctx, HealthState.Success);
 
                 this.VerifyAlert(ctx, false);
-
-                //copy all ssl certificate script to '/tmp/'
-                PosixCopy copyToHost = new PosixCopy(this.ClientInfo.HostName, this.ClientInfo.SuperUser, this.ClientInfo.SuperUserPassword);
-                copyToHost.CopyTo(scriptsLocation + "/" + breakScriptName, "/tmp/" + breakScriptName);
 
             }
             catch (Exception ex)
@@ -157,7 +148,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             string actionCmd = ctx.Records.GetValue("ActionCmd");
             string monitorName = ctx.Records.GetValue("monitorname");
             string diagnosticName = ctx.Records.GetValue("diagnostics");
-            string recoveryCmd = ctx.Records.GetValue("recoverycmd");
+            string recoveryCmd = ctx.Records.GetValue("PostCmd");
+            string stopAction = ctx.Records.GetValue("StopAction");
             string targetOSClassName = ctx.ParentContext.Records.GetValue("targetosclass");
 
             if (this.SkipThisTest(ctx))
@@ -177,14 +169,6 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 {
                     try
                     {
-                        /*RunWinCmd winCmd = new RunWinCmd();
-                        string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
-                        winCmd.WorkingDirectory = abPath;
-                        string[] cmds = actionCmd.Split(' ');
-                        winCmd.FileName = cmds[0];
-                        string arguments = actionCmd.Substring(cmds[0].Length);
-                        winCmd.Arguments = arguments;
-                        winCmd.RunCmd();*/
                         this.RunWinCMDWithThread(ctx);
                     }
                     catch (Exception)
@@ -215,15 +199,6 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     this.VerifyMonitor(ctx, requiredState);
 
                     this.VerifyAlert(ctx, true);
-                }
-
-                // Run the recovery command
-                if (!(string.IsNullOrEmpty(recoveryCmd)))
-                {
-                    ctx.Trc("Running recovery command: " + recoveryCmd);
-                    this.PosixCmd(ctx, recoveryCmd);
-
-                    this.VerifyAlert(ctx, false);
                 }
             }
             catch (Exception ex)
@@ -261,6 +236,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
             this.DeleteMonitorOverride(ctx);
             this.OverridePerformanceMonitor(ctx, true);
+            // Run the recovery command
+            this.RecoverMonitor(ctx);
 
             this.VerifyMonitor(ctx, HealthState.Success);
 
@@ -270,19 +247,42 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
         #region Private Methods
 
-        private void RunWinCMDWithThread(IContext ctx)
+        /// <summary>
+        /// RecoverMonitor via running some MySQL Cmd
+        /// </summary>
+        /// <param name="ctx">IContext</param>
+        private void RecoverMonitor(IContext ctx)
         {
-            Thread t = new Thread(new ParameterizedThreadStart(RunWinCMD));
-            t.Start(ctx);
+            string recoveryCmd = ctx.Records.GetValue("PostCmd");
+            if (!(string.IsNullOrEmpty(recoveryCmd)))
+            {
+                ctx.Trc("Running recovery command: " + recoveryCmd);
+                this.PosixCmd(ctx, recoveryCmd);
+            }
         }
 
+        /// <summary>
+        /// RunWinCMDWithThread
+        /// </summary>
+        /// <param name="ctx">IContext</param>
+        private void RunWinCMDWithThread(IContext ctx)
+        {
+            this.t = new Thread(new ParameterizedThreadStart(RunWinCMD));
+            this.t.Start(ctx);
+
+        }
+
+        /// <summary>
+        /// RunWinCMD
+        /// </summary>
+        /// <param name="parObject">parObject</param>
         private void RunWinCMD(object parObject)
         {
             IContext ctx = (IContext)parObject;
             RunWinCmd winCmd = new RunWinCmd();
-            string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
+            string sqlTestPath = ctx.ParentContext.Records.GetValue("mysqlHelperSqlTestPath");
             string actionCmd = ctx.Records.GetValue("ActionCmd");
-            winCmd.WorkingDirectory = abPath;
+            winCmd.WorkingDirectory = sqlTestPath;
             string[] cmds = actionCmd.Split(' ');
             winCmd.FileName = cmds[0];
             string arguments = actionCmd.Substring(cmds[0].Length);

@@ -84,7 +84,7 @@ namespace Microsoft.SystemCenter.CrossPlatform.ClientLibrary.MPAbstractions
             //
             // Before our RegEx substitution (using SUDO elevation), we may have something like:
             //
-            //    Last login: Fri Feb  4 01:08:12 2011 from scxomd-ws7-08.scx.com
+            //    Last login: Fri Feb  4 01:08:12 2011 from scxomd-ws7-08
             //
             //    su root -c 'sh /tmp/scx-$USER/GetOSVersion.sh; EC=$?; rm -rf /tmp/scx-$USER; exit $EC'
             //    Sun Microsystems Inc.   SunOS 5.10      Generic January 2005

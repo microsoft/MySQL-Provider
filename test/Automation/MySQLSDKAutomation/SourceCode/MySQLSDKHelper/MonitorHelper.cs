@@ -55,7 +55,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
         /// <summary>
         /// Returns an instance of a computer object matching the given computer display name.
         /// </summary>
-        /// <param name="displayName">A computer display name, for example, scxom-redhat15.scx.com</param>
+        /// <param name="displayName">A computer display name, for example, scxom-redhat15</param>
         /// <returns>A MonitoringObject instance representing the given computer.</returns>
         public MonitoringObject GetComputerObject(string displayName)
         {

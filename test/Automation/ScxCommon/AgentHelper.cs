@@ -20,7 +20,7 @@ namespace Scx.Test.Common
     /// an agent on a Posix host.
     /// </summary>
     /// <example>
-    /// AgentHelper helper = new AgentHelper("scxom-rhel51-01.scx.com", "root", "OpsMgr2007R2", "rpm -i", "rpm -e scx");
+    /// AgentHelper helper = new AgentHelper("scxom-rhel51-01", "root", "OpsMgr2007R2", "rpm -i", "rpm -e scx");
     /// helper.AgentPkgExt = "rpm";
     /// helper.DirectoryTag = "Linux_REDHAT_5.0_x86_32";
     /// helper.FindAgent(false, null, 3); // don't wait for today's agent, no specific date (latest), three minute timeout

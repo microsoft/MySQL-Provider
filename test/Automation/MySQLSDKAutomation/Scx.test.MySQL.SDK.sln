@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{
 	ProjectSection(SolutionItems) = preProject
 		TestFiles\scx.test.mysql.sdk.source.x64.xml = TestFiles\scx.test.mysql.sdk.source.x64.xml
 		TestFiles\scx.test.mysql.sdk.sources.xml = TestFiles\scx.test.mysql.sdk.sources.xml
+		TestFiles\sqlQPrunesTest.bat = TestFiles\sqlQPrunesTest.bat
+		TestFiles\sqlTest.bat = TestFiles\sqlTest.bat
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySQLSDKHelper", "SourceCode\MySQLSDKHelper\MySQLSDKHelper.csproj", "{80405EEB-CD80-4131-BB83-CD8C8516EC48}"

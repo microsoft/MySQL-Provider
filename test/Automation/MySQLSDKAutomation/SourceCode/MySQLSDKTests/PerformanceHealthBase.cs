@@ -213,7 +213,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 {
                     //if (numTries > 0)
                     //{
-                        this.Wait(ctx);
+                    this.Wait(ctx);
                     //}
 
                     monitorHealth = string.IsNullOrEmpty(monitorTarget)
@@ -233,7 +233,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.Fail(ctx, string.Format("monitor {0} -> {1} in state: {2} after {3}/{4}/ tries.", monitorName, monitorTarget, monitorHealth.ToString(), numTries, this.maxServerWaitCount));
             }
-        }  
+        }
 
 
         /// <summary>
@@ -245,26 +245,27 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         {
             string monitorName = ctx.Records.GetValue("monitorname");
             string monitorTarget = ctx.Records.GetValue("monitortarget");
+            string alertName = ctx.Records.GetValue("alertname");
 
-            MonitoringAlert alert = this.alertHelper.GetMonitorAlert(this.computerObject, monitorName, monitorTarget);
+            MonitoringAlert alert = this.alertHelper.GetMonitorAlert(this.computerObject, monitorName, monitorTarget, alertName);
 
             ctx.Trc(string.Format("VerifyAlert: {0}  shouldExist: {1}", monitorName, shouldExist));
 
             bool alertExists = !shouldExist;
 
-   
+
             int numTries = 0;
 
             while (numTries < this.maxServerWaitCount && alertExists != shouldExist)
             {
                 //if (numTries > 0)
                 //{
-                    this.Wait(ctx);
+                this.Wait(ctx);
                 //}
 
                 numTries++;
 
-                alert = this.alertHelper.GetMonitorAlert(this.computerObject, monitorName, monitorTarget);
+                alert = this.alertHelper.GetMonitorAlert(this.computerObject, monitorName, monitorTarget, alertName);
 
                 alertExists = this.alertHelper.IsActive(alert);
 
@@ -604,21 +605,26 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         }
 
         /// <summary>
-        /// GetDataBaseMonitor
+        /// GetMySQLServerMonitor
         /// </summary>
-        /// <param name="hostname">hostname:BindAddress:Port:DataBaseName</param>
-        /// <param name="instanceID">DataBaseName</param>
+        /// <param name="hostname">hostname:BindAddress:Port:</param>
+        /// <param name="instanceID">Instance ID</param>
         /// <returns>monitor</returns>
-        protected MonitoringObject GetDataBaseMonitor(string hostname, string instanceID)
+        protected MonitoringObject GetMySQLServerMonitor(string hostname, string instanceID)
         {
             MonitoringObject monitor = null;
             try
             {
-                monitor = this.mysqlAgentHelper.GetDataBaseMonitor(hostname + ":" + instanceID);
+                monitor = this.mysqlAgentHelper.GetMySQLServerMonitor(hostname + ":" + instanceID);
             }
             catch (Exception)
             {
-              //TODO
+                if (hostname.Contains("."))
+                {
+                    int index = hostname.IndexOf(".", 0);
+                    string tempHost = hostname.Substring(0, index);
+                    monitor = this.mysqlAgentHelper.GetMySQLServerMonitor(tempHost + "," + instanceID);
+                }
             }
 
             return monitor;

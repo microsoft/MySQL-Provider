@@ -238,8 +238,10 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             this.OverridePerformanceMonitor(ctx, true);
             // Run the recovery command
             this.RecoverMonitor(ctx);
-
-            this.VerifyMonitor(ctx, HealthState.Success);
+            if (!ctx.Records.HasKey("ShouldNotVerifyMonitorStatusAfterResetValue"))
+            {
+                this.VerifyMonitor(ctx, HealthState.Success);
+            }
 
         }
 

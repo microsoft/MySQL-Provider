@@ -1,8 +1,8 @@
 @Echo Off
 Setlocal EnableDelayedExpansion
 Echo Usage: 
-Echo demo: sql.bat HostName TotalRepeatCount
-Echo eg. sql.bat m50p-ora5-02.scx.com 2
+Echo demo: sql.bat HostName TotalRepeatCount QueryScript
+Echo eg. sql.bat m50p-ora5-02.scx.com 2 "select emp_no,first_name from employees where emp_no<11000;"
 SET _TotalCount=%2
 :_Repeat
 If %_TotalCount% equ 0 GOTO :_End
@@ -26,6 +26,6 @@ Set /A _RND=_RND%%%_Len%
 SET _RndAlphaNum=!_RndAlphaNum!!_Alphanumeric:~%_RND%,1!
 If !_count! lss %_RNDLength% goto _loop
 Echo Random string is !_RndAlphaNum!
-c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="SELECT * FROM departments where dept_no like '!_RndAlphaNum!';"
+c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query=%3
 GOTO :_Repeat
 :_End

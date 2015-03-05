@@ -1,7 +1,7 @@
 ﻿<varmap assembly="..\Scx.Test.MySQL.SDK.MySQLSDKTests.dll" contact="v-litin" dsc="MySQL SDK-based BVT" owner="v-litin" xmlns="http://smxinfranet/schemas/mcf/2002/01/varmap">
   <!--SDk Test Cases-->
   <!--Monitor[]-->
-  <var set="1" lvl="0" vid="797311" cid="AvailabilityHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.AvailabilityHealth" dsc="Verify MySQL Server status Code become Unhealthy when stop MySQL server." permutation="rows">
+  <var set="1" lvl="1" vid="797311" cid="AvailabilityHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.AvailabilityHealth" dsc="Verify MySQL Server status Code become Unhealthy when stop MySQL server." permutation="rows">
     <recm key="ActionCmd">
       <val>%stopMySQLCmd%</val>
     </recm>
@@ -16,12 +16,12 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797317" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Hit Percent become Error when Buffer Pool Hit Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797317" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Hit Percent become Error when Buffer Pool Hit Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
-      <val>mysql -e 'use employees;alter table employees ENGINE=InnoDB;'</val>
+      <val>%restartMySQLCmd%</val>
     </recm>
     <recm key="PostCmd">
-      <val>mysql -e 'use employees;alter table employees ENGINE=MyISAM;';%restartMySQLCmd%</val>
+      <val>%restartMySQLCmd%</val>
     </recm>
     <recm key="monitorname">
       <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_HitPct.Monitor</val>
@@ -38,13 +38,13 @@
     <recm key="errorThresholdName">
       <val>ErrorThreshold</val>
     </recm>
-    <!--The default Warning value is 95, set to 80.-->
+    <!--The default Warning value is 95, set to 50.-->
     <recm key="defaultWarningThreshold">
-      <val>80</val>
+      <val>50</val>
     </recm>
-    <!--The default Error value is 90, but it will be critical so set it to 70.-->
+    <!--The default Error value is 90, but it will be critical so set it to 40.-->
     <recm key="defaultErrorThreshold">
-      <val>70</val>
+      <val>40</val>
     </recm>
     <recm key="overrideWarningThreshold">
       <val>100</val>
@@ -57,12 +57,12 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797318" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Hit Percent become Warning when Buffer Pool Hit Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797318" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Hit Percent become Warning when Buffer Pool Hit Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
-      <val>mysql -e 'use employees;alter table employees ENGINE=InnoDB;'</val>
+      <val>%restartMySQLCmd%</val>
     </recm>
     <recm key="PostCmd">
-      <val>mysql -e 'use employees;alter table employees ENGINE=MyISAM;';%restartMySQLCmd%</val>
+      <val>%restartMySQLCmd%</val>
     </recm>
     <recm key="monitorname">
       <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_HitPct.Monitor</val>
@@ -79,65 +79,26 @@
     <recm key="errorThresholdName">
       <val>ErrorThreshold</val>
     </recm>
-    <!--The default Warning value is 95, set to 99.-->
+    <!--The default Warning value is 95, set to 50.-->
     <recm key="defaultWarningThreshold">
-      <val>99</val>
+      <val>50</val>
     </recm>
-    <!--The default Error value is 90, but it will be critical so set it to 100.-->
+    <!--The default Error value is 90, but it will be critical so set it to 40.-->
     <recm key="defaultErrorThreshold">
-      <val>100</val>
+      <val>40</val>
     </recm>
     <recm key="overrideWarningThreshold">
-      <val>100</val>
+      <val>99</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>95</val>
+      <val>10</val>
     </recm>
     <recm key="ExpectedState">
       <val>Warning</val>
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797319" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Use Percent become Error when Buffer Pool Use Percent is reached Error Threshold." permutation="rows">
-    <recm key="ActionCmd">
-      <val>mysql -e 'use employees;alter table employees ENGINE=InnoDB;'</val>
-    </recm>
-    <recm key="PostCmd">
-      <val>mysql -e 'use employees;alter table employees ENGINE=MyISAM;';%restartMySQLCmd%</val>
-    </recm>
-    <recm key="monitorname">
-      <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_UsePct.Monitor</val>
-    </recm>
-    <recm key="alertname">
-      <val>MySQL Server InnoDB Buffer Pool Use Percent</val>
-    </recm>
-    <recm key="monitorcontext">
-      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
-    </recm>
-    <recm key="warningThresholdName">
-      <val>WarningThreshold</val>
-    </recm>
-    <recm key="errorThresholdName">
-      <val>ErrorThreshold</val>
-    </recm>
-    <recm key="defaultWarningThreshold">
-      <val>80</val>
-    </recm>
-    <recm key="defaultErrorThreshold">
-      <val>95</val>
-    </recm>
-    <recm key="overrideWarningThreshold">
-      <val>80</val>
-    </recm>
-    <recm key="overrideErrorThreshold">
-      <val>10</val>
-    </recm>
-    <recm key="ExpectedState">
-      <val>Error</val>
-    </recm>
-  </var>
-
-  <var set="2" lvl="2" vid="797321" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Use Percent become Warning when Buffer Pool Use Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797319" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Use Percent become Error when Buffer Pool Use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>mysql -e 'use employees;alter table employees ENGINE=InnoDB;'</val>
     </recm>
@@ -169,6 +130,45 @@
       <val>10</val>
     </recm>
     <recm key="overrideErrorThreshold">
+      <val>20</val>
+    </recm>
+    <recm key="ExpectedState">
+      <val>Error</val>
+    </recm>
+  </var>
+
+  <var set="1" lvl="1" vid="797321" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Use Percent become Warning when Buffer Pool Use Percent is reached Warning Threshold." permutation="rows">
+    <recm key="ActionCmd">
+      <val>mysql -e 'use employees;alter table employees ENGINE=InnoDB;'</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>mysql -e 'use employees;alter table employees ENGINE=MyISAM;';%restartMySQLCmd%</val>
+    </recm>
+    <recm key="monitorname">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_UsePct.Monitor</val>
+    </recm>
+    <recm key="alertname">
+      <val>MySQL Server InnoDB Buffer Pool Use Percent</val>
+    </recm>
+    <recm key="monitorcontext">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
+    </recm>
+    <recm key="warningThresholdName">
+      <val>WarningThreshold</val>
+    </recm>
+    <recm key="errorThresholdName">
+      <val>ErrorThreshold</val>
+    </recm>
+    <recm key="defaultWarningThreshold">
+      <val>80</val>
+    </recm>
+    <recm key="defaultErrorThreshold">
+      <val>95</val>
+    </recm>
+    <recm key="overrideWarningThreshold">
+      <val>10</val>
+    </recm>
+    <recm key="overrideErrorThreshold">
       <val>95</val>
     </recm>
     <recm key="ExpectedState">
@@ -176,7 +176,7 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797324" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Hit Percent become Error when Key Cache Hit Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797324" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Hit Percent become Error when Key Cache Hit Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 4 "Select emp_no from employees limit 1000;"</val>
     </recm>
@@ -218,7 +218,7 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797325" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Hit Percent become Warning when Key Cache Hit Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797325" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Hit Percent become Warning when Key Cache Hit Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 4 "Select emp_no from employees limit 1000;"</val>
     </recm>
@@ -260,7 +260,7 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797326" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Use Percent become Error when Key Cache Use Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797326" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Use Percent become Error when Key Cache Use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 4 "Select emp_no from employees limit 1000;"</val>
     </recm>
@@ -302,7 +302,7 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797327" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Use Percent become Warning when Key Cache Use Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797327" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Use Percent become Warning when Key Cache Use Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 4 "Select emp_no from employees limit 1000;"</val>
     </recm>
@@ -344,7 +344,8 @@
     </recm>
   </var>
 
-  <var set="2" lvl="2" vid="797328" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Write Percent become Error when Key Cache Write Percent is reached Error Threshold." permutation="rows">
+  <!--Block by issue.-->
+  <var set="1" lvl="1" vid="797328" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Key Cache: Verify if the MySQL server Key Cache Write Percent become Error when Key Cache Write Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 4 "Select emp_no from employees limit 1000;"</val>
     </recm>
@@ -386,7 +387,7 @@
     </recm>
   </var>
 
-  <var set="1" lvl="0" vid="797330" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Query Cache: Verify if the MySQL server Query Cache Hit Percent become Error when Query Cache Hit Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797330" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Query Cache: Verify if the MySQL server Query Cache Hit Percent become Error when Query Cache Hit Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 20</val>
     </recm>
@@ -412,22 +413,25 @@
       <val>ErrorThreshold</val>
     </recm>
     <recm key="defaultWarningThreshold">
-      <val>90</val>
+      <val>0</val>
     </recm>
     <recm key="defaultErrorThreshold">
-      <val>80</val>
+      <val>0</val>
     </recm>
     <recm key="overrideWarningThreshold">
-      <val>90</val>
+      <val>0</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>2</val>
+      <val>95</val>
     </recm>
     <recm key="ExpectedState">
       <val>Error</val>
     </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
+    </recm>
   </var>
-  <var set="1" lvl="0" vid="797331" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Hit Percent become Warning when Query Cache Hit Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797331" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Hit Percent become Warning when Query Cache Hit Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 20</val>
     </recm>
@@ -453,22 +457,25 @@
       <val>ErrorThreshold</val>
     </recm>
     <recm key="defaultWarningThreshold">
-      <val>90</val>
+      <val>0</val>
     </recm>
     <recm key="defaultErrorThreshold">
-      <val>80</val>
+      <val>0</val>
     </recm>
     <recm key="overrideWarningThreshold">
-      <val>2</val>
+      <val>95</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>80</val>
+      <val>0</val>
     </recm>
     <recm key="ExpectedState">
       <val>Warning</val>
     </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
+    </recm>
   </var>
-  <var set="1" lvl="0" vid="797332" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Use Percent become Error when Query Cache Use Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797332" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Use Percent become Error when Query Cache Use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 40</val>
     </recm>
@@ -509,7 +516,7 @@
       <val>Error</val>
     </recm>
   </var>
-  <var set="1" lvl="0" vid="797333" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Use Percent become Warning when Query Cache Use Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797333" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Use Percent become Warning when Query Cache Use Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 40</val>
     </recm>
@@ -550,7 +557,7 @@
       <val>Warning</val>
     </recm>
   </var>
-  <var set="1" lvl="0" vid="797335" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache prunes Percent become Error when Query Cache prunes Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797335" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache prunes Percent become Error when Query Cache prunes Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 400 "SELECT * FROM departments where dept_no like '!_RndAlphaNum!';"</val>
     </recm>
@@ -591,7 +598,7 @@
       <val>Error</val>
     </recm>
   </var>
-  <var set="1" lvl="0" vid="797336" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Query Cache: Verify if the MySQL server Query Cache prunes Percent become Warning when Query Cache prunes Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797336" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Query Cache: Verify if the MySQL server Query Cache prunes Percent become Warning when Query Cache prunes Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 400 "SELECT * FROM departments where dept_no like '!_RndAlphaNum!';"</val>
     </recm>
@@ -632,7 +639,7 @@
       <val>Warning</val>
     </recm>
   </var>
-  <var set="1" lvl="0" vid="797337" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Full Table Scan Percent become Error when Full Table Scan Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797337" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Full Table Scan Percent become Error when Full Table Scan Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val><![CDATA[sqlUsingQueryTest.bat %hostname% 5 "select emp_no,first_name from employees where emp_no<11000;"]]></val>
     </recm>
@@ -673,7 +680,7 @@
       <val>true</val>
     </recm>
   </var>
-  <var set="1" lvl="0" vid="797338" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Row Operation: Verify if the MySQL server Full Table Scan Percent become Warning when Full Table Scan Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797338" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Row Operation: Verify if the MySQL server Full Table Scan Percent become Warning when Full Table Scan Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val><![CDATA[sqlUsingQueryTest.bat %hostname% 5 "select emp_no,first_name from employees where emp_no<11000;"]]></val>
     </recm>
@@ -714,7 +721,7 @@
       <val>true</val>
     </recm>
   </var>
-  <var set="1" lvl="0" vid="797339" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Error when Slowly Query Percent is reached Error Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797339" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Error when Slowly Query Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 25</val>
     </recm>
@@ -746,13 +753,13 @@
       <val>50</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>2</val>
+      <val>1</val>
     </recm>
     <recm key="ExpectedState">
       <val>Error</val>
-    </recm>    
+    </recm>
   </var>
-   <var set="1" lvl="0" vid="797340" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Warning when Slowly Query Percent is reached Warning Threshold." permutation="rows">
+  <var set="1" lvl="1" vid="797340" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Warning when Slowly Query Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 25</val>
     </recm>
@@ -781,14 +788,184 @@
       <val>25</val>
     </recm>
     <recm key="overrideWarningThreshold">
-      <val>2</val>
+      <val>1</val>
     </recm>
     <recm key="overrideErrorThreshold">
       <val>50</val>
     </recm>
     <recm key="ExpectedState">
+      <val>Warning</val>
+    </recm>
+  </var>
+  <var set="1" lvl="1" vid="797341" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Hit Percent become Error when Table Cache Hit Percent is reached Error Threshold." permutation="rows">
+    <recm key="ActionCmd">
+      <val>sqlTest.bat %hostname% 5</val>
+    </recm>
+    <recm key="ActionType">
+      <val>Server</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;'</val>
+    </recm>
+    <recm key="monitorname">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix.TableCacheHitPct.Monitor</val>
+    </recm>
+    <recm key="alertname">
+      <val>MySQL Server Table Cache Hit Percent</val>
+    </recm>
+    <recm key="monitorcontext">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
+    </recm>
+    <recm key="warningThresholdName">
+      <val>WarningThreshold</val>
+    </recm>
+    <recm key="errorThresholdName">
+      <val>ErrorThreshold</val>
+    </recm>
+    <recm key="defaultWarningThreshold">
+      <val>0</val>
+    </recm>
+    <recm key="defaultErrorThreshold">
+      <val>0</val>
+    </recm>
+    <recm key="overrideWarningThreshold">
+      <val>0</val>
+    </recm>
+    <recm key="overrideErrorThreshold">
+      <val>70</val>
+    </recm>
+    <recm key="ExpectedState">
       <val>Error</val>
-    </recm>    
+    </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
+    </recm>
+  </var>
+  <var set="1" lvl="1" vid="797342" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Hit Percent become Warning when Table Cache Hit Percent is reached Warning Threshold." permutation="rows">
+    <recm key="ActionCmd">
+      <val>sqlTest.bat %hostname% 5</val>
+    </recm>
+    <recm key="ActionType">
+      <val>Server</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;'</val>
+    </recm>
+    <recm key="monitorname">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix.TableCacheHitPct.Monitor</val>
+    </recm>
+    <recm key="alertname">
+      <val>MySQL Server Table Cache Hit Percent</val>
+    </recm>
+    <recm key="monitorcontext">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
+    </recm>
+    <recm key="warningThresholdName">
+      <val>WarningThreshold</val>
+    </recm>
+    <recm key="errorThresholdName">
+      <val>ErrorThreshold</val>
+    </recm>
+    <recm key="defaultWarningThreshold">
+      <val>0</val>
+    </recm>
+    <recm key="defaultErrorThreshold">
+      <val>0</val>
+    </recm>
+    <recm key="overrideWarningThreshold">
+      <val>80</val>
+    </recm>
+    <recm key="overrideErrorThreshold">
+      <val>0</val>
+    </recm>
+    <recm key="ExpectedState">
+      <val>Warning</val>
+    </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
+    </recm>
+  </var>
+  <var set="1" lvl="1" vid="797343" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Use Percent become Error when Table Cache Use Percent is reached Error Threshold." permutation="rows">
+    <recm key="ActionCmd">
+      <val>sqlTest.bat %hostname% 5</val>
+    </recm>
+    <recm key="ActionType">
+      <val>Server</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;'</val>
+    </recm>
+    <recm key="monitorname">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix.TableCacheUsePct.Monitor</val>
+    </recm>
+    <recm key="alertname">
+      <val>MySQL Server Table Cache Use Percent</val>
+    </recm>
+    <recm key="monitorcontext">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
+    </recm>
+    <recm key="warningThresholdName">
+      <val>WarningThreshold</val>
+    </recm>
+    <recm key="errorThresholdName">
+      <val>ErrorThreshold</val>
+    </recm>
+    <recm key="defaultWarningThreshold">
+      <val>85</val>
+    </recm>
+    <recm key="defaultErrorThreshold">
+      <val>95</val>
+    </recm>
+    <recm key="overrideWarningThreshold">
+      <val>85</val>
+    </recm>
+    <recm key="overrideErrorThreshold">
+      <val>10</val>
+    </recm>
+    <recm key="ExpectedState">
+      <val>Error</val>
+    </recm>
+  </var>
+  <var set="1" lvl="1" vid="797344" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Use Percent become Warning when Table Cache Use Percent is reached Warning Threshold." permutation="rows">
+    <recm key="ActionCmd">
+      <val>sqlTest.bat %hostname% 5</val>
+    </recm>
+    <recm key="ActionType">
+      <val>Server</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;';mysql -E -e 'FLUSH tables;'</val>
+    </recm>
+    <recm key="monitorname">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix.TableCacheUsePct.Monitor</val>
+    </recm>
+    <recm key="alertname">
+      <val>MySQL Server Table Cache Use Percent</val>
+    </recm>
+    <recm key="monitorcontext">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
+    </recm>
+    <recm key="warningThresholdName">
+      <val>WarningThreshold</val>
+    </recm>
+    <recm key="errorThresholdName">
+      <val>ErrorThreshold</val>
+    </recm>
+    <recm key="defaultWarningThreshold">
+      <val>85</val>
+    </recm>
+    <recm key="defaultErrorThreshold">
+      <val>95</val>
+    </recm>
+    <recm key="overrideWarningThreshold">
+      <val>10</val>
+    </recm>
+    <recm key="overrideErrorThreshold">
+      <val>95</val>
+    </recm>
+    <recm key="ExpectedState">
+      <val>Warning</val>
+    </recm>
   </var>
   <!--Performance[17]-->
   <!--This case will test Performance Collection Rule InnoDB Buffer Pool 799578,799582,7995810-->

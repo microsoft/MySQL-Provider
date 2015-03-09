@@ -431,6 +431,7 @@
       <val>true</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797331" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Hit Percent become Warning when Query Cache Hit Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 20</val>
@@ -475,6 +476,7 @@
       <val>true</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797332" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Use Percent become Error when Query Cache Use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 40</val>
@@ -516,6 +518,7 @@
       <val>Error</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797333" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache Use Percent become Warning when Query Cache Use Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 40</val>
@@ -557,6 +560,7 @@
       <val>Warning</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797335" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Query Cache: Verify if the MySQL server Query Cache prunes Percent become Error when Query Cache prunes Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 400 "SELECT * FROM departments where dept_no like '!_RndAlphaNum!';"</val>
@@ -598,6 +602,7 @@
       <val>Error</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797336" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Query Cache: Verify if the MySQL server Query Cache prunes Percent become Warning when Query Cache prunes Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlUsingQueryTest.bat %hostname% 400 "SELECT * FROM departments where dept_no like '!_RndAlphaNum!';"</val>
@@ -639,6 +644,7 @@
       <val>Warning</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797337" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Full Table Scan Percent become Error when Full Table Scan Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val><![CDATA[sqlUsingQueryTest.bat %hostname% 5 "select emp_no,first_name from employees where emp_no<11000;"]]></val>
@@ -680,6 +686,7 @@
       <val>true</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797338" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc=" Row Operation: Verify if the MySQL server Full Table Scan Percent become Warning when Full Table Scan Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val><![CDATA[sqlUsingQueryTest.bat %hostname% 5 "select emp_no,first_name from employees where emp_no<11000;"]]></val>
@@ -721,6 +728,7 @@
       <val>true</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797339" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Error when Slowly Query Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 25</val>
@@ -759,6 +767,7 @@
       <val>Error</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797340" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Warning when Slowly Query Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 25</val>
@@ -797,6 +806,7 @@
       <val>Warning</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797341" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Hit Percent become Error when Table Cache Hit Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 5</val>
@@ -841,6 +851,7 @@
       <val>true</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797342" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Hit Percent become Warning when Table Cache Hit Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 5</val>
@@ -885,6 +896,7 @@
       <val>true</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797343" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Use Percent become Error when Table Cache Use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 5</val>
@@ -926,6 +938,7 @@
       <val>Error</val>
     </recm>
   </var>
+  
   <var set="1" lvl="1" vid="797344" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Use Percent become Warning when Table Cache Use Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlTest.bat %hostname% 5</val>
@@ -967,6 +980,104 @@
       <val>Warning</val>
     </recm>
   </var>
+
+  <!--Task[6]-->
+  <var set="1" lvl="1" vid="798936" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify if install/upgrade MySQL Server Provider works well by running task Install/Upgrade MySQL Server Provider with valid root account" permutation="rows">
+    <recm key="EntityName">
+      <val>Install Apache CIM Module with valid root account</val>
+    </recm>
+    <recm key="TaskName">
+      <val>Microsoft.MySQLServer.DeployModule.Task</val>
+    </recm>
+    <recm key="InstanceClass">
+      <val>Microsoft.MySQLServer.Installation</val>
+    </recm>
+    <recm key="ExpectedTaskStatus">
+      <val>Success</val>
+    </recm>
+    <recm key="expectedOutputKeyWord">
+      <val>&lt;returnCode&gt;0&lt;/returnCode&gt;</val>
+    </recm>
+  </var>
+
+  <var set="1" lvl="1" vid="798935" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify if install MySQL Server Provider successfully by running task Install/Upgrade MySQL Server Provider with valid scxuser account." permutation="rows">
+    <recm key="EntityName">
+      <val>Install/Upgrade MySQL Server Provider with valid scxuser account.</val>
+    </recm>
+    <recm key="TaskName">
+      <val>Microsoft.MySQLServer.DeployModule.Task</val>
+    </recm>
+    <recm key="InstanceClass">
+      <val>Microsoft.MySQLServer.Installation</val>
+    </recm>
+    <recm key="agentCredentialSettings">
+      <val>1,1,0,2</val>
+    </recm>
+    <recm key="ExpectedTaskStatus">
+      <val>Success</val>
+    </recm>
+    <recm key="expectedOutputKeyWord">
+      <val>&lt;returnCode&gt;0&lt;/returnCode&gt;</val>
+    </recm>
+  </var>
+
+  <var set="1" lvl="1" vid="798928" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify it doesn't upgrade MySQL Server Provider to lower version by running Install/Upgrade MySQL Server Provider task." permutation="rows">
+    <recm key="EntityName">
+      <val>Doesn't upgrade MySQL Server Provider to lower version by running Install/Upgrade MySQL Server Provider task."</val>
+    </recm>
+    <recm key="TaskName">
+      <val>Microsoft.MySQLServer.DeployModule.Task</val>
+    </recm>
+    <recm key="InstanceClass">
+      <val>Microsoft.MySQLServer.Installation</val>
+    </recm>
+    <recm key="ExpectedTaskStatus">
+      <val>Success</val>
+    </recm>
+    <recm key="expectedOutputKeyWord">
+      <val>&lt;stderr&gt;\S*&lt;/stderr&gt;</val>
+    </recm>
+  </var>
+
+  <var set="1" lvl="1" vid="798925" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify the MySQL Server Provide installation failed by running task Install/Upgrade MySQL Server Provider with root account which password is incorrect." permutation="rows">
+    <recm key="EntityName">
+      <val>Install/Upgrade MySQL Server Provider with root account which password is incorrect.</val>
+    </recm>
+    <recm key="TaskName">
+      <val>Microsoft.MySQLServer.DeployModule.Task</val>
+    </recm>
+    <recm key="InstanceClass">
+      <val>Microsoft.MySQLServer.Installation</val>
+    </recm>
+    <recm key="agentCredentialSettings">
+      <val>1,0,0,0</val>
+    </recm>
+    <recm key="ExpectedTaskStatus">
+      <val>Success</val>
+    </recm>
+    <recm key="expectedOutputKeyWord">
+      <val>&lt;stderr&gt;\S*&lt;/stderr&gt;</val>
+    </recm>
+  </var>
+
+  <var set="1" lvl="1" vid="798927" cid="ManageMySQLServiceTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.ManageMySQLServiceTask" dsc="Verify the Update Discover Properties task is work well." permutation="rows">
+    <recm key="EntityName">
+      <val>Update Discover Properties task</val>
+    </recm>
+    <recm key="TaskName">
+      <val>Microsoft.MySQLServer.DiscoverServer.Task</val>
+    </recm>
+    <recm key="InstanceClass">
+      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
+    </recm>
+    <recm key="ExpectedTaskStatus">
+      <val>Success</val>
+    </recm>
+    <recm key="expectedOutputKeyWord">
+      <val>SUCCESS</val>
+    </recm>
+  </var>
+  
   <!--Performance[17]-->
   <!--This case will test Performance Collection Rule InnoDB Buffer Pool 799578,799582,7995810-->
   <var set="2" lvl="1" vid="799578" cid="performancecollectionHealth-MySqlServerInnoDBBufferPool" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth" dsc="This test will test Performance Collection Rule 799578,799582,7995810" permutation="rows">

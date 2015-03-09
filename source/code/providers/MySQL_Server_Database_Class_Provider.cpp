@@ -304,7 +304,7 @@ void MySQL_Server_Database_Class_Provider::GetInstance(
             context.Post(MI_RESULT_NOT_FOUND);
         }
     }
-    CIM_PEX_END( L"MySQL_Server_Database_Class_Provider::::GetInstance", hLog );
+    CIM_PEX_END( L"MySQL_Server_Database_Class_Provider::GetInstance", hLog );
 }
 
 void MySQL_Server_Database_Class_Provider::CreateInstance(

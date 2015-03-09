@@ -152,7 +152,6 @@ public:
         std::wstring tmpExpectedProperties[] = {L"InstanceID",
                                                 L"CurrentNumConnections",
                                                 L"MaxConnections",
-                                                L"FailedConnections",
                                                 L"Uptime",
                                                 L"ServerDiskUseInBytes",
                                                 L"ConnectionsUsePct",

@@ -11,6 +11,7 @@
 #include "MySQL_Server_Class_Provider.h"
 #include "MySQL_ServerStatistics_Class_Provider.h"
 #include "MySQL_Server_Database_Class_Provider.h"
+#include "MySQL_StoredProcedureRow_AsXML_Class_Provider.h"
 
 using namespace mi;
 
@@ -437,6 +438,125 @@ MI_EXTERN_C void MI_CALL MySQL_Server_Database_Invoke_RequestStateChange(
     MySQL_Server_Database_RequestStateChange_Class param(in, false);
 
     cxxSelf->Invoke_RequestStateChange(cxxContext, nameSpace, instance, param);
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_Load(
+    MySQL_StoredProcedureRow_AsXML_Self** self,
+    MI_Module_Self* selfModule,
+    MI_Context* context)
+{
+    MI_Result r = MI_RESULT_OK;
+    Context ctx(context, &r);
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* prov = new MySQL_StoredProcedureRow_AsXML_Class_Provider((Module*)selfModule);
+
+    prov->Load(ctx);
+    if (MI_RESULT_OK != r)
+    {
+        delete prov;
+        MI_Context_PostResult(context, r);
+        return;
+    }
+    *self = (MySQL_StoredProcedureRow_AsXML_Self*)prov;
+    MI_Context_PostResult(context, MI_RESULT_OK);
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_Unload(
+    MySQL_StoredProcedureRow_AsXML_Self* self,
+    MI_Context* context)
+{
+    MI_Result r = MI_RESULT_OK;
+    Context ctx(context, &r);
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* prov = (MySQL_StoredProcedureRow_AsXML_Class_Provider*)self;
+
+    prov->Unload(ctx);
+    delete ((MySQL_StoredProcedureRow_AsXML_Class_Provider*)self);
+    MI_Context_PostResult(context, r);
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_EnumerateInstances(
+    MySQL_StoredProcedureRow_AsXML_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MI_PropertySet* propertySet,
+    MI_Boolean keysOnly,
+    const MI_Filter* filter)
+{
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* cxxSelf =((MySQL_StoredProcedureRow_AsXML_Class_Provider*)self);
+    Context  cxxContext(context);
+
+    cxxSelf->EnumerateInstances(
+        cxxContext,
+        nameSpace,
+        __PropertySet(propertySet),
+        __bool(keysOnly),
+        filter);
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_GetInstance(
+    MySQL_StoredProcedureRow_AsXML_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MySQL_StoredProcedureRow_AsXML* instanceName,
+    const MI_PropertySet* propertySet)
+{
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* cxxSelf =((MySQL_StoredProcedureRow_AsXML_Class_Provider*)self);
+    Context  cxxContext(context);
+    MySQL_StoredProcedureRow_AsXML_Class cxxInstanceName(instanceName, true);
+
+    cxxSelf->GetInstance(
+        cxxContext,
+        nameSpace,
+        cxxInstanceName,
+        __PropertySet(propertySet));
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_CreateInstance(
+    MySQL_StoredProcedureRow_AsXML_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MySQL_StoredProcedureRow_AsXML* newInstance)
+{
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* cxxSelf =((MySQL_StoredProcedureRow_AsXML_Class_Provider*)self);
+    Context  cxxContext(context);
+    MySQL_StoredProcedureRow_AsXML_Class cxxNewInstance(newInstance, false);
+
+    cxxSelf->CreateInstance(cxxContext, nameSpace, cxxNewInstance);
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_ModifyInstance(
+    MySQL_StoredProcedureRow_AsXML_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MySQL_StoredProcedureRow_AsXML* modifiedInstance,
+    const MI_PropertySet* propertySet)
+{
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* cxxSelf =((MySQL_StoredProcedureRow_AsXML_Class_Provider*)self);
+    Context  cxxContext(context);
+    MySQL_StoredProcedureRow_AsXML_Class cxxModifiedInstance(modifiedInstance, false);
+
+    cxxSelf->ModifyInstance(
+        cxxContext,
+        nameSpace,
+        cxxModifiedInstance,
+        __PropertySet(propertySet));
+}
+
+MI_EXTERN_C void MI_CALL MySQL_StoredProcedureRow_AsXML_DeleteInstance(
+    MySQL_StoredProcedureRow_AsXML_Self* self,
+    MI_Context* context,
+    const MI_Char* nameSpace,
+    const MI_Char* className,
+    const MySQL_StoredProcedureRow_AsXML* instanceName)
+{
+    MySQL_StoredProcedureRow_AsXML_Class_Provider* cxxSelf =((MySQL_StoredProcedureRow_AsXML_Class_Provider*)self);
+    Context  cxxContext(context);
+    MySQL_StoredProcedureRow_AsXML_Class cxxInstanceName(instanceName, true);
+
+    cxxSelf->DeleteInstance(cxxContext, nameSpace, cxxInstanceName);
 }
 
 

@@ -7,3 +7,4 @@ EXTRACLASS=CIM_Error
 CLASS=MySQL_Server:CIM_InstalledProduct:CIM_Collection:CIM_ManagedElement
 CLASS=MySQL_ServerStatistics:CIM_StatisticalData:CIM_ManagedElement
 CLASS=MySQL_Server_Database:CIM_CommonDatabase:CIM_EnabledLogicalElement:CIM_LogicalElement:CIM_ManagedSystemElement:CIM_ManagedElement
+CLASS=MySQL_StoredProcedureRow_AsXML

@@ -36,6 +36,8 @@ class Binding_Test : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testSQL_Connect_With_Stored_Credentials );
     CPPUNIT_TEST( testSQL_Binding_Destruction_When_Disconnected );
     CPPUNIT_TEST( testSQL_Stored_Credentials_Fails_With_Bad_Port );
+    CPPUNIT_TEST( testSQL_Connect_With_ExistingDatabase_Succeeds );
+    CPPUNIT_TEST( testSQL_Connect_With_BadDatabase_Fails );
     CPPUNIT_TEST( testSQL_GetConfigurationFilePaths );
     CPPUNIT_TEST( testSQLQuery_With_No_Attach );
     CPPUNIT_TEST( testSQLQuery_With_Bad_Credentials );
@@ -176,6 +178,33 @@ public:
         CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(2003), pBinding->GetErrorNum() );
     }
 
+    void testSQL_Connect_With_ExistingDatabase_Succeeds()
+    {
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
+
+        // The "mysql" database should always be installed (part of base MySQL installation)
+        CPPUNIT_ASSERT( pBinding->AttachUsingStoredCredentials(sqlPort, pAuth, "mysql") );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( pBinding->GetErrorText(), static_cast<size_t>(0),  pBinding->GetErrorText().size() );
+        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(0), pBinding->GetErrorNum() );
+    }
+
+    void testSQL_Connect_With_BadDatabase_Fails()
+    {
+        util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
+        util::unique_ptr<MySQL_Authentication> pAuth(g_pFactory->GetAuthentication());
+        pAuth->Load();
+        CPPUNIT_ASSERT_NO_THROW( pAuth->AddCredentialSet(sqlPort, sqlHostname, sqlUsername, sqlPassword) );
+
+        bool fSuccess = pBinding->AttachUsingStoredCredentials(sqlPort, pAuth, "NoSuchDatabase");
+        CPPUNIT_ASSERT_MESSAGE( "Database connection succeeded when failure was expected", !fSuccess );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( pBinding->GetErrorText(), static_cast<size_t>(0),
+                                      pBinding->GetErrorText().find("Unknown database") );
+        CPPUNIT_ASSERT_EQUAL( static_cast<unsigned int>(ER_BAD_DB_ERROR), pBinding->GetErrorNum() );
+    }
+
     void testSQL_GetConfigurationFilePaths()
     {
         util::unique_ptr<MySQL_Binding> pBinding( g_pFactory->GetBinding() );
@@ -188,7 +217,7 @@ public:
         CPPUNIT_ASSERT_EQUAL( std::string("/var/lib/mysql/my.cnf"), paths[2] );
         CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/mysql/data/my.cnf"), paths[3] );
         CPPUNIT_ASSERT_EQUAL( std::string("/usr/local/var/my.cnf"), paths[4] );
-                CPPUNIT_ASSERT_EQUAL( std::string("/usr/my.cnf"), paths[5] );
+        CPPUNIT_ASSERT_EQUAL( std::string("/usr/my.cnf"), paths[5] );
     }
 
     void testSQLQuery_With_No_Attach()

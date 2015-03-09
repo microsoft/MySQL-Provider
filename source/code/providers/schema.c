@@ -11,6 +11,7 @@
 #include "MySQL_Server.h"
 #include "MySQL_ServerStatistics.h"
 #include "MySQL_Server_Database.h"
+#include "MySQL_StoredProcedureRow_AsXML.h"
 
 /*
 **==============================================================================
@@ -1256,23 +1257,6 @@ static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_MaxConnections_prop =
     NULL,
 };
 
-/* property MySQL_ServerStatistics.FailedConnections */
-static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_FailedConnections_prop =
-{
-    MI_FLAG_PROPERTY, /* flags */
-    0x00667311, /* code */
-    MI_T("FailedConnections"), /* name */
-    NULL, /* qualifiers */
-    0, /* numQualifiers */
-    MI_UINT32, /* type */
-    NULL, /* className */
-    0, /* subscript */
-    offsetof(MySQL_ServerStatistics, FailedConnections), /* offset */
-    MI_T("MySQL_ServerStatistics"), /* origin */
-    MI_T("MySQL_ServerStatistics"), /* propagator */
-    NULL,
-};
-
 /* property MySQL_ServerStatistics.Uptime */
 static MI_CONST MI_PropertyDecl MySQL_ServerStatistics_Uptime_prop =
 {
@@ -1590,7 +1574,6 @@ static MI_PropertyDecl MI_CONST* MI_CONST MySQL_ServerStatistics_props[] =
     &CIM_StatisticalData_SampleInterval_prop,
     &MySQL_ServerStatistics_CurrentNumConnections_prop,
     &MySQL_ServerStatistics_MaxConnections_prop,
-    &MySQL_ServerStatistics_FailedConnections_prop,
     &MySQL_ServerStatistics_Uptime_prop,
     &MySQL_ServerStatistics_ServerDiskUseInBytes_prop,
     &MySQL_ServerStatistics_ConnectionsUsePct_prop,
@@ -4341,6 +4324,197 @@ MI_CONST MI_ClassDecl MySQL_Server_Database_rtti =
 /*
 **==============================================================================
 **
+** MySQL_StoredProcedureRow_AsXML
+**
+**==============================================================================
+*/
+
+/* property MySQL_StoredProcedureRow_AsXML.InstanceID */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_InstanceID_prop =
+{
+    MI_FLAG_PROPERTY|MI_FLAG_KEY, /* flags */
+    0x0069640A, /* code */
+    MI_T("InstanceID"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, InstanceID), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_StoredProcedureRow_AsXML.Port */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_Port_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x00707404, /* code */
+    MI_T("Port"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_UINT16, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, Port), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_StoredProcedureRow_AsXML.DatabaseName */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_DatabaseName_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x0064650C, /* code */
+    MI_T("DatabaseName"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, DatabaseName), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_StoredProcedureRow_AsXML.StoredProcedureName */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_StoredProcedureName_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x00736513, /* code */
+    MI_T("StoredProcedureName"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, StoredProcedureName), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_StoredProcedureRow_AsXML.Parameters */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_Parameters_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x0070730A, /* code */
+    MI_T("Parameters"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, Parameters), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_StoredProcedureRow_AsXML.RowXMLValue */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_RowXMLValue_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x0072650B, /* code */
+    MI_T("RowXMLValue"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_STRING, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, RowXMLValue), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+/* property MySQL_StoredProcedureRow_AsXML.IsTruncated */
+static MI_CONST MI_PropertyDecl MySQL_StoredProcedureRow_AsXML_IsTruncated_prop =
+{
+    MI_FLAG_PROPERTY, /* flags */
+    0x0069640B, /* code */
+    MI_T("IsTruncated"), /* name */
+    NULL, /* qualifiers */
+    0, /* numQualifiers */
+    MI_BOOLEAN, /* type */
+    NULL, /* className */
+    0, /* subscript */
+    offsetof(MySQL_StoredProcedureRow_AsXML, IsTruncated), /* offset */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* origin */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* propagator */
+    NULL,
+};
+
+static MI_PropertyDecl MI_CONST* MI_CONST MySQL_StoredProcedureRow_AsXML_props[] =
+{
+    &MySQL_StoredProcedureRow_AsXML_InstanceID_prop,
+    &MySQL_StoredProcedureRow_AsXML_Port_prop,
+    &MySQL_StoredProcedureRow_AsXML_DatabaseName_prop,
+    &MySQL_StoredProcedureRow_AsXML_StoredProcedureName_prop,
+    &MySQL_StoredProcedureRow_AsXML_Parameters_prop,
+    &MySQL_StoredProcedureRow_AsXML_RowXMLValue_prop,
+    &MySQL_StoredProcedureRow_AsXML_IsTruncated_prop,
+};
+
+static MI_CONST MI_ProviderFT MySQL_StoredProcedureRow_AsXML_funcs =
+{
+  (MI_ProviderFT_Load)MySQL_StoredProcedureRow_AsXML_Load,
+  (MI_ProviderFT_Unload)MySQL_StoredProcedureRow_AsXML_Unload,
+  (MI_ProviderFT_GetInstance)MySQL_StoredProcedureRow_AsXML_GetInstance,
+  (MI_ProviderFT_EnumerateInstances)MySQL_StoredProcedureRow_AsXML_EnumerateInstances,
+  (MI_ProviderFT_CreateInstance)MySQL_StoredProcedureRow_AsXML_CreateInstance,
+  (MI_ProviderFT_ModifyInstance)MySQL_StoredProcedureRow_AsXML_ModifyInstance,
+  (MI_ProviderFT_DeleteInstance)MySQL_StoredProcedureRow_AsXML_DeleteInstance,
+  (MI_ProviderFT_AssociatorInstances)NULL,
+  (MI_ProviderFT_ReferenceInstances)NULL,
+  (MI_ProviderFT_EnableIndications)NULL,
+  (MI_ProviderFT_DisableIndications)NULL,
+  (MI_ProviderFT_Subscribe)NULL,
+  (MI_ProviderFT_Unsubscribe)NULL,
+  (MI_ProviderFT_Invoke)NULL,
+};
+
+static MI_CONST MI_Char* MySQL_StoredProcedureRow_AsXML_Version_qual_value = MI_T("1.0.0");
+
+static MI_CONST MI_Qualifier MySQL_StoredProcedureRow_AsXML_Version_qual =
+{
+    MI_T("Version"),
+    MI_STRING,
+    MI_FLAG_ENABLEOVERRIDE|MI_FLAG_TRANSLATABLE|MI_FLAG_RESTRICTED,
+    &MySQL_StoredProcedureRow_AsXML_Version_qual_value
+};
+
+static MI_Qualifier MI_CONST* MI_CONST MySQL_StoredProcedureRow_AsXML_quals[] =
+{
+    &MySQL_StoredProcedureRow_AsXML_Version_qual,
+};
+
+/* class MySQL_StoredProcedureRow_AsXML */
+MI_CONST MI_ClassDecl MySQL_StoredProcedureRow_AsXML_rtti =
+{
+    MI_FLAG_CLASS, /* flags */
+    0x006D6C1E, /* code */
+    MI_T("MySQL_StoredProcedureRow_AsXML"), /* name */
+    MySQL_StoredProcedureRow_AsXML_quals, /* qualifiers */
+    MI_COUNT(MySQL_StoredProcedureRow_AsXML_quals), /* numQualifiers */
+    MySQL_StoredProcedureRow_AsXML_props, /* properties */
+    MI_COUNT(MySQL_StoredProcedureRow_AsXML_props), /* numProperties */
+    sizeof(MySQL_StoredProcedureRow_AsXML), /* size */
+    NULL, /* superClass */
+    NULL, /* superClassDecl */
+    NULL, /* methods */
+    0, /* numMethods */
+    &schemaDecl, /* schema */
+    &MySQL_StoredProcedureRow_AsXML_funcs, /* functions */
+    NULL, /* owningClass */
+};
+
+/*
+**==============================================================================
+**
 ** __mi_server
 **
 **==============================================================================
@@ -4371,6 +4545,7 @@ static MI_ClassDecl MI_CONST* MI_CONST classes[] =
     &MySQL_Server_rtti,
     &MySQL_ServerStatistics_rtti,
     &MySQL_Server_Database_rtti,
+    &MySQL_StoredProcedureRow_AsXML_rtti,
 };
 
 MI_SchemaDecl schemaDecl =

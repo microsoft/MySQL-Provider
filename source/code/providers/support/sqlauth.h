@@ -3,7 +3,7 @@
  *     
  *        */
  /**
-      \file        sqlbinding.h
+      \file        sqlauth.h
 
       \brief       MySQL authentication handling for MySQL provider
 
@@ -26,7 +26,8 @@
 #include <pwd.h>
 #include <stdint.h>
 
-
+#include <unistd.h>
+#include <sys/types.h>
 
 namespace MySQL_Auth
 {

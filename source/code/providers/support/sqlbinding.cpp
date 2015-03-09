@@ -69,10 +69,10 @@ bool MySQL_Dependencies::Attach()
             m_sqlHostName.c_str(),
             m_sqlUserID.c_str(),
             m_sqlPassword.c_str(),
-            NULL,      /* No database connection */
-            m_sqlPort, /* Port */
-            NULL,      /* UNIX Socket */
-            0 );       /* Client connection flags */
+            m_sqlDatabase.size() ? m_sqlDatabase.c_str() : NULL,
+            m_sqlPort,                  /* Port */
+            NULL,                       /* UNIX Socket */
+            m_sqlConnectFlags );        /* Client connection flags */
 
         if ( NULL == sqlConnRet )
         {
@@ -96,7 +96,10 @@ bool MySQL_Dependencies::Attach()
     return true;
 }
 
-bool MySQL_Dependencies::AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth)
+bool MySQL_Dependencies::AttachUsingStoredCredentials(
+    unsigned int port,
+    util::unique_ptr<MySQL_Authentication>& auth,
+    const std::string& database)
 {
     bool fValidEntry = false;
     MySQL_AuthenticationEntry entry;
@@ -120,7 +123,7 @@ bool MySQL_Dependencies::AttachUsingStoredCredentials(unsigned int port, util::u
         return false;
     }
 
-    return Attach(entry.port, entry.binding, entry.username, entry.password);
+    return Attach(entry.port, entry.binding, entry.username, entry.password, database);
 }
 
 bool MySQL_Dependencies::Detach()
@@ -149,239 +152,62 @@ bool MySQL_Query::ExecuteQuery( const char* query )
 bool MySQL_Query::ExecuteQuery( const char* query, const std::vector<std::string>& parameters )
 {
     bool returnStatus = true;
-    SCX_LOGINFO(m_log, std::string("Executing query: ") + query);
 
     // Clear the prior results, if any
     m_columnNames.clear();
     m_queryResults.clear();
 
-    m_sqlErrorText.clear();
-    m_sqlState.clear();
-    m_sqlErrorNum = 0;
+    // Execute the query using the row handler
 
-    MYSQL_STMT* sqlStatement = NULL;
-    long unsigned int* paramLength = NULL;
-    try
+    if ( (returnStatus = m_rowHandler.ExecuteQuery(query, parameters)) )
     {
-        MYSQL * sqlConnection = m_deps->m_sqlConnection;
+        m_rowHandler.GetColumnNames( m_columnNames );
 
-        if ( NULL == sqlConnection )
+        if ( m_rowHandler.GetColumnCount() >= 2 )
         {
-            m_sqlErrorText = "Attach() not called; not connected to a server";
-            return false;
-        }
-
-        // Initialize the statement
-        sqlStatement = mysql_stmt_init( sqlConnection );
-        if ( !sqlStatement )
-        {
-            m_sqlErrorText = "mysql_stmt_init() failed, out of memory";
-            m_sqlErrorNum = CR_OUT_OF_MEMORY; // Don't have sqlStatement to assign normally
-
-            throw SQLError( m_sqlErrorText.c_str(), SCXSRCLOCATION );
-        }
-
-        // Prepare the statement
-        if ( mysql_stmt_prepare(sqlStatement, query, strlen(query)) )
-        {
-            throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
-        }
-
-        //
-        // Now that the statement is prepared, we can pick up the column names.
-        // (If no columns, then statement must not have generated results)
-        //
-
-        if ( (m_columnCount = mysql_stmt_field_count(sqlStatement)) > 0 )
-        {
-            MYSQL_RES *resultSet = mysql_stmt_result_metadata(sqlStatement);
-            if ( !resultSet )
+            std::vector<std::string> columns;
+            while ( m_rowHandler.GetNextRow(columns) )
             {
-                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
-            }
-
-            MYSQL_FIELD* field;
-            while ( (field = mysql_fetch_field(resultSet)) != 0 )
-            {
-                m_columnNames.push_back( field->name );
-            }
-
-            mysql_free_result(resultSet);
-        }
-
-        //
-        // Bind the parameters (passed in) to the statement if any exist
-        //
-
-        size_t parameterCount;
-        if ( (parameterCount = parameters.size()) > 0 )
-        {
-            MYSQL_BIND params[parameterCount];
-            paramLength = new long unsigned int[parameterCount];
-            memset( params, 0, sizeof(params) );
-
-            for (size_t i = 0; i < parameterCount; ++i)
-            {
-                params[i].buffer_type = MYSQL_TYPE_STRING;
-                params[i].buffer = (void *) ( parameters[i].c_str() );
-                params[i].buffer_length = static_cast<long unsigned int>( parameters[i].size() + 1 );
-                params[i].is_null = 0;
-                params[i].length = &paramLength[i];
-
-                paramLength[i] = parameters[i].size();
-            }
-
-            if ( mysql_stmt_bind_param(sqlStatement, params) )
-            {
-                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
-            }
-        }
-
-        //
-        // Bind the output parameters (passed in) to the statement if appropriate
-        //
-
-        if ( m_columnCount > 0 )
-        {
-            const unsigned int COLUMN_MAXLEN = 256; /* Arbitary value, raise if needed */
-
-            MYSQL_BIND results[m_columnCount];
-            char result_data[m_columnCount][COLUMN_MAXLEN];
-            unsigned long result_lengths[m_columnCount];
-
-            memset( results, 0, sizeof(results) );
-
-            for (size_t i = 0; i < m_columnCount; ++i)
-            {
-                results[i].buffer_type = MYSQL_TYPE_VAR_STRING;
-                results[i].buffer = result_data[i];
-                results[i].buffer_length = COLUMN_MAXLEN;
-                results[i].is_null = 0;
-                results[i].length = &result_lengths[i];
-            }
-
-            // Bind the results buffer ...
-            if ( mysql_stmt_bind_result(sqlStatement, results) )
-            {
-                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
-            }
-
-            // ... and execute the SQL statement
-            if ( mysql_stmt_execute(sqlStatement) )
-            {
-                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
-            }
-
-            // Finally collect up the results
-
-            if ( m_columnCount >= 2 )
-            {
-                SCX_LOGERROR(m_log, std::string("Results for query: ") + query);
-
-                /*
-                 * If the prepared statement result set contains somethning like this:
-                 *
-                 * +--------------------+--------+--------------+
-                 * | Database           | Tables | Size (Bytes) |
-                 * +--------------------+--------+--------------+
-                 * | information_schema |     28 |         8192 |
-                 * | mysql              |     23 |       641963 |
-                 * | test               |      0 |         NULL |
-                 * +--------------------+--------+--------------+
-                 *
-                 * then, unfortunately, mysql_stmt_fetch doesn't set up the last column
-                 * result bindings for the very last column. This causes programs looking
-                 * at the result bindings to believe that the size of the test database is
-                 * acutally 641963, which is wrong.
-                 *
-                 * Furthermore, it appears that the length (in result_lengths) isn't set
-                 * properly for numeric fields that undergo ASCII conversion. Thus, the
-                 * easist fix is to zero out the result memory (variable result_data),
-                 * making it appear that this last field is "", which is good enough.
-                 */
-
-                while ( memset( result_data, 0, sizeof(result_data) ),
-                        memset( result_lengths, 0, sizeof(result_lengths) ),
-                        mysql_stmt_fetch(sqlStatement) == 0 )
+                // If key is NULL, then don't try to insert the record
+                if ( columns[0].size() == 0 )
                 {
-                    // If key is NULL, then don't try to insert the record
-                    if ( results[0].is_null )
-                    {
-                        continue;
-                    }
-
-                    // Get the key (in lower case)
-                    std::string key = result_data[0];
-                    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-
-                    if ( m_queryResults.count(key) > 0 )
-                    {
-                        m_sqlErrorText = "Duplicate result " + key + " returned in result set";
-                        returnStatus = false;
-                        break;
-                    }
-
-                    for (unsigned int i = 1; i < m_columnCount; ++i)
-                    {
-                        if ( ! results[i].is_null )
-                        {
-                            result_data[i][result_lengths[i]] = '\0';
-                            m_queryResults[key].push_back( result_data[i] );
-                            SCX_LOGERROR(m_log, std::string("For key ") + key + ", pushed back " + result_data[i]);
-                            // TODO: gi wrong for test database on port 3399 - why?
-                            // Wrong because fetch returned different number of rows?
-                            // (memset at while loop resolved, but is this the right fix?)
-                        }
-                        else
-                        {
-                            m_queryResults[key].push_back( "" );
-                            SCX_LOGERROR(m_log, std::string("For key ") + key + ", pushed back EMPTY" );
-                        }
-                    }
+                    SCX_LOGERROR(m_log, std::string("Null key returned for query: ") + query);
+                    continue;
                 }
-            }
-            else
-            {
-                // We didn't get two columns of information back from query
-                
-                m_sqlErrorText = "Result set did not contain at least two columns of data";
-                returnStatus = false;
+
+                // Get the key (in lower case)
+                std::string key = columns[0];
+                std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+                if ( m_queryResults.count(key) > 0 )
+                {
+                    m_sqlErrorText = "Duplicate result " + key + " returned in result set";
+                    returnStatus = false;
+                    break;
+                }
+
+                for (unsigned int i = 1; i < m_rowHandler.GetColumnCount(); ++i)
+                {
+                    m_queryResults[key].push_back( columns[i] );
+                }
             }
         }
         else
         {
-            // No results to bind, so just execute (no data returned)
-            if ( mysql_stmt_execute(sqlStatement) )
-            {
-                throw SQLError( mysql_stmt_error(sqlStatement), SCXSRCLOCATION );
-            }
-
-            m_sqlErrorText = "Result set is empty";
+            // We didn't get two columns of information back from query
+                
+            m_sqlErrorText = "Result set did not contain at least two columns of data";
             returnStatus = false;
         }
-
     }
-    catch ( SQLError& e )
+    else
     {
-        m_sqlErrorText = SCXCoreLib::StrToUTF8( e.What() );
-        SCX_LOGERROR(m_log, e.What());
+        // Query didn't execute for some reason ...
 
-        if (NULL != sqlStatement)
-        {
-            m_sqlState = mysql_stmt_sqlstate(sqlStatement);
-            m_sqlErrorNum = mysql_stmt_errno(sqlStatement);
-            mysql_stmt_close(sqlStatement);
-        }
-
-        delete [] paramLength;
-        return false;
+        m_sqlErrorText = m_rowHandler.GetErrorText();
+        m_sqlState = m_rowHandler.GetErrorState();
+        m_sqlErrorNum = m_rowHandler.GetErrorNum();
     }
-
-    if (NULL != sqlStatement)
-    {
-        mysql_stmt_close(sqlStatement);
-    }
-    delete [] paramLength;
 
     return returnStatus;
 }
@@ -390,7 +216,7 @@ bool MySQL_Query::GetResults(std::map<std::string,std::string>& results)
 {
     results.clear();
 
-    if ( 2 != m_columnCount )
+    if ( 2 != m_rowHandler.GetColumnCount() )
     {
         // We didn't get two columns of information back from query
 
@@ -411,10 +237,325 @@ bool MySQL_Query::GetResults(std::map<std::string,std::string>& results)
     return true;
 }
 
-bool MySQL_Query::GetMultiColumnResults(MySQL_QueryResults& results)
+bool MySQL_Query::GetMultiColumnResults(MySQL_QueryResults& results) const
 {
     results = m_queryResults;
     return true;
+}
+
+
+
+MySQL_Query_Rows::~MySQL_Query_Rows()
+{
+    Reset();
+}
+
+void MySQL_Query_Rows::Reset()
+{
+    if ( NULL != m_deps->m_sqlConnection && NULL != m_sqlStatement )
+    {
+        // Release the statement results
+        if ( mysql_stmt_free_result(m_sqlStatement) )
+        {
+            m_sqlErrorText = mysql_stmt_error(m_sqlStatement);
+            m_sqlState = mysql_stmt_sqlstate(m_sqlStatement);
+            m_sqlErrorNum = mysql_stmt_errno(m_sqlStatement);
+
+            SCX_LOGWARNING(m_log, "Error calling mysql_stmt_free_result(): " + m_sqlErrorText);
+        }
+
+        // Close the prepared statement
+        //
+        // Note: With MySQL versions prior to v5.5.3, prepared statements that
+        // utilize 'call' queries (to stored procedures) can't close properly
+        // since we don't have mysql_stmt_next_result() to get the result of the
+        // stored procedure execution.  This causes an error to be logged:
+        //
+        //   Commands out of sync; you can't run this command now
+        //
+        // Detect this and don't log the error to keep the log clean
+
+        bool fResultsOutstanding = mysql_more_results(m_deps->m_sqlConnection);
+        if ( mysql_stmt_close(m_sqlStatement) && !fResultsOutstanding )
+        {
+            m_sqlErrorText = mysql_stmt_error(m_sqlStatement);
+            m_sqlState = mysql_stmt_sqlstate(m_sqlStatement);
+            m_sqlErrorNum = mysql_stmt_errno(m_sqlStatement);
+
+            SCX_LOGWARNING(m_log, "Error calling mysql_stmt_close(): " + m_sqlErrorText);
+        }
+
+        // If the statement wasn't really closed from above, we may have a leak
+        // (but there's really nothing we can do about it).
+        //
+        // Note that since our agent is short-lived, any leaks should clear up on shutdown
+
+        m_sqlStatement = NULL;
+    }
+
+    if ( NULL != m_bindInParamLength )
+    {
+        delete [] m_bindInParamLength;
+        m_bindInParamLength = NULL;
+    }
+
+    if ( NULL != m_bindOutParams )
+    {
+        delete [] m_bindOutParams;
+        m_bindOutParams = NULL;
+    }
+
+    if ( NULL != m_bindOutResultData )
+    {
+        delete [] m_bindOutResultData;
+        m_bindOutResultData = NULL;
+    }
+
+    if ( NULL != m_bindOutParamLength )
+    {
+        delete [] m_bindOutParamLength;
+        m_bindOutParamLength = NULL;
+    }
+
+    m_fQueryForResults = false;
+}
+
+bool MySQL_Query_Rows::ExecuteQuery( const char* query, const std::vector<std::string>& parameters )
+{
+    bool returnStatus = true;
+    SCX_LOGTRACE(m_log, std::string("Executing query: ") + query);
+
+    // Clear for new query
+    m_sqlErrorText.clear();
+    m_sqlState.clear();
+    m_sqlErrorNum = 0;
+
+    Reset();
+
+    try
+    {
+        MYSQL * sqlConnection = m_deps->m_sqlConnection;
+
+        if ( NULL == sqlConnection )
+        {
+            m_sqlErrorText = "Attach() not called; not connected to a server";
+            SCX_LOGERROR(m_log, m_sqlErrorText);
+            return false;
+        }
+
+        // Initialize the statement
+        m_sqlStatement = mysql_stmt_init( sqlConnection );
+        if ( !m_sqlStatement )
+        {
+            m_sqlErrorText = "mysql_stmt_init() failed, out of memory";
+            m_sqlErrorNum = CR_OUT_OF_MEMORY; // Don't have sqlStatement to assign normally
+
+            throw SQLError( m_sqlErrorText.c_str(), SCXSRCLOCATION );
+        }
+
+        // Prepare the statement
+        if ( mysql_stmt_prepare(m_sqlStatement, query, strlen(query)) )
+        {
+            throw SQLError( mysql_stmt_error(m_sqlStatement), SCXSRCLOCATION );
+        }
+
+        //
+        // Bind the parameters (passed in) to the statement if any exist
+        //
+
+        size_t parameterCount;
+        if ( (parameterCount = parameters.size()) > 0 )
+        {
+            SCX_LOGTRACE(m_log, std::wstring(L"Binding ") + SCXCoreLib::StrFrom(parameters.size()) + L" input parameters");
+
+            MYSQL_BIND params[parameterCount];
+            m_bindInParamLength = new long unsigned int[parameterCount];
+            memset( params, 0, sizeof(params) );
+
+            for (size_t i = 0; i < parameterCount; ++i)
+            {
+                params[i].buffer_type = MYSQL_TYPE_STRING;
+                params[i].buffer = (void *) ( parameters[i].c_str() );
+                params[i].buffer_length = static_cast<long unsigned int>( parameters[i].size() + 1 );
+                params[i].is_null = 0;
+                params[i].length = &m_bindInParamLength[i];
+
+                m_bindInParamLength[i] = parameters[i].size();
+            }
+
+            if ( mysql_stmt_bind_param(m_sqlStatement, params) )
+            {
+                throw SQLError( mysql_stmt_error(m_sqlStatement), SCXSRCLOCATION );
+            }
+        }
+
+        // Execute the SQL statement
+        if ( mysql_stmt_execute(m_sqlStatement) )
+        {
+            throw SQLError( mysql_stmt_error(m_sqlStatement), SCXSRCLOCATION );
+        }
+
+        m_columnCount = mysql_stmt_field_count(m_sqlStatement);
+        SCX_LOGTRACE(m_log, std::wstring(L"Query result column count: ") + SCXCoreLib::StrFrom(m_columnCount));
+
+        if ( m_columnCount > 0 )
+        {
+            // We have results, so allow them to be collected
+
+            m_fQueryForResults = true;
+
+            // Bind the results so we can fetch from the database
+
+            m_bindOutParams = new MYSQL_BIND [m_columnCount];
+            m_bindOutResultData = new char [m_columnCount * COLUMN_MAXLEN];
+            m_bindOutParamLength = new unsigned long [m_columnCount];
+            memset( m_bindOutParams, 0, sizeof(MYSQL_BIND) * m_columnCount );
+
+            for (size_t i = 0; i < m_columnCount; ++i)
+            {
+                m_bindOutParams[i].buffer_type = MYSQL_TYPE_VAR_STRING;
+                m_bindOutParams[i].buffer = &m_bindOutResultData[i * COLUMN_MAXLEN];
+                m_bindOutParams[i].buffer_length = COLUMN_MAXLEN;
+                m_bindOutParams[i].is_null = 0;
+                m_bindOutParams[i].length = &m_bindOutParamLength[i];
+            }
+
+            // Bind the results buffer ...
+
+            if ( mysql_stmt_bind_result(m_sqlStatement, m_bindOutParams) )
+            {
+                throw SQLError( mysql_stmt_error(m_sqlStatement), SCXSRCLOCATION );
+            }
+
+            // At this point, we're good to go for calling GetNextRow() ...
+        }
+        else
+        {
+            m_sqlErrorText = "Result set is empty";
+            SCX_LOGTRACE(m_log, m_sqlErrorText);
+            returnStatus = false;
+        }
+    }
+    catch ( SQLError& e )
+    { 
+        m_sqlErrorText = SCXCoreLib::StrToUTF8( e.What() );
+        SCX_LOGERROR(m_log, e.What());
+
+        if (NULL != m_sqlStatement)
+        {
+            m_sqlState = mysql_stmt_sqlstate(m_sqlStatement);
+            m_sqlErrorNum = mysql_stmt_errno(m_sqlStatement);
+        }
+
+        Reset();
+        return false;
+    }
+
+    return returnStatus;
+}
+
+bool MySQL_Query_Rows::GetColumnNames( std::vector<std::string>& columnNames )
+{
+    columnNames.clear();
+
+    if ( m_fQueryForResults && m_columnCount > 0 )
+    {
+        try
+        {
+            MYSQL_RES *resultSet = mysql_stmt_result_metadata(m_sqlStatement);
+            if ( !resultSet )
+            {
+                throw SQLError( mysql_stmt_error(m_sqlStatement), SCXSRCLOCATION );
+            }
+
+            MYSQL_FIELD* field;
+            while ( (field = mysql_fetch_field(resultSet)) != 0 )
+            {
+                columnNames.push_back( field->name );
+            }
+
+            mysql_free_result(resultSet);
+            return true;
+        }
+        catch ( SQLError& e )
+        { 
+            m_sqlErrorText = SCXCoreLib::StrToUTF8( e.What() );
+            SCX_LOGERROR(m_log, e.What());
+
+            if (NULL != m_sqlStatement)
+            {
+                m_sqlState = mysql_stmt_sqlstate(m_sqlStatement);
+                m_sqlErrorNum = mysql_stmt_errno(m_sqlStatement);
+            }
+
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool MySQL_Query_Rows::GetNextRow( std::vector<std::string>& columns )
+{
+    columns.clear();
+
+    // Nothing to query for? Then don't allow it ...
+    if ( ! m_fQueryForResults )
+    {
+        return false;
+    }
+
+    SCX_LOGHYSTERICAL(m_log, "MySQL::GetNextRow entry");
+
+    /*
+     * If the prepared statement result set contains somethning like this:
+     *
+     * +--------------------+--------+--------------+
+     * | Database           | Tables | Size (Bytes) |
+     * +--------------------+--------+--------------+
+     * | information_schema |     28 |         8192 |
+     * | mysql              |     23 |       641963 |
+     * | test               |      0 |         NULL |
+     * +--------------------+--------+--------------+
+     *
+     * then, unfortunately, mysql_stmt_fetch doesn't set up the last column
+     * result bindings for the very last column. This causes programs looking
+     * at the result bindings to believe that the size of the test database is
+     * acutally 641963, which is wrong.
+     *
+     * Furthermore, it appears that the length (in m_bindOutParamLength) isn't set
+     * properly for numeric fields that undergo ASCII conversion. Thus, the
+     * easist fix is to zero out the result memory (variable m_bindOutResultData),
+     * making it appear that this last field is "", which is good enough.
+     */
+
+    memset( m_bindOutResultData, 0, m_columnCount * COLUMN_MAXLEN );
+    memset( m_bindOutParamLength, 0, m_columnCount * sizeof(unsigned long) );
+
+    bool fMoreRows = false;
+    if ( mysql_stmt_fetch(m_sqlStatement) == 0 )
+    {
+        fMoreRows = true;
+
+        for (unsigned int i = 0; i < m_columnCount; ++i)
+        {
+            if ( m_bindOutParams[i].is_null && *(m_bindOutParams[i].is_null) )
+            {
+                columns.push_back( "" );
+                SCX_LOGHYSTERICAL(m_log, std::wstring(L"Column ") + SCXCoreLib::StrFrom(i) + L": pushed EMPTY" );
+            }
+            else
+            {
+                m_bindOutResultData[(i * COLUMN_MAXLEN) + m_bindOutParamLength[i]] = '\0';
+                columns.push_back( &m_bindOutResultData[i * COLUMN_MAXLEN] );
+                SCX_LOGHYSTERICAL(m_log, std::string("Column ") + SCXCoreLib::StrToUTF8(SCXCoreLib::StrFrom(i))
+                             + ": pushed " + &m_bindOutResultData[i * COLUMN_MAXLEN]);
+            }
+        }
+    }
+
+    SCX_LOGHYSTERICAL(m_log, "MySQL::GetNextRow exit");
+    return fMoreRows;
 }
 
 

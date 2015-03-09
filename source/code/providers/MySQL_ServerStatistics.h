@@ -38,7 +38,6 @@ typedef struct _MySQL_ServerStatistics /* extends CIM_StatisticalData */
     /* MySQL_ServerStatistics properties */
     MI_ConstUint32Field CurrentNumConnections;
     MI_ConstUint32Field MaxConnections;
-    MI_ConstUint32Field FailedConnections;
     MI_ConstUint64Field Uptime;
     MI_ConstUint64Field ServerDiskUseInBytes;
     MI_ConstUint8Field ConnectionsUsePct;
@@ -353,22 +352,6 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_MaxConnections(
     MySQL_ServerStatistics* self)
 {
     memset((void*)&self->MaxConnections, 0, sizeof(self->MaxConnections));
-    return MI_RESULT_OK;
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_FailedConnections(
-    MySQL_ServerStatistics* self,
-    MI_Uint32 x)
-{
-    ((MI_Uint32Field*)&self->FailedConnections)->value = x;
-    ((MI_Uint32Field*)&self->FailedConnections)->exists = 1;
-    return MI_RESULT_OK;
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_FailedConnections(
-    MySQL_ServerStatistics* self)
-{
-    memset((void*)&self->FailedConnections, 0, sizeof(self->FailedConnections));
     return MI_RESULT_OK;
 }
 
@@ -981,46 +964,6 @@ public:
     void MaxConnections_clear()
     {
         const size_t n = offsetof(Self, MaxConnections);
-        GetField<Uint32>(n).Clear();
-    }
-
-    //
-    // MySQL_ServerStatistics_Class.FailedConnections
-    //
-    
-    const Field<Uint32>& FailedConnections() const
-    {
-        const size_t n = offsetof(Self, FailedConnections);
-        return GetField<Uint32>(n);
-    }
-    
-    void FailedConnections(const Field<Uint32>& x)
-    {
-        const size_t n = offsetof(Self, FailedConnections);
-        GetField<Uint32>(n) = x;
-    }
-    
-    const Uint32& FailedConnections_value() const
-    {
-        const size_t n = offsetof(Self, FailedConnections);
-        return GetField<Uint32>(n).value;
-    }
-    
-    void FailedConnections_value(const Uint32& x)
-    {
-        const size_t n = offsetof(Self, FailedConnections);
-        GetField<Uint32>(n).Set(x);
-    }
-    
-    bool FailedConnections_exists() const
-    {
-        const size_t n = offsetof(Self, FailedConnections);
-        return GetField<Uint32>(n).exists ? true : false;
-    }
-    
-    void FailedConnections_clear()
-    {
-        const size_t n = offsetof(Self, FailedConnections);
         GetField<Uint32>(n).Clear();
     }
 

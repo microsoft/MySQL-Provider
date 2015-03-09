@@ -51,30 +51,39 @@ public:
     : m_sqlConnection(NULL),
       m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.binding.dependencies")),
       m_sqlPort(0),
+      m_sqlConnectFlags(0),
       m_sqlErrorNum(0)
     {}
     virtual ~MySQL_Dependencies();
 
-    bool Attach(unsigned int port, const std::string& hostname, const std::string& username, const std::string& password)
+    bool Attach(unsigned int port,
+                const std::string& hostname,
+                const std::string& username,
+                const std::string& password,
+                const std::string& database = "" /* No database by default */ )
     {
         m_sqlPort = port;
         m_sqlHostName = hostname;
         m_sqlUserID = username;
         m_sqlPassword = password;
+        m_sqlDatabase = database;
 
         return Attach();
     }
     bool Attach();
-    bool AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth);
+    bool AttachUsingStoredCredentials(unsigned int port,
+                                      util::unique_ptr<MySQL_Authentication>& auth,
+                                      const std::string& database = "");
     bool Detach();
+    void AllowStoredProcedures() { m_sqlConnectFlags = CLIENT_MULTI_RESULTS; }
 
-    const std::string& GetErrorText() { return m_sqlErrorText; }
-    const std::string& GetErrorState() { return m_sqlState; }
-    unsigned int GetErrorNum() { return m_sqlErrorNum; }
+    const std::string& GetErrorText() const { return m_sqlErrorText; }
+    const std::string& GetErrorState() const { return m_sqlState; }
+    unsigned int GetErrorNum() const { return m_sqlErrorNum; }
 
-    const std::string& GetConnectionInfo() { return m_infoConnection; }
-    const std::string& GetClientInfo() { return m_infoClient; }
-    const std::string& GetServerInfo() { return m_infoServer; }
+    const std::string& GetConnectionInfo() const { return m_infoConnection; }
+    const std::string& GetClientInfo() const { return m_infoClient; }
+    const std::string& GetServerInfo() const { return m_infoServer; }
 
 private:
     MYSQL *m_sqlConnection;
@@ -84,6 +93,8 @@ private:
     std::string m_sqlHostName;
     std::string m_sqlUserID;
     std::string m_sqlPassword;
+    std::string m_sqlDatabase;
+    unsigned long m_sqlConnectFlags;
 
     std::string m_sqlErrorText;
     std::string m_sqlState;
@@ -93,7 +104,8 @@ private:
     std::string m_infoClient;
     std::string m_infoServer;
 
-    friend class MySQL_Query;
+    friend class MySQL_Query_Rows;
+    friend class MySQL_Stored_Procedure_Test;
 };
 
 
@@ -112,14 +124,65 @@ private:
  *   via the class factory.
  */
 
+const unsigned int COLUMN_MAXLEN = 256; /* Arbitrary value; raise if needed */
 typedef std::map< std::string, std::vector<std::string> > MySQL_QueryResults;
 
-class MySQL_Query
+class MySQL_Query_Base
+{
+public:
+    explicit MySQL_Query_Base() : m_sqlErrorNum(0) {}
+    virtual ~MySQL_Query_Base() {}
+
+    virtual const std::string& GetErrorText() const { return m_sqlErrorText; }
+    virtual const std::string& GetErrorState() const { return m_sqlState; }
+    virtual unsigned int GetErrorNum() const { return m_sqlErrorNum; }
+
+protected:
+    std::string m_sqlErrorText;
+    std::string m_sqlState;
+    unsigned int m_sqlErrorNum;
+};
+
+class MySQL_Query_Rows : public MySQL_Query_Base
+{
+public:
+    explicit MySQL_Query_Rows(SCXCoreLib::SCXHandle<MySQL_Dependencies> deps)
+    : m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.query.rows")), m_deps(deps),
+      m_sqlStatement(NULL), m_bindInParamLength(NULL),
+      m_bindOutParams(NULL), m_bindOutResultData(NULL), m_bindOutParamLength(NULL),
+      m_fQueryForResults(false), m_columnCount(0)
+    { }
+    virtual ~MySQL_Query_Rows();
+    virtual void Reset();
+
+    virtual bool ExecuteQuery( const char* query, const std::vector<std::string>& parameters );
+    virtual unsigned int GetColumnCount() const { return m_columnCount; }
+
+    virtual bool GetColumnNames( std::vector<std::string>& columnNames );
+    virtual bool GetNextRow( std::vector<std::string>& columns );
+
+protected:
+    SCXCoreLib::SCXLogHandle m_log;
+    SCXCoreLib::SCXHandle<MySQL_Dependencies> m_deps;
+
+    MYSQL_STMT* m_sqlStatement;
+    long unsigned int* m_bindInParamLength;
+
+    MYSQL_BIND* m_bindOutParams;
+    char *m_bindOutResultData;
+    long unsigned int* m_bindOutParamLength;
+
+    bool m_fQueryForResults;
+    unsigned int m_columnCount;
+};
+
+class MySQL_Query : public MySQL_Query_Base
 {
 public:
     explicit MySQL_Query(SCXCoreLib::SCXHandle<MySQL_Dependencies> deps)
-    : m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.query")),
-      m_columnCount(0), m_sqlErrorNum(0), m_deps(deps)
+    : m_rowHandler(deps),
+      m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.query.sets")),
+      m_deps(deps)
     { }
     virtual ~MySQL_Query() {}
 
@@ -127,25 +190,16 @@ public:
     virtual bool ExecuteQuery( const char* query, const std::vector<std::string>& parameters );
 
     virtual bool GetResults(std::map<std::string, std::string>& results);
-    virtual bool GetMultiColumnResults(MySQL_QueryResults& results);
-    virtual const std::vector<std::string>& GetColumnNames() { return m_columnNames; }
-
-    virtual const std::string& GetErrorText() { return m_sqlErrorText; }
-    virtual const std::string& GetErrorState() { return m_sqlState; }
-    virtual unsigned int GetErrorNum() { return m_sqlErrorNum; }
+    virtual bool GetMultiColumnResults(MySQL_QueryResults& results) const;
+    virtual const std::vector<std::string>& GetColumnNames() const { return m_columnNames; }
 
 private:
+    MySQL_Query_Rows m_rowHandler;
     SCXCoreLib::SCXLogHandle m_log;
+    SCXCoreLib::SCXHandle<MySQL_Dependencies> m_deps;
 
     std::vector< std::string > m_columnNames;
     std::map< std::string, std::vector<std::string> > m_queryResults;
-    unsigned int m_columnCount;
-
-    std::string m_sqlErrorText;
-    std::string m_sqlState;
-    unsigned int m_sqlErrorNum;
-
-    SCXCoreLib::SCXHandle<MySQL_Dependencies> m_deps;
 };
 
 
@@ -165,12 +219,19 @@ public:
     : m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.binding")), m_deps(deps)
     { }
     virtual ~MySQL_Binding();
-    bool Attach(unsigned int port, const std::string& hostname, const std::string& username, const std::string& password)
-        { return m_deps->Attach(port, hostname, username, password); }
+    bool Attach(unsigned int port,
+                const std::string& hostname,
+                const std::string& username,
+                const std::string& password,
+                const std::string& database = "")
+    { return m_deps->Attach(port, hostname, username, password, database); }
     bool Attach() { return m_deps->Attach(); }
-    bool AttachUsingStoredCredentials(unsigned int port, util::unique_ptr<MySQL_Authentication>& auth)
-        { return m_deps->AttachUsingStoredCredentials(port, auth); }
+    bool AttachUsingStoredCredentials(unsigned int port,
+                                      util::unique_ptr<MySQL_Authentication>& auth,
+                                      const std::string& database = "")
+    { return m_deps->AttachUsingStoredCredentials(port, auth, database); }
     bool Detach() { return m_deps->Detach(); }
+    void AllowStoredProcedures() { m_deps->AllowStoredProcedures(); }
 
     void GetConfigurationFilePaths( std::vector<std::string>& paths );
 
@@ -231,6 +292,17 @@ public:
         return pQuery.move();
     }
 
+    // This returns a unique_ptr to the MySQL_Query_Rows class to guarantee destruction
+    //
+    // Use this with code like:
+    //   unique_ptr<MySQL_Query_Rows> pQuery(g_pFactory->GetQueryByRow());
+    //   pQuery->QueryMethod(...);
+    virtual util::unique_ptr<MySQL_Query_Rows>::move_type GetQueryByRow()
+    {
+        util::unique_ptr<MySQL_Query_Rows> pQuery (new MySQL_Query_Rows(GetDependencies()));
+        return pQuery.move();
+    }
+
     // This returns a unique_ptr to the MySQL_Authentication class to guarantee destruction
     //
     // Use this with code like:
@@ -269,6 +341,8 @@ protected:
     SCXCoreLib::SCXHandle<MySQL_Binding> m_binding;
 
     SCXCoreLib::SCXHandle<MySQL_AuthenticationDependencies> m_authDeps;
+
+    friend class MySQL_Stored_Procedure_Test;
 };
 
 // Define single global copy (intended as a singleton class)

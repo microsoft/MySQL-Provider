@@ -59,7 +59,7 @@ PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)
 
 LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 MYAUTH_LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
-PREEXEC_LINK_LIBRARIES := -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt
+PREEXEC_LINK_LIBRARIES := -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt -pthread
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
 
 SHARED_FLAGS := -shared
@@ -293,7 +293,8 @@ $(INTERMEDIATE_DIR)/%.o : $(BASE_DIR)/%.c $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
 STATIC_PROVIDERLIB_SRCFILES = \
 	$(PROVIDER_DIR)/MySQL_Server_Class_Provider.cpp \
 	$(PROVIDER_DIR)/MySQL_ServerStatistics_Class_Provider.cpp \
-	$(PROVIDER_DIR)/MySQL_Server_Database_Class_Provider.cpp
+	$(PROVIDER_DIR)/MySQL_Server_Database_Class_Provider.cpp \
+	$(PROVIDER_DIR)/MySQL_StoredProcedureRow_AsXML_Class_Provider.cpp
 
 STATIC_PROVIDERLIB_SRCFILES += \
 	$(PROVIDER_DIR)/module.cpp \
@@ -332,10 +333,10 @@ $(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLI
 
 STATIC_MYAUTH_SRCFILES = \
 	$(PROVIDER_DIR)/support/logstartup.cpp \
+	$(PROVIDER_DIR)/support/mycnf-paths.cpp \
 	$(PROVIDER_DIR)/support/productdependencies.cpp \
 	$(PROVIDER_DIR)/support/sqlauth.cpp \
 	$(PROVIDER_DIR)/support/sqlbinding.cpp \
-	$(PROVIDER_DIR)/support/mycnf-paths.cpp \
 	$(SOURCE_DIR)/myauth/myauth.cpp
 
 STATIC_MYAUTH_HEADERS = \
@@ -398,6 +399,7 @@ STATIC_PROVIDER_UNITFILES = \
 	$(PROVIDER_TEST_DIR)/sqlserver_test.cpp \
 	$(PROVIDER_TEST_DIR)/sqlstats_test.cpp \
 	$(PROVIDER_TEST_DIR)/sqldatabase_test.cpp \
+	$(PROVIDER_TEST_DIR)/sqlstoredproc_test.cpp \
 	$(PROVIDER_TEST_DIR)/support/testrunnerlogpolicy.cpp \
 	$(TEST_DIR)/myauth/myauth_test.cpp \
 	$(PROVIDER_TEST_DIR)/providertestutils.cpp
@@ -552,7 +554,8 @@ ifeq ($(PERFORM_OMI_MAKEINSTALL),1)
 CLASSES = \
 	MySQL_Server \
 	MySQL_ServerStatistics \
-	MySQL_Server_Database
+	MySQL_Server_Database \
+	MySQL_StoredProcedureRow_AsXML
 
 OMI_DIR = $(OMI_ROOT)/output/install_local
 OMI_BINDIR = $(OMI_DIR)/bin

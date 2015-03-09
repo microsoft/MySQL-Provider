@@ -71,9 +71,6 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     [ Description ( "Maximum amount of connections allowed for MySQL Server instance" ) ]
     uint32 MaxConnections;
 
-    [ Description ( "Failed amount of connections allowed for MySQL Server instance" ) ]
-    uint32 FailedConnections;
-
     [ Description ( "Amount of time (seconds) the server has been up" ) ]
     uint64 Uptime;
 
@@ -145,5 +142,44 @@ class MySQL_Server_Database : CIM_CommonDatabase {
 
     [ Description ( "How much space (in bytes) a database in MySQL is using" ) ]
     uint64 DiskSpaceInBytes;
+
+};
+
+// MySQL_StoredProcedureRow_AsXML
+// -------------------------------------------------------------------
+[   Version ( "1.0.0" ), 
+    Description (
+        "The MySQL_StoredProcedureRow_AsXML class contains information about"
+        "a specific row from a MySQL stored procedure result set. The output"
+        "of the result set is in XML format." )
+]
+class MySQL_StoredProcedureRow_AsXML {
+
+    [ Key,
+      Description (
+            "The InstanceID is a unique identifier of a specific row in a stored"
+            "procedure's result set. It is a concatenation of the hostname,"
+            "bind-address, port, database name, stored procedure name, and row"
+            "number" ) ]
+    string InstanceID;
+
+    [ Description ( "The port for the MySQL Server hosting the MySQL Database" ) ]
+    uint16 Port;
+
+    [ Description ( "Name of database" ) ]
+    string DatabaseName;
+
+    [ Description ( "The stored procedure's name" ) ]
+    string StoredProcedureName;
+
+    [ Description ( "The parameters to pass to the stored procedure" ) ]
+    string Parameters;
+
+    [ Description ( "The specific row (in XML form) returned from the stored procedure" ) ]
+    string RowXMLValue;
+
+    [ Description ( "Indicates whether or not the fields returned in the result set were truncated"
+                    " due to size restrictions; where true is truncated and false is not truncated" ) ]
+    boolean IsTruncated;
 
 };

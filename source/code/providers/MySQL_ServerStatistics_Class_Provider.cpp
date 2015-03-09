@@ -120,7 +120,6 @@ static bool EnumerateOneInstance(
         //
 
         uint8_t  uval8;
-        uint32_t uval32;
         uint64_t uval64;
         float valFloat, valFloat2;
 
@@ -159,11 +158,6 @@ static bool EnumerateOneInstance(
         if ( GetUValue(variables, "max_connections", connectionsMax) )
         {
             inst.MaxConnections_value( connectionsMax );
-        }
-
-        if ( GetUValue(globals, "aborted_connects", uval32) )
-        {
-            inst.FailedConnections_value( uval32 );
         }
 
         if ( GetUValue(globals, "uptime", uval64) )

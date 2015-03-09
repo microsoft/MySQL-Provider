@@ -82,15 +82,15 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     this.actionCmdType = ctx.Records.GetValue("ActionType");
                     if (this.actionCmdType.Equals("Server"))
                     {
-                        if (ctx.ParentContext.Records.HasKey("mysqlHelperABPath"))
+                        if (ctx.ParentContext.Records.HasKey("mysqlHelperSqlTestPath"))
                         {
-                            string abPath = ctx.ParentContext.Records.GetValue("mysqlHelperABPath");
-                            if (!Directory.Exists(abPath))
-                                throw new VarAbort("Could not find the ab.exe under " + abPath);
+                            string SqlTestPath = ctx.ParentContext.Records.GetValue("mysqlHelperSqlTestPath");
+                            if (!Directory.Exists(SqlTestPath))
+                                throw new VarAbort("Could not find the sql batch files under " + SqlTestPath);
                         }
                         else
                         {
-                            throw new VarAbort("Please set mysqlHelperABPath in VarMap");
+                            throw new VarAbort("Please set mysqlHelperSqlTestPath in VarMap");
                         }
                     }
                 }
@@ -123,15 +123,11 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 this.ApplyMonitorOverride(ctx, OverrideState.Default);
 
-                //this.CloseMatchingAlerts(ctx);
+                this.CloseMatchingAlerts(ctx);
 
                 this.VerifyMonitor(ctx, HealthState.Success);
 
                 this.VerifyAlert(ctx, false);
-
-                //copy all ssl certificate script to '/tmp/'
-                //PosixCopy copyToHost = new PosixCopy(this.ClientInfo.HostName, this.ClientInfo.SuperUser, this.ClientInfo.SuperUserPassword);
-                //copyToHost.CopyTo(scriptsLocation + "/" + breakScriptName, "/tmp/" + breakScriptName);
 
             }
             catch (Exception ex)
@@ -153,6 +149,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             string monitorName = ctx.Records.GetValue("monitorname");
             string diagnosticName = ctx.Records.GetValue("diagnostics");
             string recoveryCmd = ctx.Records.GetValue("PostCmd");
+            string stopAction = ctx.Records.GetValue("StopAction");
             string targetOSClassName = ctx.ParentContext.Records.GetValue("targetosclass");
 
             if (this.SkipThisTest(ctx))
@@ -239,7 +236,6 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
             this.DeleteMonitorOverride(ctx);
             this.OverridePerformanceMonitor(ctx, true);
-            this.ApplyMonitorOverride(ctx, OverrideState.Default);
             // Run the recovery command
             this.RecoverMonitor(ctx);
             if (!ctx.Records.HasKey("ShouldNotVerifyMonitorStatusAfterResetValue"))

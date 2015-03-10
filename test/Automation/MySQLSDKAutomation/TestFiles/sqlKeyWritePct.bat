@@ -1,8 +1,8 @@
 @Echo Off
 Setlocal EnableDelayedExpansion
 Echo Usage: 
-Echo demo: sql.bat HostName TotalRepeatCount
-Echo eg. sql.bat m50p-ora5-02.scx.com 
+Echo demo: sqlKeyWritePct.bat HostName TotalRepeatCount
+Echo eg. sqlKeyWritePct.bat m50p-ora5-02.scx.com 5
 Echo Create table
 c:\temp\mysql.exe -h %1 -E -e "use employees;create table Test02(id int(4) not null primary key auto_increment,name char(20) not null);"
 

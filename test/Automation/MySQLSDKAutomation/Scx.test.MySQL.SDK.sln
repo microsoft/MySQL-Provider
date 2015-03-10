@@ -17,7 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{
 	ProjectSection(SolutionItems) = preProject
 		TestFiles\scx.test.mysql.sdk.source.x64.xml = TestFiles\scx.test.mysql.sdk.source.x64.xml
 		TestFiles\scx.test.mysql.sdk.sources.xml = TestFiles\scx.test.mysql.sdk.sources.xml
+		TestFiles\sqlAbortConnection.bat = TestFiles\sqlAbortConnection.bat
 		TestFiles\sqlKeyWritePct.bat = TestFiles\sqlKeyWritePct.bat
+		TestFiles\sqlMultiConnection.bat = TestFiles\sqlMultiConnection.bat
 		TestFiles\sqlTest.bat = TestFiles\sqlTest.bat
 		TestFiles\sqlUsingQueryTest.bat = TestFiles\sqlUsingQueryTest.bat
 	EndProjectSection

@@ -116,9 +116,6 @@ class MySQL_ServerStatistics : CIM_StatisticalData {
     [ Description ( "Percent of InnoDB logical read requests satisfied from the buffer pool" ) ]
     uint8 IDB_BP_HitPct;
 
-    [ Description ( "Percent of time MySQL has to wait for memory pages to be flushed compared to those that were immediate" ) ]
-    uint8 IDB_BP_WriteWaitPct;
-
     [ Description ( "How much of the InnoDB buffer pool is being used" ) ]
     uint8 IDB_BP_UsePct;
 

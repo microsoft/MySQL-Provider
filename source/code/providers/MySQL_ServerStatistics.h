@@ -53,7 +53,6 @@ typedef struct _MySQL_ServerStatistics /* extends CIM_StatisticalData */
     MI_ConstUint8Field TableLockContentionPct;
     MI_ConstUint8Field TableCacheUsePct;
     MI_ConstUint8Field IDB_BP_HitPct;
-    MI_ConstUint8Field IDB_BP_WriteWaitPct;
     MI_ConstUint8Field IDB_BP_UsePct;
     MI_ConstUint8Field FullTableScanPct;
 }
@@ -592,22 +591,6 @@ MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_BP_HitPct(
     MySQL_ServerStatistics* self)
 {
     memset((void*)&self->IDB_BP_HitPct, 0, sizeof(self->IDB_BP_HitPct));
-    return MI_RESULT_OK;
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Set_IDB_BP_WriteWaitPct(
-    MySQL_ServerStatistics* self,
-    MI_Uint8 x)
-{
-    ((MI_Uint8Field*)&self->IDB_BP_WriteWaitPct)->value = x;
-    ((MI_Uint8Field*)&self->IDB_BP_WriteWaitPct)->exists = 1;
-    return MI_RESULT_OK;
-}
-
-MI_INLINE MI_Result MI_CALL MySQL_ServerStatistics_Clear_IDB_BP_WriteWaitPct(
-    MySQL_ServerStatistics* self)
-{
-    memset((void*)&self->IDB_BP_WriteWaitPct, 0, sizeof(self->IDB_BP_WriteWaitPct));
     return MI_RESULT_OK;
 }
 
@@ -1564,46 +1547,6 @@ public:
     void IDB_BP_HitPct_clear()
     {
         const size_t n = offsetof(Self, IDB_BP_HitPct);
-        GetField<Uint8>(n).Clear();
-    }
-
-    //
-    // MySQL_ServerStatistics_Class.IDB_BP_WriteWaitPct
-    //
-    
-    const Field<Uint8>& IDB_BP_WriteWaitPct() const
-    {
-        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
-        return GetField<Uint8>(n);
-    }
-    
-    void IDB_BP_WriteWaitPct(const Field<Uint8>& x)
-    {
-        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
-        GetField<Uint8>(n) = x;
-    }
-    
-    const Uint8& IDB_BP_WriteWaitPct_value() const
-    {
-        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
-        return GetField<Uint8>(n).value;
-    }
-    
-    void IDB_BP_WriteWaitPct_value(const Uint8& x)
-    {
-        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
-        GetField<Uint8>(n).Set(x);
-    }
-    
-    bool IDB_BP_WriteWaitPct_exists() const
-    {
-        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
-        return GetField<Uint8>(n).exists ? true : false;
-    }
-    
-    void IDB_BP_WriteWaitPct_clear()
-    {
-        const size_t n = offsetof(Self, IDB_BP_WriteWaitPct);
         GetField<Uint8>(n).Clear();
     }
 

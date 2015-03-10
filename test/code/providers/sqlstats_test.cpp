@@ -167,7 +167,6 @@ public:
                                                 L"TableLockContentionPct",
                                                 L"TableCacheUsePct",
                                                 L"IDB_BP_HitPct",
-                                                L"IDB_BP_WriteWaitPct",
                                                 L"IDB_BP_UsePct",
                                                 L"FullTableScanPct"};
 
@@ -191,7 +190,6 @@ public:
         ValidateRatio(instance, L"TableLockContentionPct", errMsg);
         ValidateRatio(instance, L"TableCacheUsePct", errMsg);
         ValidateRatio(instance, L"IDB_BP_HitPct", errMsg);
-        ValidateRatio(instance, L"IDB_BP_WriteWaitPct", errMsg);
         ValidateRatio(instance, L"IDB_BP_UsePct", errMsg);
         ValidateRatio(instance, L"FullTableScanPct", errMsg);
     }

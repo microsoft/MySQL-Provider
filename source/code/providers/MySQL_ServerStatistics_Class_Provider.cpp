@@ -254,11 +254,6 @@ static bool EnumerateOneInstance(
             inst.IDB_BP_HitPct_value( 100 - uval8 );
         }
 
-        if ( ComputeRatio(globals, "innodb_buffer_pool_wait_free", "innodb_buffer_pool_write_requests", uval8) )
-        {
-            inst.IDB_BP_WriteWaitPct_value( uval8 );
-        }
-
         if ( ComputeRatio(globals, "innodb_buffer_pool_pages_data", "innodb_buffer_pool_pages_total", uval8) )
         {
             inst.IDB_BP_UsePct_value( uval8 );

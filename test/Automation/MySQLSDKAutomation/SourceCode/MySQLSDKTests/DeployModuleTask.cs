@@ -151,17 +151,12 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 {
                     fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
                 }
-                string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
-                if (!ctx.Records.GetValue("entityname").Contains("upgrade MySQL CIM Module"))
+
+                string needRemoveDefaultAgent = ctx.Records.GetValue("RemoveDefaultAgent");
+                if (needRemoveDefaultAgent.ToLower().Contains("true"))
                 {
-                this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
-             }
-                string commentSudoers = ctx.Records.GetValue("CommentSudoers");
-                if (commentSudoers != null)
-                {
-                    RunPosixCmd execCmd = new RunPosixCmd(this.clientInfo.HostName, this.clientInfo.SuperUser, this.clientInfo.SuperUserPassword);
-                    ctx.Trc("Running commentSudoers command: " + commentSudoers);
-                    execCmd.RunCmd(commentSudoers);
+                    string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
+                    this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
                 }
              }
             catch (Exception ex)
@@ -279,34 +274,31 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             {
                 useTaskInstallMySQLAgent = true;
             }
-           
-            bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
+            
+            string needRemoveDefaultAgent = ctx.Records.GetValue("RemoveDefaultAgent");
+            if (needRemoveDefaultAgent.ToLower().Contains("true"))
+            {
+                bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
 
-            if (useTaskInstallMySQLAgent)
-            {
-                if(!mysqlAgentInstalled)
+                if (useTaskInstallMySQLAgent)
                 {
-                    this.mysqlAgentHelper.InstallMySQLAgentWihTask();
+                    if (!mysqlAgentInstalled)
+                    {
+                        this.mysqlAgentHelper.InstallMySQLAgentWihTask();
+                    }
                 }
-            }
-            else
-            {
-                string fullMySQLAgentPath = tempMySQLCIMModuleLocation;
-                string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
-                if (mysqlAgentInstalled)
+                else
                 {
-                    this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);              
-                }
+                    string fullMySQLAgentPath = tempMySQLCIMModuleLocation;
+                    string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
+                    if (mysqlAgentInstalled)
+                    {
+                        this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
+                    }
 
-                fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
-                this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
-            }
-            string unCommentSudoers = ctx.Records.GetValue("UnCommentSudoers");
-            if (unCommentSudoers!=null)
-            {
-                RunPosixCmd execCmd = new RunPosixCmd(this.clientInfo.HostName, this.clientInfo.SuperUser, this.clientInfo.SuperUserPassword);
-                ctx.Trc("Running commentSudoers command: " + unCommentSudoers);
-                execCmd.RunCmd(unCommentSudoers);
+                    fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
+                    this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
+                }
             }
 
             ctx.Trc("MySQLSDKTests.DeployModuleTask.Cleanup finished");

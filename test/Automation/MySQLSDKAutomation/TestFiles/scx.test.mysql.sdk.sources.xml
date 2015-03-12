@@ -1207,6 +1207,9 @@
     <recm key="expectedOutputKeyWord">
       <val>&lt;returnCode&gt;0&lt;/returnCode&gt;</val>
     </recm>
+    <recm key="RemoveDefaultAgent">
+      <val>true</val>
+    </recm>
   </var>
 
   <var set="1" lvl="1" vid="798935" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify if install MySQL Server Provider successfully by running task Install/Upgrade MySQL Server Provider with valid scxuser account." permutation="rows">
@@ -1228,6 +1231,9 @@
     <recm key="expectedOutputKeyWord">
       <val>&lt;returnCode&gt;0&lt;/returnCode&gt;</val>
     </recm>
+    <recm key="RemoveDefaultAgent">
+      <val>true</val>
+    </recm>
   </var>
 
   <var set="1" lvl="1" vid="798928" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify it doesn't upgrade MySQL Server Provider to lower version by running Install/Upgrade MySQL Server Provider task." permutation="rows">
@@ -1245,6 +1251,9 @@
     </recm>
     <recm key="expectedOutputKeyWord">
       <val>&lt;stderr&gt;\S*&lt;/stderr&gt;</val>
+    </recm>
+    <recm key="RemoveDefaultAgent">
+      <val>false</val>
     </recm>
   </var>
 
@@ -1267,6 +1276,30 @@
     <recm key="expectedOutputKeyWord">
       <val>&lt;stderr&gt;\S*&lt;/stderr&gt;</val>
     </recm>
+    <recm key="RemoveDefaultAgent">
+      <val>true</val>
+    </recm>
+  </var>
+
+  <var set="1" lvl="1" vid="798926" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify the 'Set Default Credentials for MySQL Server' task works correctly" permutation="rows">
+    <recm key="EntityName">
+      <val>Set Default Credentials for MySQL Server</val>
+    </recm>
+    <recm key="TaskName">
+      <val>Microsoft.MySQLServer.SetDefaultCredentials.Task</val>
+    </recm>
+    <recm key="InstanceClass">
+      <val>Microsoft.MySQLServer.Installation</val>
+    </recm>
+    <recm key="ExpectedTaskStatus">
+      <val>Success</val>
+    </recm>
+    <recm key="expectedOutputKeyWord">
+      <val>&lt;p:ReturnValue&gt;TRUE&lt;/p:ReturnValue&gt;</val>
+    </recm>
+    <recm key="RemoveDefaultAgent">
+      <val>false</val>
+    </recm>
   </var>
 
   <var set="1" lvl="1" vid="798927" cid="ManageMySQLServiceTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.ManageMySQLServiceTask" dsc="Verify the Update Discover Properties task is work well." permutation="rows">
@@ -1284,6 +1317,9 @@
     </recm>
     <recm key="expectedOutputKeyWord">
       <val>SUCCESS</val>
+    </recm>
+    <recm key="RemoveDefaultAgent">
+      <val>false</val>
     </recm>
   </var>
 
@@ -1542,5 +1578,6 @@
     <rec key="mySQLAddNonSuperUserAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxuser Password scxuser }</rec>
     <varref />
   </grp>
+
 
 </varmap>

@@ -64,6 +64,9 @@ namespace Scx.Test.MySQL.Provider
             this.InsertMySQLDataBaseValues(mcfContext);
 
             mcfContext.Trc("Expected Result: " + this.ResultTemplate);
+
+            // set up Multi instances env.
+            SetUpMultiMySQLEnv(mcfContext);
         }
 
 
@@ -130,6 +133,9 @@ namespace Scx.Test.MySQL.Provider
                 string removeMySQLAuthCmd = mcfContext.Records.GetValue("removeMySQLAuthCmd");
                 this.RunCommandAsRoot(removeMySQLAuthCmd, this.RootPassword);
             }
+
+            // CleanUpMultiMySQLEnv
+            CleanUpMultiMySQLEnv(mcfContext);
         }
 
         #endregion Public Methods

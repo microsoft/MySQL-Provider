@@ -349,16 +349,16 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 idbBpHitPct = 0;
             }
 
-            // IDB_BP_WriteWaitPct
-            string innodbBufferPoolWaitFreeValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where Variable_name= \"innodb_buffer_pool_wait_free\";");
-            double innodbBufferPoolWaitFree = double.Parse(innodbBufferPoolWaitFreeValue);
-            string innodbBufferPoolWriteRequestsValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where Variable_name= \"innodb_buffer_pool_write_requests\";");
-            double innodbBufferPoolWriteRequests = double.Parse(innodbBufferPoolWriteRequestsValue);
-            double idbBpWriteWaitPct = Math.Round((innodbBufferPoolWaitFree / innodbBufferPoolWriteRequests) * 100, 0);
-            if (Double.IsNaN(idbBpWriteWaitPct))
-            {
-                idbBpWriteWaitPct = 0;
-            }
+            //// IDB_BP_WriteWaitPct
+            //string innodbBufferPoolWaitFreeValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where Variable_name= \"innodb_buffer_pool_wait_free\";");
+            //double innodbBufferPoolWaitFree = double.Parse(innodbBufferPoolWaitFreeValue);
+            //string innodbBufferPoolWriteRequestsValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where Variable_name= \"innodb_buffer_pool_write_requests\";");
+            //double innodbBufferPoolWriteRequests = double.Parse(innodbBufferPoolWriteRequestsValue);
+            //double idbBpWriteWaitPct = Math.Round((innodbBufferPoolWaitFree / innodbBufferPoolWriteRequests) * 100, 0);
+            //if (Double.IsNaN(idbBpWriteWaitPct))
+            //{
+            //    idbBpWriteWaitPct = 0;
+            //}
 
             // IDB_BP_UsePct
             string innodbBufferPoolPagesDataValue = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where Variable_name= \"innodb_buffer_pool_pages_data\";");
@@ -405,7 +405,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             propertyLists.Add("TableLockContentionPct", tableLockContentionPct.ToString());
             propertyLists.Add("TableCacheUsePct", tableCacheUsePct.ToString());
             propertyLists.Add("IDB_BP_HitPct", idbBpHitPct.ToString());
-            propertyLists.Add("IDB_BP_WriteWaitPct", idbBpWriteWaitPct.ToString());
+            //propertyLists.Add("IDB_BP_WriteWaitPct", idbBpWriteWaitPct.ToString());
             propertyLists.Add("IDB_BP_UsePct", idbBpUsePct.ToString());
             propertyLists.Add("FullTableScanPct", fullTableScanPct.ToString());
 

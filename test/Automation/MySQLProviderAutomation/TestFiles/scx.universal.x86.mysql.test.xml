@@ -9,7 +9,7 @@
     <rec key="MySQL.VerifyMySQLInstalledCmd">dpkg -l |grep -i mysql-cimprov</rec>
   </snippet>
   <snippet id="LinuxInfo">
-    <rec key="Linux.Host">m50p-ora5-01</rec>
+    <rec key="Linux.Host">m50p-ora5-02</rec>
     <rec key="LocalIP">127.0.0.1</rec>
     <rec key="DefaultPort">3306</rec>
     <rec key="DefaultAuthorUser">root</rec>
@@ -144,8 +144,7 @@
         <MySQLServerStatistic>
           <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}</InstanceID>  
           <CurrentNumConnections>[0-9]</CurrentNumConnections> 
-          <MaxConnections>[0-9]</MaxConnections> 
-          <FailedConnections>[0-9]</FailedConnections> 
+          <MaxConnections>[0-9]</MaxConnections>          
           <Uptime>[0-9]</Uptime> 
           <ServerDiskUseInBytes>[0-9]</ServerDiskUseInBytes> 
           <ConnectionsUsePct>[0-9]</ConnectionsUsePct> 
@@ -160,8 +159,7 @@
           <TCacheHitPct>[0-9]</TCacheHitPct> 
           <TableLockContentionPct>[0-9]</TableLockContentionPct> 
           <TableCacheUsePct>[0-9]</TableCacheUsePct> 
-          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct> 
-          <IDB_BP_WriteWaitPct>[0-9]</IDB_BP_WriteWaitPct> 
+          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct>           
           <IDB_BP_UsePct>[0-9]</IDB_BP_UsePct> 
           <FullTableScanPct>[0-9]</FullTableScanPct> 
         </MySQLServerStatistic>
@@ -281,8 +279,7 @@
         <MySQLServerStatistic>
           <InstanceID>{MachineName}:{LocalIP}:{DefaultPort}</InstanceID>  
           <CurrentNumConnections>[0-9]</CurrentNumConnections> 
-          <MaxConnections>[0-9]</MaxConnections> 
-          <FailedConnections>[0-9]</FailedConnections> 
+          <MaxConnections>[0-9]</MaxConnections>           
           <Uptime>[0-9]</Uptime> 
           <ServerDiskUseInBytes>[0-9]</ServerDiskUseInBytes> 
           <ConnectionsUsePct>[0-9]</ConnectionsUsePct> 
@@ -297,16 +294,14 @@
           <TCacheHitPct>[0-9]</TCacheHitPct> 
           <TableLockContentionPct>[0-9]</TableLockContentionPct> 
           <TableCacheUsePct>[0-9]</TableCacheUsePct> 
-          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct> 
-          <IDB_BP_WriteWaitPct>[0-9]</IDB_BP_WriteWaitPct> 
+          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct>           
           <IDB_BP_UsePct>[0-9]</IDB_BP_UsePct> 
           <FullTableScanPct>[0-9]</FullTableScanPct> 
         </MySQLServerStatistic>
         <MySQLServerStatistic>
           <InstanceID>{MachineName}:{LocalIP}:{MultiDefaultPort}</InstanceID>  
           <CurrentNumConnections>[0-9]</CurrentNumConnections> 
-          <MaxConnections>[0-9]</MaxConnections> 
-          <FailedConnections>[0-9]</FailedConnections> 
+          <MaxConnections>[0-9]</MaxConnections>           
           <Uptime>[0-9]</Uptime> 
           <ServerDiskUseInBytes>[0-9]</ServerDiskUseInBytes> 
           <ConnectionsUsePct>[0-9]</ConnectionsUsePct> 
@@ -321,8 +316,7 @@
           <TCacheHitPct>[0-9]</TCacheHitPct> 
           <TableLockContentionPct>[0-9]</TableLockContentionPct> 
           <TableCacheUsePct>[0-9]</TableCacheUsePct> 
-          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct> 
-          <IDB_BP_WriteWaitPct>[0-9]</IDB_BP_WriteWaitPct> 
+          <IDB_BP_HitPct>[0-9]</IDB_BP_HitPct>           
           <IDB_BP_UsePct>[0-9]</IDB_BP_UsePct> 
           <FullTableScanPct>[0-9]</FullTableScanPct> 
         </MySQLServerStatistic>
@@ -375,14 +369,14 @@
   <!-- 779296-VerifynonprivilegedAccountEnumeratedMySQL_Server -->
   <var set="1" lvl="0" vid="779296" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the non-privileged account can enumerated for MySQL_Server" act="true">
     <snipref id="MySQLAuthInfo" />
-    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 10.110.73.73 Username scxuser Password scxuser }</rec>
-    <rec key="removeMySQLAuthCmd">rm -rf /var/opt/microsoft/mysql-cimprov/auth/scxuser</rec>
+    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxtest Password scxtest }</rec>
+    <rec key="removeMySQLAuthCmd">rm -rf /var/opt/microsoft/mysql-cimprov/auth/scxtest</rec>
     <rec key="useNonSuperUser">true</rec>
     <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
-    <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic scxuser</rec>
-    <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/scxuser|grep -i mysql-auth</rec>
+    <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic scxtest</rec>
+    <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/scxtest|grep -i mysql-auth</rec>
     <rec key="expectedAuthFolderCount">1</rec>
-    <rec key="expectedAuthFileOwner">scxuser</rec>
+    <rec key="expectedAuthFileOwner">scxtest</rec>
     <rec key="expectedAuthFileProtection">-rw-------</rec>
     <rec key="expectedOperatingStatus">OperatingStatus=Insufficient Privileges</rec>
   </var>
@@ -409,7 +403,7 @@
     <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
     <!-- The mysql-cimprov folder under /opt/microsoft and /var/opt/microsoft and /etc/opt/microsoft should be 1,1,1 -->
     <rec key="expectedFolderCount">1,1,1</rec>
-    <rec key="installLogKeyWorlds">done</rec>
+    <rec key="installLogKeyWorlds">OK</rec>
     <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
   </var>
 
@@ -420,7 +414,7 @@
     <rec key="isInvalidInstall">false</rec>
     <!-- The mysql-cimprov folder under /opt/microsoft and /var/opt/microsoft and /etc/opt/microsoft should be 1,1,1 -->
     <rec key="expectedFolderCount">1,1,1</rec>
-    <rec key="installLogKeyWorlds">done</rec>
+    <rec key="installLogKeyWorlds">OK</rec>
     <rec key="verifyFolderExistCmd">%MySQL.VerifyFolderExistCmd%</rec>
     <rec key="verifyMySQLInstalledCmd">%MySQL.VerifyMySQLInstalledCmd%</rec>
   </var>
@@ -473,6 +467,7 @@
 
   <!-- 727741-VerifyCimProvUpgradeOption -->
   <var set="1" lvl="0" vid="727741" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvCompatibility" dsc="[MySQL]Verify if upgrade MySQL agent successfully with '--upgrade' option" act="true">
+    <snipref id="MySQLInstallInfo" />
     <rec key="installOlderMySQLCmd">sh /tmp/{0} --install</rec>
     <rec key="oldMySQLsLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
     <rec key="mysqlCmd">sh /tmp/{0} --upgrade</rec>
@@ -484,6 +479,7 @@
 
   <!-- 727743-VerifyCimProvUpgradeUsingForceOption -->
   <var set="1" lvl="0" vid="727743" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvCompatibility" dsc="[MySQL]Verify if upgrade MySQL agent successfully with '--upgrade --force' option" act="true">
+    <snipref id="MySQLInstallInfo" />
     <rec key="installOlderMySQLCmd">sh /tmp/{0} --install</rec>
     <rec key="oldMySQLsLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
     <rec key="mysqlCmd">sh /tmp/{0} --upgrade --force</rec>
@@ -686,6 +682,7 @@
     <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="deleteCredentials">true</rec>
+    <rec key="isDeleteCredentialsInMulti">true</rec>
     <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3307</rec>
   </var>
 
@@ -760,6 +757,8 @@
     <rec key="OMAgentLocation"><![CDATA[C:\Program Files\Microsoft System Center 2012 R2\Operations Manager\Server\AgentManagement\UnixAgents]]></rec>
     <!--cimprov-->
     <rec key="MySQLsLocation"><![CDATA[C:\MySQL\cimprov]]></rec>
+    <rec key="MySQLConfigForR"><![CDATA[C:\MySQL\cimprov\mycnf\R]]></rec>
+    <rec key="MySQLConfigForD"><![CDATA[C:\MySQL\cimprov\mycnf\D]]></rec>
     <rec key="installMySQLCmd">sh /tmp/{0} --install</rec>
     <rec key="UninstallMySQLCmd">sh /tmp/{0} --purge</rec>
     <rec key="CleanupMySQLCmd"><![CDATA[sh /tmp/{0} --purge;rm -rf /etc/opt/microsoft/mysql*;rm -rf /opt/microsoft/mysql*;rm -rf /var/opt/microsoft/mysql*;]]></rec>
@@ -774,6 +773,8 @@
     <rec key="stopOmAgentCmd">scxadmin -stop</rec>
     <rec key="startOmAgentCmd">scxadmin -start</rec>
     <rec key="checkMySQLInstalled">dpkg -l |grep -i mysql</rec>
+    <rec key="startMultiMySQLCmd">service mysqld_multi start</rec>
+    <rec key="stopMultiMySQLCmd">service mysqld_multi stop</rec>
 
     <rec key="getOSVersionCmd">python -c "import platform; print platform.dist()"</rec>
     <rec key="getMySQLVersionCmd">mysql -V | awk '{print $5}' | sed -e 's/,$//'</rec>
@@ -807,12 +808,12 @@
     <rec key="defaultCollectionID">[lL]inux</rec>
 
     <!--Expected MySQL M50P-ORA5-01 Version-->
-    <rec key="ProductVersionM50PORA5">5.0.96-community</rec>
+    <rec key="ProductVersionM50PORA5">5.0.96</rec>
     <rec key="defaultConfigurationFileM50PORA5">/etc/my.cnf</rec>
     <rec key="defaultErrorLogFileM50PORA5">/var/log/mysql/error.log</rec>
     <rec key="defaultSocketFileM50PORA5">/var/lib/mysql/mysql.sock</rec>
     <rec key="defaultDataDirectoryM50PORA5">/var/lib/mysql/</rec>
-    <rec key="defaultMultiProductVersionM50PORA5">5.0.96-community-log</rec>
+    <rec key="defaultMultiProductVersionM50PORA5">5.0.96</rec>
     <rec key="defaultMultiConfigurationFileM50PORA5">/etc/my.cnf</rec>
     <rec key="defaultMultiErrorLogFileM50PORA5">/var/log/mysql/error2.log</rec>
     <rec key="defaultMultiSocketFileM50PORA5">/var/lib/mysql/mysql2.sock</rec>

@@ -13,6 +13,7 @@ namespace Scx.Test.MySQL.Provider
     using Scx.Test.Common;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Xml.Linq;
@@ -278,6 +279,11 @@ namespace Scx.Test.MySQL.Provider
             set { expecteStatusValue = value; }
         }
         /// <summary>
+        /// The Current OS is Deb or Ubun.
+        /// </summary>
+        private bool isDeb = false;
+
+        /// <summary>
         /// defaultMultiPort 3307.
         /// </summary>
         private string defaultMultiPort = "3307";
@@ -541,6 +547,97 @@ namespace Scx.Test.MySQL.Provider
                 osVersion = "ora5";
             }
             return osVersion;
+        }
+
+        /// <summary>
+        /// GetOSIsDebInfo
+        /// </summary>
+        /// <returns>isDeb debian or ubuntu will return true. </returns>
+        private bool GetOSIsDebInfo()
+        {
+            string getOSDistCmd = "python -c \"import platform; print platform.dist()\"";
+            RunPosixCmd execCmd = this.MySQLHelper.RunCmd(getOSDistCmd);
+            if (execCmd.StdOut.ToLower().Contains("debian") || execCmd.StdOut.ToLower().Contains("ubuntu"))
+            {
+                this.isDeb = true;
+            }
+            else
+            {
+                this.isDeb = false;
+            }
+            return this.isDeb;
+        }
+
+        /// <summary>
+        /// SetUpMultiMySQLEnv
+        /// </summary>
+        /// <param name="mcfContext">mcfContext</param>
+        public void SetUpMultiMySQLEnv(IContext mcfContext)
+        {
+            this.GetOSIsDebInfo();
+            string mysqllocation = mcfContext.ParentContext.Records.GetValue("MySQLConfigForR");
+            if (this.isDeb)
+            {
+                mysqllocation = mcfContext.ParentContext.Records.GetValue("MySQLConfigForD");
+            }
+            bool isMulti = mcfContext.Records.HasKey("IsMulti");
+            bool isDeleteCredentialsInMulti = mcfContext.Records.HasKey("isDeleteCredentialsInMulti");
+
+            if (isMulti || isDeleteCredentialsInMulti)
+            {
+                // stop one instance services.
+                string stopMySQLServicecmd = mcfContext.ParentContext.Records.GetValue("stopMySQLCmd");
+                this.MySQLHelper.RunCmd(stopMySQLServicecmd);
+
+                // copy multi instances
+                DirectoryInfo di = new DirectoryInfo(mysqllocation);
+                FileInfo[] multi = di.GetFiles("*" + "my-multi" + "*");
+                PosixCopy copyToHost = new PosixCopy(this.HostName, this.UserName, this.Password);
+                // Copy from server to Posix host
+                copyToHost.CopyTo(multi[0].FullName, "/etc/my.cnf");
+
+                // start multi instances
+                string startMultiMySQLCmd = mcfContext.ParentContext.Records.GetValue("startMultiMySQLCmd");
+                this.MySQLHelper.RunCmd(startMultiMySQLCmd);
+                this.Wait(mcfContext);
+                this.Wait(mcfContext);
+            }
+        }
+
+        /// <summary>
+        /// CleanUpMultiMySQLEnv
+        /// </summary>
+        /// <param name="mcfContext">mcfContext</param>        
+        public void CleanUpMultiMySQLEnv(IContext mcfContext)
+        {
+            this.GetOSIsDebInfo();
+            string mysqllocation = mcfContext.ParentContext.Records.GetValue("MySQLConfigForR");
+            if (this.isDeb)
+            {
+                mysqllocation = mcfContext.ParentContext.Records.GetValue("MySQLConfigForD");
+            }
+            bool isMulti = mcfContext.Records.HasKey("IsMulti");
+            bool isDeleteCredentialsInMulti = mcfContext.Records.HasKey("isDeleteCredentialsInMulti");
+
+            if (isMulti || isDeleteCredentialsInMulti)
+            {
+                // stop one instance services.
+                string stopMySQLServiceCmd = mcfContext.ParentContext.Records.GetValue("stopMultiMySQLCmd");
+                this.MySQLHelper.RunCmd(stopMySQLServiceCmd);
+
+                // copy multi instances
+                DirectoryInfo di = new DirectoryInfo(mysqllocation);
+                FileInfo[] multi = di.GetFiles("*" + "my-oneInstance" + "*");
+                PosixCopy copyToHost = new PosixCopy(this.HostName, this.UserName, this.Password);
+                // Copy from server to Posix host
+                copyToHost.CopyTo(multi[0].FullName, "/etc/my.cnf");
+
+                // start multi instances
+                string startMultiMySQLCmd = mcfContext.ParentContext.Records.GetValue("startMySQLCmd");
+                this.MySQLHelper.RunCmd(startMultiMySQLCmd);
+                this.Wait(mcfContext);
+                this.Wait(mcfContext);
+            }
         }
 
         /// <summary>

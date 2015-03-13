@@ -159,6 +159,11 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         }
 
         /// <summary>
+        /// The Current OS is Deb or Ubun.
+        /// </summary>
+        private bool isDeb = false;
+
+        /// <summary>
         /// get all the group values from ctx.
         /// </summary>
         /// <param name="ctx">IContext</param>
@@ -221,9 +226,31 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                 throw new VarAbort("MySQLsLocation not specified");
             }
             mysqlHelper = new MySQLHelper(ctx.Trc, this.hostName, this.userName, this.password, this.MySQLLocation, this.MySQLTag, true);
+
+            // get OS Info if the OS is Deb or UBUN it will return true
+            GetOSIsDebInfo();
         }
 
         #region HelpMethod
+
+        /// <summary>
+        /// GetOSIsDebInfo
+        /// </summary>
+        /// <returns>isDeb</returns>
+        private bool GetOSIsDebInfo()
+        {
+            string getOSDistCmd = "python -c \"import platform; print platform.dist()\"";
+            RunPosixCmd execCmd = this.MySQLHelper.RunCmd(getOSDistCmd);
+            if (execCmd.StdOut.ToLower().Contains("debian") || execCmd.StdOut.ToLower().Contains("ubuntu"))
+            {
+                this.isDeb = true;
+            }
+            else
+            {
+                this.isDeb = false;
+            }
+            return this.isDeb;
+        }
 
         /// <summary>
         /// Run remote command using root acount.
@@ -316,6 +343,10 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                 string versionNumber01 = nameParts[2] + '-' + nameParts[3].Split('.')[0];
 
                 // get acutally version number using cmd.
+                if (!this.isDeb)
+                {
+                    verifyMySQLInstalledCmd = "rpm -qa|grep -i mysql-cimprov";
+                }
                 string commandStdOut = this.MySQLHelper.RunCmd(verifyMySQLInstalledCmd).StdOut;
                 if (!commandStdOut.Contains(versionNumber) && !commandStdOut.Contains(versionNumber01))
                 {

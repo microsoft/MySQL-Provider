@@ -24,7 +24,7 @@ namespace MySQL
         paths.push_back( "/var/lib/mysql/my.cnf" );
         paths.push_back( "/usr/local/mysql/data/my.cnf" );
         paths.push_back( "/usr/local/var/my.cnf" );
-		paths.push_back( "/usr/my.cnf" );
+        paths.push_back( "/usr/my.cnf" );
 
         return;
     }

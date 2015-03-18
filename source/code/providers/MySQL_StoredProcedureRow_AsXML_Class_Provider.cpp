@@ -294,13 +294,14 @@ void MySQL_StoredProcedureRow_AsXML_Class_Provider::EnumerateInstances(
             return;
         }
 
-        // Construct the query string (something like 'call ? (?, ?, ?)' based on # of parameters)
+        // Construct the query string (something like 'call `spName` ("p1", "p2", "p3")' based on # of parameters)
         string strQuery = "call `" + spName + "` ";
         if ( parameters.size() )
         {
             for (vector<std::string>::const_iterator it = parameters.begin(); it != parameters.end(); ++it)
             {
-                strQuery += ( it == parameters.begin() ? "(?" : ", ?");
+                strQuery += ( it == parameters.begin() ? "(\"" : ", \"");
+                strQuery += pQuery->EscapeQuery(*it) + "\"";
             }
             strQuery += ");";
         }
@@ -322,7 +323,7 @@ void MySQL_StoredProcedureRow_AsXML_Class_Provider::EnumerateInstances(
             SCX_LOGTRACE(hLog, "Parameter substitution list: " + ( parameterList.size() ? parameterList : "<None>") );
         }
 
-        if ( ! pQuery->ExecuteQuery(strQuery.c_str(), parameters) )
+        if ( ! pQuery->ExecuteQuery(strQuery.c_str(), strQuery.size()) )
         {
             std::stringstream ss;
             ss << "Failure executing query to execute stored procedure, error "

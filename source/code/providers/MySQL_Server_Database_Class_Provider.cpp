@@ -250,17 +250,18 @@ void MySQL_Server_Database_Class_Provider::GetInstance(
         // Note that Size may be NULL if database has no tables
 
         util::unique_ptr<MySQL_Query> pQuery( g_pFactory->GetQuery() );
-        std::string strQuery = "select b.schema_name as \"Database\","
-                                   "COUNT(a.table_name) as \"Tables\", "
-                                   "SUM(a.data_length) + SUM(a.index_length) as \"Size (Bytes)\""
-                               " from information_schema.schemata b"
-                               " left join information_schema.tables a on b.schema_name = a.table_schema"
-                               " where b.schema_name = ? group by b.schema_name";
-        std::vector<std::string> parameters;
-        parameters.push_back(database);
+        std::string strQueryPrefix = "select b.schema_name as \"Database\","
+                                         "COUNT(a.table_name) as \"Tables\", "
+                                         "SUM(a.data_length) + SUM(a.index_length) as \"Size (Bytes)\""
+                                     " from information_schema.schemata b"
+                                     " left join information_schema.tables a on b.schema_name = a.table_schema"
+                                     " where b.schema_name = \"";
+        std::string strQuerySuffix = "\" group by b.schema_name";
+
+        std::string strQuery = strQueryPrefix + pQuery->EscapeQuery(database) + strQuerySuffix;
 
         MySQL_QueryResults databases;
-        if ( ! pQuery->ExecuteQuery(strQuery.c_str(), parameters)
+        if ( ! pQuery->ExecuteQuery(strQuery.c_str(), strQuery.size())
              || ! pQuery->GetMultiColumnResults(databases) )
         {
             std::stringstream ss;

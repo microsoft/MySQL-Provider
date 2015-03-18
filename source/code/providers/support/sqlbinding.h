@@ -148,14 +148,14 @@ class MySQL_Query_Rows : public MySQL_Query_Base
 public:
     explicit MySQL_Query_Rows(SCXCoreLib::SCXHandle<MySQL_Dependencies> deps)
     : m_log(SCXCoreLib::SCXLogHandleFactory::GetLogHandle(L"mysql.query.rows")), m_deps(deps),
-      m_sqlStatement(NULL), m_bindInParamLength(NULL),
-      m_bindOutParams(NULL), m_bindOutResultData(NULL), m_bindOutParamLength(NULL),
-      m_fQueryForResults(false), m_columnCount(0)
+      m_sqlResult(NULL), m_fQueryForResults(false), m_columnCount(0)
     { }
     virtual ~MySQL_Query_Rows();
     virtual void Reset();
 
-    virtual bool ExecuteQuery( const char* query, const std::vector<std::string>& parameters );
+    virtual const std::string EscapeQuery( const std::string& query );
+
+    virtual bool ExecuteQuery( const char* query, unsigned int queryLength = 0 );
     virtual unsigned int GetColumnCount() const { return m_columnCount; }
 
     virtual bool GetColumnNames( std::vector<std::string>& columnNames );
@@ -165,12 +165,7 @@ protected:
     SCXCoreLib::SCXLogHandle m_log;
     SCXCoreLib::SCXHandle<MySQL_Dependencies> m_deps;
 
-    MYSQL_STMT* m_sqlStatement;
-    long unsigned int* m_bindInParamLength;
-
-    MYSQL_BIND* m_bindOutParams;
-    char *m_bindOutResultData;
-    long unsigned int* m_bindOutParamLength;
+    MYSQL_RES* m_sqlResult;
 
     bool m_fQueryForResults;
     unsigned int m_columnCount;
@@ -186,8 +181,12 @@ public:
     { }
     virtual ~MySQL_Query() {}
 
-    virtual bool ExecuteQuery( const char* query );
-    virtual bool ExecuteQuery( const char* query, const std::vector<std::string>& parameters );
+    virtual const std::string EscapeQuery( const std::string& query )
+    {
+        return m_rowHandler.EscapeQuery(query);
+    }
+
+    virtual bool ExecuteQuery( const char* query, unsigned int queryLength = 0 );
 
     virtual bool GetResults(std::map<std::string, std::string>& results);
     virtual bool GetMultiColumnResults(MySQL_QueryResults& results) const;

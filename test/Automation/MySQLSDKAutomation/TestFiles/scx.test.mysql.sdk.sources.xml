@@ -1,7 +1,7 @@
 ﻿<varmap assembly="..\Scx.Test.MySQL.SDK.MySQLSDKTests.dll" contact="v-litin" dsc="MySQL SDK-based BVT" owner="v-litin" xmlns="http://smxinfranet/schemas/mcf/2002/01/varmap">
   <!--SDk Test Cases-->
   <!--Monitor[30]-->
-  <var set="1" lvl="0" vid="797304" cid="AvailabilityHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.AvailabilityHealth" dsc="Verify MySQL Server status Monitor become Unhealthy when remove MySQL-cimprove package" permutation="rows">
+  <var set="2" lvl="0" vid="797304" cid="AvailabilityHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.AvailabilityHealth" dsc="Verify MySQL Server status Monitor become Unhealthy when remove MySQL-cimprove package" permutation="rows">
     <recm key="needUninstallMySQL">
       <val>true</val>
     </recm>
@@ -12,10 +12,13 @@
       <val>Uninitialized</val>
     </recm>
   </var>
-  
+
   <var set="1" lvl="1" vid="797313" cid="PerformanceHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Connection: Verify if the MySQL server Abort Connection Percent become Error when Abort Connection Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlAbortConnection.bat %hostname% 10</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>%restartMySQLCmd%</val>
     </recm>
     <recm key="ActionType">
       <val>Server</val>
@@ -56,6 +59,9 @@
     <recm key="ActionCmd">
       <val>sqlAbortConnection.bat %hostname% 10</val>
     </recm>
+    <recm key="PostCmd">
+      <val>%restartMySQLCmd%</val>
+    </recm>
     <recm key="ActionType">
       <val>Server</val>
     </recm>
@@ -90,7 +96,7 @@
       <val>Warning</val>
     </recm>
   </var>
- 
+
   <var set="1" lvl="1" vid="797315" cid="PerformanceHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Connection: Verify if the MySQL server Connection use Percent become Error when Connection use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlMultiConnection.bat %hostname% 5</val>
@@ -129,7 +135,7 @@
       <val>Error</val>
     </recm>
   </var>
- 
+
   <var set="1" lvl="1" vid="797316" cid="PerformanceHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Connection: Verify if the MySQL server Connection use Percent become Warning when Connection use Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
       <val>sqlMultiConnection.bat %hostname% 5</val>
@@ -223,6 +229,9 @@
     <recm key="ExpectedState">
       <val>Error</val>
     </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
+    </recm>
   </var>
 
   <var set="1" lvl="1" vid="797318" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="InnoDB Buffer: Verify if the MySQL server Buffer Pool Hit Percent become Warning when Buffer Pool Hit Percent is reached Warning Threshold." permutation="rows">
@@ -263,6 +272,9 @@
     </recm>
     <recm key="ExpectedState">
       <val>Warning</val>
+    </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
     </recm>
   </var>
 
@@ -337,7 +349,7 @@
       <val>10</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>95</val>
+      <val>110</val>
     </recm>
     <recm key="ExpectedState">
       <val>Warning</val>
@@ -1328,26 +1340,21 @@
   <var set="2" lvl="1" vid="799578" cid="performancecollectionHealth-MySqlServerInnoDBBufferPool" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceCollectionHealth" dsc="This test will test Performance Collection Rule 799578,799582,7995810" permutation="rows">
     <recm key="entityname">
       <val>MySQL Server Buffer Pool Hit Percent Collection</val>
-      <val>MySQL Server Buffer Pool Write Wait Percent Collection</val>
       <val>MySQL Server Buffer Pool Use Percent Collection</val>
     </recm>
     <recm key="monitorcontext">
-      <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
       <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
       <val>Microsoft.MySQLServer.ManagedServer.Unix</val>
     </recm>
     <recm key="monitortarget">
       <val></val>
       <val></val>
-      <val></val>
     </recm>
     <recm key="ruleName">
       <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_HitPct.Collection</val>
-      <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_WriteWaitPct.Collection</val>
       <val>Microsoft.MySQLServer.ManagedServer.Unix.InnoDB_BufferPool_UsePct.Collection</val>
     </recm>
     <recm key="pattern">
-      <val>^[-]?([0-9]*\.[0-9]+|[0-9]+)$</val>
       <val>^[-]?([0-9]*\.[0-9]+|[0-9]+)$</val>
       <val>^[-]?([0-9]*\.[0-9]+|[0-9]+)$</val>
     </recm>
@@ -1497,16 +1504,16 @@
       <val>^[-]?([0-9]*\.[0-9]+|[0-9]+)$</val>
     </recm>
     <recm key="setupcommand">
-      <val>mysql -u -p -E -e "use test;Drop table testtb;";mysql -u -p -E -e "use test;create table testtb(pid int,name varchar(20));Insert into testtb values(1,"01");"</val>
+      <val>mysql -E -e "use test;Drop table testtb;";mysql -E -e "create database test";mysql -E -e "use test;create table testtb(pid int,name varchar(20));Insert into testtb values(1,"01");"</val>
     </recm>
     <recm key="runcommand">
-      <val>mysqldump -u root --password=OpsMgr2007R2 test>/tmp/test.sql;mysql -u -p -E -e "use test;Drop table testtb;Drop database test;"</val>
+      <val>mysqldump -u root --password=OpsMgr2007R2 test>/tmp/test.sql;mysql -E -e "use test;Drop table testtb;Drop database test;"</val>
     </recm>
     <recm key="verifycommand">
-      <val>mysql -u -p -E -e "create database test;";mysql -u root --password=OpsMgr2007R2 test &lt;/tmp/test.sql</val>
+      <val>mysql -E -e "create database test;";mysql -u root --password=OpsMgr2007R2 test &lt;/tmp/test.sql</val>
     </recm>
     <recm key="cleanupcommand">
-      <val>mysql -u -p -E -e "use test;Drop table testtb;"</val>
+      <val>mysql -E -e "use test;Drop table testtb;"</val>
     </recm>
   </var>
   <grp cls="Scx.Test.MySQL.SDK.MySQLSDKTests.GroupHelper">
@@ -1578,6 +1585,4 @@
     <rec key="mySQLAddNonSuperUserAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxuser Password scxuser }</rec>
     <varref />
   </grp>
-
-
 </varmap>

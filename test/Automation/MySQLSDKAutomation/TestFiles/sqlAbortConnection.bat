@@ -26,6 +26,7 @@ Set /A _RND=_RND%%%_Len%
 SET _RndAlphaNum=!_RndAlphaNum!!_Alphanumeric:~%_RND%,1!
 If !_count! lss %_RNDLength% goto _loop
 Echo Random string is !_RndAlphaNum!
+c:\temp\mysqlslap.exe --user=root --host=%1 --concurrency=8 --iterations=3 --create-schema=employees --query="SELECT * FROM dept_emp;" --verbose
 c:\temp\mysqlslap.exe --user=root -p=123 --host=%1 --concurrency=10 --iterations=5 --create-schema=employees --query="SELECT * FROM dept_emp;" --verbose
 GOTO :_Repeat
 :_End

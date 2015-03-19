@@ -11,7 +11,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 {
     using System;
     using System.Collections.Generic;
-    using Infra.Frmwrk;    
+    using Infra.Frmwrk;
     using Microsoft.EnterpriseManagement.Monitoring;
     using Scx.Test.Common;
     using Scx.Test.MySQL.SDK.MySQLSDKHelper;
@@ -68,7 +68,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <summary>
         /// The Location of MySQL Cim module
         /// </summary>
-        private string tempMySQLCIMModuleLocation= @"C:\Windows\Temp\MySQLCimProv";
+        private string tempMySQLCIMModuleLocation = @"C:\Windows\Temp\MySQLCimProv";
 
         #endregion Private Fields
 
@@ -128,7 +128,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 string monitorInstanceClass = ctx.Records.GetValue("InstanceClass");
 
-                this.mysqlInstance = this.monitorHelper.GetMonitoringObject(monitorInstanceClass,this.clientInfo.HostName);
+                this.mysqlInstance = this.monitorHelper.GetMonitoringObject(monitorInstanceClass, this.clientInfo.HostName);
                 // Configure the agent maintenance account according to the cases. using root account by default.
                 if (ctx.Records.HasKey("UseAgentMaintenanceAccount") && ctx.Records.GetValue("UseAgentMaintenanceAccount").Equals("true"))
                 {
@@ -158,7 +158,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
                     this.mysqlAgentHelper.UninstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
                 }
-             }
+            }
             catch (Exception ex)
             {
                 this.Abort(ctx, ex.ToString());
@@ -180,7 +180,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             string expectedResult = ctx.Records.GetValue("ExpectedTaskStatus");
 
             ctx.Trc("SDKTests.ConsumerTaskHealth.Run: ConsumerTaskHealth test: " + entity);
-            
+
             try
             {
                 if (expectedResult.Equals("Fail"))
@@ -189,8 +189,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 }
                 else
                 {
-                this.taskResult = this.tasksHelper.RunConsumerTask(this.mysqlInstance, consumerTask);
-            }
+                    this.taskResult = this.tasksHelper.RunConsumerTask(this.mysqlInstance, consumerTask);
+                }
             }
             catch (Exception ex)
             {
@@ -213,7 +213,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 string expectedOutputKeyWord = ctx.Records.GetValue("expectedOutputKeyWord");
 
                 if (this.taskResult != null)
-                {   
+                {
                     ctx.Trc(String.Format("Pass: Consumer task execute fine:{0}", ctx.Records.GetValue("taskname")));
                 }
                 else
@@ -243,12 +243,12 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 if (!(expectedTaskStatus == Microsoft.EnterpriseManagement.Runtime.TaskStatus.Failed))
                 {
-                bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
+                    bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
                     if (!mysqlAgentInstalled & ctx.Records.GetValue("ExpectedTaskStatus").Contains("Success"))
-                {
-                    this.Fail(ctx, "Fail: didn't find CIM prov installed on client");
+                    {
+                        this.Fail(ctx, "Fail: didn't find CIM prov installed on client");
+                    }
                 }
-            }
             }
             catch (Exception ex)
             {
@@ -274,7 +274,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             {
                 useTaskInstallMySQLAgent = true;
             }
-            
+
             string needRemoveDefaultAgent = ctx.Records.GetValue("RemoveDefaultAgent");
             if (needRemoveDefaultAgent.ToLower().Contains("true"))
             {
@@ -289,7 +289,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 }
                 else
                 {
-                    string fullMySQLAgentPath = tempMySQLCIMModuleLocation;
+                    string fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
                     string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
                     if (mysqlAgentInstalled)
                     {

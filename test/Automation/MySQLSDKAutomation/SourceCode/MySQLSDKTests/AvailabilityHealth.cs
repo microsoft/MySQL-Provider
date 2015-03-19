@@ -132,7 +132,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             try
             {
                 if (!(string.IsNullOrEmpty(action)))
-                { 
+                {
                     ctx.Alw("Running command synchronously (may take a while): " + action);
                     RunCmd(action);
                 }
@@ -217,6 +217,13 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 string fullMySQLAgentPath = ctx.ParentContext.Records.GetValue("mysqlAgentPath");
                 string tag = ctx.ParentContext.Records.GetValue("mysqlTag");
                 this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
+
+                // Add the mySQL Auth for superuser and nonsuperuser
+                string mySQLAddAuthCmd = ctx.ParentContext.Records.GetValue("mySQLAddAuthCmd");
+                this.mysqlAgentHelper.SetupMySqlAuth(mySQLAddAuthCmd);
+
+                string mySQLAddNonSuperUserAuthCmd = ctx.ParentContext.Records.GetValue("mySQLAddNonSuperUserAuthCmd");
+                this.mysqlAgentHelper.SetupMySqlAuthForNonSuperUser(mySQLAddNonSuperUserAuthCmd);
             }
             //remove all scripts
             RunCmd("rm -rf /tmp/*.sh");

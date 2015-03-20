@@ -59,10 +59,12 @@ usage()
 {
     echo "usage: $1 [OPTIONS]"
     echo "Options:"
+    echo "  --extract              Extract contents and exit."
     echo "  --force                Force upgrade (override version checks)."
     echo "  --install              Install the package from the system."
     echo "  --purge                Uninstall the package and remove all related data."
     echo "  --remove               Uninstall the package from the system."
+    echo "  --restart-deps         Reconfigure and restart dependent services (no-op)."
     echo "  --upgrade              Upgrade the package in the system."
     echo "  --debug                use shell debug mode."
     echo "  -? | --help            shows this usage text."
@@ -132,17 +134,17 @@ pkg_rm() {
             ulinux_detect_installer
             if [ "$INSTALLER" = "DPKG" ]; then
                 if [ "$installMode" = "P" ]; then
-                    dpkg --purge $1 1> /dev/null 2> /dev/null
+                    dpkg --purge $1
                 else
-                    dpkg --remove $1 1> /dev/null 2> /dev/null
+                    dpkg --remove $1
                 fi
             else
-                rpm --erase $1 1> /dev/null 2> /dev/null
+                rpm --erase $1
             fi
             ;;
 
         Linux_REDHAT|Linux_SUSE)
-            rpm --erase $1 1> /dev/null 2> /dev/null
+            rpm --erase $1
             ;;
 
         *)
@@ -216,6 +218,12 @@ while [ $# -ne 0 ]; do
             shift 2
             ;;
 
+        --extract)
+            verifyNoInstallationOption
+            installMode=E
+            shift 1
+            ;;
+
         --force)
             forceFlag=true
             shift 1
@@ -238,6 +246,11 @@ while [ $# -ne 0 ]; do
             verifyNoInstallationOption
             installMode=R
             shouldexit=true
+            shift 1
+            ;;
+
+        --restart-deps)
+            # No-op for MySQL, as there are no dependent services
             shift 1
             ;;
 
@@ -286,6 +299,11 @@ case "$PLATFORM" in
         cleanup_and_exit 2
 esac
 
+if [ -z "${installMode}" ]; then
+    echo "$0: No options specified, specify --help for help" >&2
+    cleanup_and_exit 3
+fi
+
 # Do we need to remove the package?
 set +e
 if [ "$installMode" = "R" -o "$installMode" = "P" ]; then
@@ -321,10 +339,6 @@ if [ ${STATUS} -ne 0 ]; then
     cleanup_and_exit ${STATUS}
 fi
 
-# Default behavior is to extract the bundle and then exit
-
-[ -z "$installMode" ] && cleanup_and_exit 0
-
 #
 # Do stuff after extracting the binary here, such as actually installing the package.
 #
@@ -332,6 +346,11 @@ fi
 EXIT_STATUS=0
 
 case "$installMode" in
+    E)
+        # Files are extracted, so just exit
+        cleanup_and_exit ${STATUS}
+        ;;
+
     I)
         echo "Installing MySQL agent ..."
 
@@ -350,7 +369,7 @@ case "$installMode" in
         ;;
 
     *)
-        echo "$0: Invalid setting of variable \$installMode, exiting" >&2
+        echo "$0: Invalid setting of variable \$installMode ($installMode), exiting" >&2
         cleanup_and_exit 2
 esac
 

@@ -2,7 +2,10 @@
 PF:	'Linux'
 
 %FindClientLibrary
-FindClientLibrary() {
+# Note: FindClientLibrary() is found in SCXCore/installer/oss-kits/mysql-oss-test.sh
+#       If this function is modified, modify in that file as well!
+FindClientLibrary()
+{
     MYSQL_NAME=libmysqlclient.so
     CLIENT_LIBRARY=
 

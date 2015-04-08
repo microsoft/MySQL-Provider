@@ -22,8 +22,8 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         string mysqlCmd = string.Empty;
         string installOlderMySQLCmd = string.Empty;
         bool isUpgrade = false;
-        string mysqlOlderAgentFullName = string.Empty;
-        string mysqlAgentFullName = string.Empty;
+        string omOlderAgentFullName = string.Empty;
+        string omAgentFullName = string.Empty;
         string commandStdOut = string.Empty;
         string expectedFolderCount = string.Empty;
         string verifyFolderExistCmd = string.Empty;
@@ -70,12 +70,10 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                 verifyMySQLInstalledCmd = ctx.Records.GetValue("verifyMySQLInstalledCmd");
             }
 
-            string mysqllocation = ctx.ParentContext.Records.GetValue("MySQLsLocation");
-            string oldMySQLlocation = ctx.Records.GetValue("oldMySQLsLocation");
-            this.mysqlOlderAgentFullName = SearchForMySQLInApcheAgentPath(oldMySQLlocation, this.MySQLTag);
-            this.mysqlAgentFullName = SearchForMySQLInApcheAgentPath(mysqllocation, this.MySQLTag);
-            this.CopyMySQLAgent(this.mysqlAgentFullName, "/tmp/");
-            this.CopyMySQLAgent(this.mysqlOlderAgentFullName, "/tmp/");
+            string omlocation = ctx.ParentContext.Records.GetValue("OMAgentLocation");
+            string oldOMlocation = ctx.ParentContext.Records.GetValue("oldOMAgentLocation");
+            this.omOlderAgentFullName = this.AgentHelper.SetOmAgentPath(oldOMlocation);
+            this.omAgentFullName = this.AgentHelper.SetOmAgentPath(omlocation);
 
             // install older mysql version.
             if (this.isUpgrade)
@@ -83,12 +81,14 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                 try
                 {
                     // Uninstall MySQL Agent. for upgrade test.
-                    this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
-                    this.MySQLHelper.RunCmd(string.Format(this.installOlderMySQLCmd, Path.GetFileName(this.mysqlOlderAgentFullName)));
+                    // this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
+                    this.AgentHelper.Uninstall();
+                    this.Wait(ctx);
+                    this.MySQLHelper.RunCmd(string.Format(this.installOlderMySQLCmd, Path.GetFileName(this.omOlderAgentFullName)));
                 }
                 catch (Exception e)
                 {
-                    throw new Exception("install older mysql CimProv agent failed: " + e.Message);
+                    // throw new Exception("install older mysql CimProv agent failed: " + e.Message);
                 }
             }
         }
@@ -103,11 +103,11 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
             {
                 if (isUpgrade)
                 {
-                    commandStdOut = this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.MySQLHelper.mysqlAgentName)).StdOut;
+                    commandStdOut = this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.omAgentFullName)).StdOut;
                 }
                 else
                 {
-                    this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, Path.GetFileName(this.mysqlOlderAgentFullName)));
+                    this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, Path.GetFileName(this.omOlderAgentFullName)));
                 }
             }
             catch (Exception e)
@@ -144,63 +144,15 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         {
             if (isUpgrade)
             {
-                this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
+                // this.AgentHelper.Uninstall();
+                // this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
             }
             else
             {
-                this.MySQLHelper.RunCmd(string.Format("sh /tmp/{0} --purge", Path.GetFileName(this.mysqlOlderAgentFullName)));
+                this.MySQLHelper.RunCmd(string.Format("sh /tmp/{0} --purge", Path.GetFileName(this.omOlderAgentFullName)));
             }
-            this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.MySQLHelper.mysqlAgentName));
+            this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.omAgentFullName));
             // the uninstall will be down via group clean up.
-        }
-
-        /// <summary>
-        /// CopyMySQLAgent
-        /// </summary>
-        /// <param name="mysqlAgentFullName">mysqlAgentFullName</param>
-        /// <param name="targetHostAgentloaclPath">targetHostAgentloaclPath</param>
-        public void CopyMySQLAgent(string mysqlAgentFullName, string targetHostAgentloaclPath)
-        {
-            CopyFileToHost(mysqlAgentFullName, targetHostAgentloaclPath + Path.GetFileName(mysqlAgentFullName));
-        }
-
-        /// <summary>
-        /// SearchForMySQLInApcheAgentPath
-        /// </summary>
-        /// <param name="apcheAgentFullloaclPath">apcheAgentFullloaclPath</param>
-        /// <param name="apcheTag">apcheTag</param>
-        /// <returns>apcheAgentFullNamePath</returns>
-        private static string SearchForMySQLInApcheAgentPath(string apcheAgentFullloaclPath, string apcheTag)
-        {
-            //"Searching for mysql in " + apcheAgentFullPath;
-            DirectoryInfo di = new DirectoryInfo(apcheAgentFullloaclPath);
-            FileInfo[] fi = di.GetFiles("*" + apcheTag + "*");
-            if (fi.Length == 0)
-            {
-                throw new Exception("Found no mysql installer matching MySQLTag: " + apcheTag);
-            }
-
-            if (fi.Length > 1)
-            {
-                throw new Exception("Found more than one mysql installer matching MySQLTag: " + apcheTag);
-            }
-
-            // User-specified MySQL path takes precedent
-            string mysqlAgentName = fi[0].FullName;
-            return mysqlAgentName;
-        }
-
-        /// <summary>
-        /// CopyFileToHost
-        /// </summary>
-        /// <param name="from">from</param>
-        /// <param name="to">to</param>
-        private void CopyFileToHost(string from, string to)
-        {
-
-            PosixCopy copyToHost = new PosixCopy(this.HostName, this.UserName, this.Password);
-            // Copy from server to Posix host
-            copyToHost.CopyTo(from, to);
         }
     }
 }

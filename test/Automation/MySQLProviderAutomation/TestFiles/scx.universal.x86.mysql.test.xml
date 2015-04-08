@@ -9,7 +9,7 @@
     <rec key="MySQL.VerifyMySQLInstalledCmd">dpkg -l |grep -i mysql-cimprov</rec>
   </snippet>
   <snippet id="LinuxInfo">
-    <rec key="Linux.Host">m50p-ora5-02</rec>
+    <rec key="Linux.Host">m50p-sles10-01</rec>
     <rec key="LocalIP">127.0.0.1</rec>
     <rec key="DefaultPort">3306</rec>
     <rec key="DefaultAuthorUser">root</rec>
@@ -463,6 +463,7 @@
   <var set="1" lvl="0" vid="727500" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProv" dsc="[MySQL]Verify if output the usage properly when type '--help' option" act="true">
     <rec key="mysqlCmd">sh /tmp/{0} --help</rec>
     <rec key="isHelpOption">true</rec>
+    <rec key="installLogKeyWorlds">usage</rec>
   </var>
 
   <!-- 727741-VerifyCimProvUpgradeOption -->
@@ -751,10 +752,11 @@
     <rec key="MySQLTag">universal.1.i686</rec>
     <rec key="InstallOMCmd">sh /tmp/{0} --install</rec>
     <rec key="UninstallOMCmd">sh /tmp/{0} --purge</rec>
-    <rec key="CleanupOMCmd"><![CDATA[sh /tmp/{0} --purge;rm -rf /opt/microsoft;rm -rf /etc/opt/microsoft;rm -rf /var/opt/microsoft]]></rec>
+    <rec key="CleanupOMCmd"><![CDATA[sh /tmp/{0} --purge;]]></rec>
     <rec key="installonly">false</rec>
     <rec key="knownIssueFormat">Known Issue: WI {0}: '{1}'</rec>
     <rec key="OMAgentLocation"><![CDATA[C:\Program Files\Microsoft System Center 2012 R2\Operations Manager\Server\AgentManagement\UnixAgents]]></rec>
+    <rec key="oldOMAgentLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
     <!--cimprov-->
     <rec key="MySQLsLocation"><![CDATA[C:\MySQL\cimprov]]></rec>
     <rec key="MySQLConfigForR"><![CDATA[C:\MySQL\cimprov\mycnf\R]]></rec>
@@ -806,18 +808,23 @@
 
     <!--Expected MySQL CollectionID-->
     <rec key="defaultCollectionID">[lL]inux</rec>
+    <rec key="ProductVersionM50">5.0.96</rec>
+    <rec key="ProductVersionM51">5.1</rec>
+    <rec key="ProductVersionM55">5.5</rec>
+    <rec key="ProductVersionM56">5.6</rec>
+    <rec key="ProductVersionM57">5.7</rec>
 
     <!--Expected MySQL M50P-ORA5-01 Version-->
-    <rec key="ProductVersionM50PORA5">5.0.96</rec>
-    <rec key="defaultConfigurationFileM50PORA5">/etc/my.cnf</rec>
-    <rec key="defaultErrorLogFileM50PORA5">/var/log/mysql/error.log</rec>
-    <rec key="defaultSocketFileM50PORA5">/var/lib/mysql/mysql.sock</rec>
-    <rec key="defaultDataDirectoryM50PORA5">/var/lib/mysql/</rec>
-    <rec key="defaultMultiProductVersionM50PORA5">5.0.96</rec>
-    <rec key="defaultMultiConfigurationFileM50PORA5">/etc/my.cnf</rec>
-    <rec key="defaultMultiErrorLogFileM50PORA5">/var/log/mysql/error2.log</rec>
-    <rec key="defaultMultiSocketFileM50PORA5">/var/lib/mysql/mysql2.sock</rec>
-    <rec key="defaultMultiDataDirectoryM50PORA5">/var/lib/mysql/data/</rec>
+    <!--<rec key="ProductVersionM50PORA5">5.0.96</rec>-->
+    <rec key="defaultConfigurationFile">/etc/my.cnf</rec>
+    <rec key="defaultErrorLogFile">/var/log/mysql/error.log</rec>
+    <rec key="defaultSocketFile">/var/lib/mysql/mysql.sock</rec>
+    <rec key="defaultDataDirectory">/var/lib/mysql/</rec>
+    <!--<rec key="defaultMultiProductVersion">5.0.96</rec>-->
+    <rec key="defaultMultiConfigurationFile">/etc/my.cnf</rec>
+    <rec key="defaultMultiErrorLogFile">/var/log/mysql/error2.log</rec>
+    <rec key="defaultMultiSocketFile">/var/lib/mysql/mysql2.sock</rec>
+    <rec key="defaultMultiDataDirectory">/var/lib/mysql/data</rec>
     <varref />
   </grp>
 </varmap>

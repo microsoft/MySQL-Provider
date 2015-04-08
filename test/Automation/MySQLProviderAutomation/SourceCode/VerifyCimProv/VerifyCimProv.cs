@@ -34,6 +34,9 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
             // get value from base class.
             this.GetValueFromVarList(ctx);
 
+            string omlocation = ctx.ParentContext.Records.GetValue("OMAgentLocation");
+            this.AgentHelper.SetOmAgentPath(omlocation);
+
             // get value from current case.
             mysqlCmd = ctx.Records.GetValue("mysqlCmd");
             if (string.IsNullOrEmpty(this.mysqlCmd))
@@ -70,8 +73,10 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
             // if has to install twice don't need uninstall.
             if (!ctx.Records.HasKey("installTwice") && !ctx.Records.HasKey("isHelpOption") && !ctx.Records.HasKey("isRemoveOption"))
             {
-                // Uninstall MySQL Agent. 
-                this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
+                // Uninstall Agent. 
+                this.AgentHelper.Uninstall();
+                this.Wait(ctx);
+                // this.MySQLHelper.UninstallMySQLAgent(this.UninstallMySQLCmd);
             }
 
         }
@@ -84,7 +89,7 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         {
             try
             {
-                commandStdOut = this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.MySQLHelper.mysqlAgentName)).StdOut;
+                commandStdOut = this.MySQLHelper.RunCmd(string.Format(this.mysqlCmd, this.AgentHelper.AgentName)).StdOut;
             }
             catch (Exception e)
             {
@@ -104,7 +109,7 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         {
             if (!this.isInValidInstall && !ctx.Records.HasKey("isHelpOption") && !ctx.Records.HasKey("isRemoveOption"))
             {
-                this.VerifyCommandStdOutLog(commandStdOut, this.installLogKeyWorlds, true);
+                //  this.VerifyCommandStdOutLog(commandStdOut, this.installLogKeyWorlds, true);
 
                 this.VerifyFolderExist(verifyFolderExistCmd, this.expectedFolderCount, true);
 
@@ -133,7 +138,8 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         {
             if ((this.isInValidInstall && !ctx.Records.HasKey("installTwice")) || ctx.Records.HasKey("isRemoveOption"))
             {
-                this.MySQLHelper.InstallMySQLAgent(this.InstallMySQLCmd);
+                // install agent.
+                this.AgentHelper.Install();
             }
             // the uninstall will be down via group clean up.
         }

@@ -11,9 +11,7 @@ namespace Scx.Test.Common
 {
     using System;
     using System.IO;
-    using System.Linq;
     using System.Net;
-    using System.Text.RegularExpressions;
 
     /// <summary>
     /// The AgentHelper class provides functionality to install and remove
@@ -103,11 +101,35 @@ namespace Scx.Test.Common
         /// </summary>
         private ScxLogDelegate logger = ScxMethods.ScxNullLogDelegate;
 
+        /// <summary>
+        /// platformTag eg.sles.10.x86. 
+        /// </summary>
+        private string platformTag;
+
+        /// <summary>
+        /// platformTag eg.sles.10.x86. 
+        /// </summary>
+        public string PlatformTag
+        {
+            get { return platformTag; }
+            set { platformTag = value; }
+        }
+
+        /// <summary>
+        /// AgentName eg.scx-1.6.0-164.sles.10.x86.sh
+        /// </summary>
+        public string AgentName
+        {
+            get { return agentName; }
+            set { agentName = value; }
+        }
+
         #endregion Private Fields
+
 
         #region Constructors
 
-         /// <summary>
+        /// <summary>
         /// Initializes a new instance of the AgentHelper class.
         /// </summary>
         /// <param name="logger">Log delegate method (takes single string as argument)</param>
@@ -135,6 +157,7 @@ namespace Scx.Test.Common
             this.hostName = hostName;
             this.userName = userName;
             this.password = password;
+            this.PlatformTag = GetPlatformTag(this.hostName);
         }
 
         /// <summary>
@@ -180,13 +203,14 @@ namespace Scx.Test.Common
             this.password = password;
             this.installOmCmd = installOmCmd;
             this.uninstallOmCmd = uninstallOmCmd;
+            this.PlatformTag = GetPlatformTag(this.hostName);
         }
 
         /// <summary>
         /// Need this for calling the public methods directly from the varmap.
         /// </summary>
         public AgentHelper() { }
-     
+
         #endregion Constructors
 
         #region Properties
@@ -410,7 +434,7 @@ namespace Scx.Test.Common
             }
             uninstallOmCmd = string.Format(uninstallOmCmd, this.agentName);
             genericLogger.Write("Uninstalling agent: from {0}: {1} ", hostName, uninstallOmCmd);
-          
+
             RunPosixCmd execUninstall = new RunPosixCmd(hostName, userName, password)
             {
                 FileName = uninstallOmCmd,
@@ -426,15 +450,17 @@ namespace Scx.Test.Common
             {
                 this.logger(string.Format("Uninstall agent from '{0}' failed. Error message: '{1}'", hostName, e.ToString()));
             }
+
         }
 
         /// <summary>
-        /// Set the OM FullPath
+        /// SetOmAgentFullPath
         /// </summary>
         /// <param name="omiAgentPath">omiAgentPath</param>
         /// <param name="platformTag">platformTag</param>
-        /// <param name="needCopyFile">needCopyFile or not</param>
-        public void SetOmAgentFullPath(string omiAgentPath, string platformTag, bool needCopyFile = false)
+        /// <param name="needCopyFile">needCopyFile</param>
+        /// <returns>agentName</returns>
+        public string SetOmAgentFullPath(string omiAgentPath, string platformTag, bool needCopyFile = false)
         {
             this.DirectoryTag = platformTag;
             //"Searching for omi in " + this.FullAgentPath;
@@ -452,7 +478,7 @@ namespace Scx.Test.Common
 
             // User-specified MySQL path takes precedent
             this.FullAgentPath = fi[0].FullName;
-            this.agentName = Path.GetFileName(this.FullAgentPath);
+            this.AgentName = Path.GetFileName(this.FullAgentPath);
 
             if (needCopyFile)
             {
@@ -461,6 +487,17 @@ namespace Scx.Test.Common
                 this.logger("Copying MySQL from drop server to host");
                 copyToHost.CopyTo(this.FullAgentPath, "/tmp/" + this.agentName);
             }
+            return this.AgentName;
+        }
+
+        /// <summary>
+        /// SetOmAgentPath
+        /// </summary>
+        /// <param name="omilocation">omilocation</param>
+        /// <returns></returns>
+        public string SetOmAgentPath(string omilocation)
+        {
+            return this.SetOmAgentFullPath(omilocation, this.platformTag, true);
         }
 
         /// <summary>
@@ -581,6 +618,40 @@ namespace Scx.Test.Common
             {
                 throw new Exception("Start OM Agent failed: " + e.Message);
             }
+        }
+
+        /// <summary>
+        /// GetPlatformTag
+        /// </summary>
+        /// <param name="hostName">hostName</param>
+        /// <returns>platformtag</returns>
+        public string GetPlatformTag(string hostName)
+        {
+            string platformtagstr = string.Empty;
+            if (hostName.ToLower().Contains("rhel") || hostName.ToLower().Contains("sles"))
+            {
+                string[] names = hostName.Split('-');
+                platformtagstr = names[1].Substring(0, 4) + "." + (hostName.ToLower().Contains("sles") ? names[1].Substring(4, 2) : names[1].Substring(4, 1));
+            }
+            else if (hostName.ToLower().Contains("deb") || hostName.ToLower().Contains("ubun"))
+            {
+                platformtagstr = ".universald.1";
+            }
+            else
+            {
+                platformtagstr = ".universalr.1";
+            }
+
+            if (hostName.Contains("64"))
+            {
+                platformtagstr = platformtagstr + ".x64";
+            }
+            else
+            {
+                platformtagstr = platformtagstr + ".x86";
+            }
+
+            return platformtagstr;
         }
         #endregion Public Methods
 

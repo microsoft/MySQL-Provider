@@ -19,6 +19,20 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
     public class VerifyCimProvHelper
     {
         /// <summary>
+        /// new a AgentHelper
+        /// </summary>
+        private AgentHelper agentHelper;
+
+        /// <summary>
+        /// new a AgentHelper
+        /// </summary>
+        public AgentHelper AgentHelper
+        {
+            get { return agentHelper; }
+            set { agentHelper = value; }
+        }
+
+        /// <summary>
         /// new a mysqlHelper
         /// </summary>
         private MySQLHelper mysqlHelper;
@@ -75,45 +89,44 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         }
 
         /// <summary>
-        /// Required: Command to install MySQL
+        /// Required: Command to install om
         /// </summary>
-        private string installMySQLCmd;
+        private string installOmCmd;
 
         /// <summary>
-        /// Required: Command to install MySQL
+        /// Required: Command to Install Om
         /// </summary>
-        public string InstallMySQLCmd
+        public string InstallOmCmd
         {
-            get { return installMySQLCmd; }
-            set { installMySQLCmd = value; }
+            get { return installOmCmd; }
+            set { installOmCmd = value; }
+        }
+        /// <summary>
+        /// Required: Command to Uninstall Om 
+        /// </summary>
+        private string uninstallOmCmd;
+
+        /// <summary>
+        /// Required: Command to Uninstall Om 
+        /// </summary>
+        public string UninstallOmCmd
+        {
+            get { return uninstallOmCmd; }
+            set { uninstallOmCmd = value; }
         }
 
         /// <summary>
-        /// Required: Command to remove MySQL 
+        /// Required: Command to clean om
         /// </summary>
-        private string uninstallMySQLCmd;
+        private string cleanupOmCmd;
 
         /// <summary>
-        /// Required: Command to remove MySQL 
+        /// Required: Command to clean om.
         /// </summary>
-        public string UninstallMySQLCmd
+        public string CleanupOmCmd
         {
-            get { return uninstallMySQLCmd; }
-            set { uninstallMySQLCmd = value; }
-        }
-
-        /// <summary>
-        /// Required: Command to clean mysql:Uninstall and delete direcotries
-        /// </summary>
-        private string cleanupMySQLCmd;
-
-        /// <summary>
-        /// Required: Command to clean mysql:Uninstall and delete direcotries
-        /// </summary>
-        public string CleanupMySQLCmd
-        {
-            get { return cleanupMySQLCmd; }
-            set { cleanupMySQLCmd = value; }
+            get { return cleanupOmCmd; }
+            set { cleanupOmCmd = value; }
         }
 
         /// <summary>
@@ -131,23 +144,13 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         }
 
         /// <summary>
-        ///  Required: mysql Location path on local machine
-        /// </summary>
-        private string mysqlLocation;
-
-        /// <summary>
-        ///  Required: mysql Location path on local machine
-        /// </summary>
-        public string MySQLLocation
-        {
-            get { return mysqlLocation; }
-            set { mysqlLocation = value; }
-        }
-
-        /// <summary>
         ///  Optional: useNonSuperUser
         /// </summary>
         private bool useNonSuperUser;
+        /// <summary>
+        /// Time to wait before attempting retry of query after a failed query
+        /// </summary>
+        private TimeSpan queryRetryInterval = new TimeSpan(0, 0, 20);
 
         /// <summary>
         ///  Optional: useNonSuperUser
@@ -196,39 +199,29 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                 throw new VarAbort("password not specified");
             }
 
-            this.InstallMySQLCmd = ctx.ParentContext.Records.GetValue("installMySQLCmd");
-            if (String.IsNullOrEmpty(this.InstallMySQLCmd))
+            this.InstallOmCmd = ctx.ParentContext.Records.GetValue("InstallOMCmd");
+            if (String.IsNullOrEmpty(this.InstallOmCmd))
             {
-                throw new VarAbort("hostname not specified");
+                throw new VarAbort("InstallOMCmd not specified");
             }
 
-            this.UninstallMySQLCmd = ctx.ParentContext.Records.GetValue("UninstallMySQLCmd");
-            if (String.IsNullOrEmpty(this.UninstallMySQLCmd))
+            this.UninstallOmCmd = ctx.ParentContext.Records.GetValue("UninstallOMCmd");
+            if (String.IsNullOrEmpty(this.UninstallOmCmd))
             {
-                throw new VarAbort("hostname not specified");
+                throw new VarAbort("UninstallOMCmd not specified");
             }
 
-            this.CleanupMySQLCmd = ctx.ParentContext.Records.GetValue("CleanupMySQLCmd");
-            if (String.IsNullOrEmpty(this.CleanupMySQLCmd))
+            this.CleanupOmCmd = ctx.ParentContext.Records.GetValue("CleanupOMCmd");
+            if (String.IsNullOrEmpty(this.CleanupOmCmd))
             {
-                throw new VarAbort("hostname not specified");
+                throw new VarAbort("CleanupOMCmd not specified");
             }
 
-            this.MySQLTag = ctx.ParentContext.Records.GetValue("MySQLTag");
-            if (String.IsNullOrEmpty(this.MySQLTag))
-            {
-                throw new VarAbort("hostname not specified");
-            }
-
-            this.MySQLLocation = ctx.ParentContext.Records.GetValue("MySQLsLocation");
-            if (String.IsNullOrEmpty(this.MySQLLocation))
-            {
-                throw new VarAbort("MySQLsLocation not specified");
-            }
-            mysqlHelper = new MySQLHelper(ctx.Trc, this.hostName, this.userName, this.password, this.MySQLLocation, this.MySQLTag, true);
+            mysqlHelper = new MySQLHelper(ctx.Trc, this.hostName, this.userName, this.password);
+            agentHelper = new AgentHelper(ctx.Trc, this.hostName, this.userName, this.password, this.installOmCmd, this.cleanupOmCmd);
 
             // get OS Info if the OS is Deb or UBUN it will return true
-            GetOSIsDebInfo();
+            GetOSIsDebInfo(ctx);
         }
 
         #region HelpMethod
@@ -237,10 +230,12 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         /// GetOSIsDebInfo
         /// </summary>
         /// <returns>isDeb</returns>
-        private bool GetOSIsDebInfo()
+        private bool GetOSIsDebInfo(IContext ctx)
         {
             string getOSDistCmd = "python -c \"import platform; print platform.dist()\"";
-            RunPosixCmd execCmd = this.MySQLHelper.RunCmd(getOSDistCmd);
+            string password = ctx.ParentContext.Records.GetValue("password");
+            RunPosixCmd execCmd = new RunPosixCmd(this.HostName, "root", password);
+            execCmd.RunCmd(getOSDistCmd);
             if (execCmd.StdOut.ToLower().Contains("debian") || execCmd.StdOut.ToLower().Contains("ubuntu"))
             {
                 this.isDeb = true;
@@ -334,24 +329,12 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         {
             try
             {
-                // verify the mysql pakage version.
-                // file name like mysql-cimprov-1.0.0-29.universal.1.i686.sh.
-                // version is 1.0.0.29.
-                // get expected version number:
-                string[] nameParts = this.MySQLHelper.mysqlAgentName.Split('-');
-                string versionNumber = nameParts[2] + '.' + nameParts[3].Split('.')[0];
-                string versionNumber01 = nameParts[2] + '-' + nameParts[3].Split('.')[0];
-
                 // get acutally version number using cmd.
                 if (!this.isDeb)
                 {
                     verifyMySQLInstalledCmd = "rpm -qa|grep -i mysql-cimprov";
                 }
                 string commandStdOut = this.MySQLHelper.RunCmd(verifyMySQLInstalledCmd).StdOut;
-                if (!commandStdOut.Contains(versionNumber) && !commandStdOut.Contains(versionNumber01))
-                {
-                    throw new VarAbort("verify the mysql version failed");
-                }
             }
             catch
             {
@@ -360,6 +343,16 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
                     throw new VarAbort("running verifyMySQLInstalledCmd failed");
                 }
             }
+        }
+
+        /// <summary>
+        /// Generic wait method for use to allow the state of the installed agent to stabilize
+        /// </summary>
+        /// <param name="ctx">Current MCF context</param>
+        public void Wait(IContext ctx)
+        {
+            ctx.Trc(string.Format("Waiting for {0}...", this.queryRetryInterval));
+            System.Threading.Thread.Sleep(this.queryRetryInterval);
         }
 
         #endregion HelpMethod

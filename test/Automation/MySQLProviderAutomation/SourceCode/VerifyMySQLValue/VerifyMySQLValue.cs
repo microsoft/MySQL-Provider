@@ -217,7 +217,6 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
 
             // slowQueryPct
             double queries = 0;
-            GetMySqlVersion();
             if (this.IsMySql5)
             {
                 string questions = this.GetVariablesValueFromMySQLCmd("SHOW GLOBAL STATUS where variable_name=\"Questions\"");

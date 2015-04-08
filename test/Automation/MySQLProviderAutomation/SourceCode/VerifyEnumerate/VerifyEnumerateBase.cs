@@ -198,6 +198,59 @@ namespace Scx.Test.MySQL.Provider
         }
 
         /// <summary>
+        /// isMySql51. default should be false.
+        /// </summary>
+        private bool isMySql51 = false;
+
+        /// <summary>
+        /// isMySql51. default should be false.
+        /// </summary>
+        public bool IsMySql51
+        {
+            get { return isMySql51; }
+            set { isMySql51 = value; }
+        }
+        /// <summary>
+        /// isMySql55. default should be false.
+        /// </summary>
+        private bool isMySql55 = false;
+
+        /// <summary>
+        /// isMySql55. default should be false.
+        /// </summary>
+        public bool IsMySql55
+        {
+            get { return isMySql55; }
+            set { isMySql55 = value; }
+        }
+        /// <summary>
+        /// isMySql56. default should be false.
+        /// </summary>
+        private bool isMySql56 = false;
+
+        /// <summary>
+        /// isMySql56. default should be false.
+        /// </summary>
+        public bool IsMySql56
+        {
+            get { return isMySql56; }
+            set { isMySql56 = value; }
+        }
+        /// <summary>
+        /// isMySql57. default should be false.
+        /// </summary>
+        private bool isMySql57 = false;
+
+        /// <summary>
+        /// isMySql57. default should be false.
+        /// </summary>
+        public bool IsMySql57
+        {
+            get { return isMySql57; }
+            set { isMySql57 = value; }
+        }
+
+        /// <summary>
         /// enumerateresult. default should be true.
         /// </summary>
         private bool shouldEnumerateResult = true;
@@ -238,12 +291,12 @@ namespace Scx.Test.MySQL.Provider
         /// <summary>
         /// version
         /// </summary>
-        private string version = "5.0.96-community";
+        private string version = "5.0.96";
 
         /// <summary>
         /// collectionID
         /// </summary>
-        private string collectionID = "Linux";
+        private string collectionID = "[lL]inux";
 
         /// <summary>
         /// defaultConfigFile
@@ -291,7 +344,7 @@ namespace Scx.Test.MySQL.Provider
         /// <summary>
         /// defaultMultiConfigFile
         /// </summary>
-        private string defaultMultiProductVersion = "5.0.96-community-log";
+        private string defaultMultiProductVersion = "5.0.96";
 
         /// <summary>
         /// defaultMultiConfigFile
@@ -311,7 +364,9 @@ namespace Scx.Test.MySQL.Provider
         /// <summary>
         /// defaultMultiDataDirectory
         /// </summary>
-        private string defaultMultiDataDirectory = "/var/lib/mysql/data/";
+        private string defaultMultiDataDirectory = "/var/lib/mysql/data";
+
+        private string mysqlVersion = string.Empty;
 
         /// <summary>
         /// InitializeHelper. get all the values from Group or current ctx.
@@ -377,6 +432,7 @@ namespace Scx.Test.MySQL.Provider
 
             this.MySQLHelper = new MySQLHelper(ctx.Trc, this.HostName, this.UserName, this.Password);
             this.AgentHelper = new AgentHelper(ctx.Trc, this.HostName, this.UserName, this.password);
+            GetMySqlVersion(ctx);
             this.queryXmlResult = new List<string>();
         }
 
@@ -490,64 +546,56 @@ namespace Scx.Test.MySQL.Provider
             collectionID = mcfContext.ParentContext.Records.GetValue("defaultCollectionID");
             defaultMultiPort = mcfContext.ParentContext.Records.GetValue("multiDefaultPortID");
 
-            string platflag = GetPlatformInfo();
+            this.defaultConfigFile = mcfContext.ParentContext.Records.GetValue("defaultConfigurationFile");
+            this.defaultErrorlogFile = mcfContext.ParentContext.Records.GetValue("defaultErrorLogFile");
+            this.defaultSockFile = mcfContext.ParentContext.Records.GetValue("defaultSocketFile");
+            this.defaultDataDirectory = mcfContext.ParentContext.Records.GetValue("defaultDataDirectory");
 
-            if (platflag.ToLower() == "m50ora5")
-            {
-                this.version = mcfContext.ParentContext.Records.GetValue("ProductVersionM50PORA5");
-                this.defaultConfigFile = mcfContext.ParentContext.Records.GetValue("defaultConfigurationFileM50PORA5");
-                this.defaultErrorlogFile = mcfContext.ParentContext.Records.GetValue("defaultErrorLogFileM50PORA5");
-                this.defaultSockFile = mcfContext.ParentContext.Records.GetValue("defaultSocketFileM50PORA5");
-                this.defaultDataDirectory = mcfContext.ParentContext.Records.GetValue("defaultDataDirectoryM50PORA5");
 
-                this.defaultMultiProductVersion = mcfContext.ParentContext.Records.GetValue("defaultMultiProductVersionM50PORA5");
-                this.defaultMultiConfigFile = mcfContext.ParentContext.Records.GetValue("defaultMultiConfigurationFileM50PORA5");
-                this.defaultMultiErrorlogFile = mcfContext.ParentContext.Records.GetValue("defaultMultiErrorLogFileM50PORA5");
-                this.defaultMultiSockFile = mcfContext.ParentContext.Records.GetValue("defaultMultiSocketFileM50PORA5");
-                this.defaultMultiDataDirectory = mcfContext.ParentContext.Records.GetValue("defaultMultiDataDirectoryM50PORA5");
-            }
-        }
-        /// <summary>
-        /// GetPlatformInfo
-        /// </summary>
-        /// <returns>platform info as m50 ora5</returns>
-        private string GetPlatformInfo()
-        {
-            string platflag = string.Empty;
-            string osVersion = GetOSInfo();
-            string mysqlVersion = GetMySqlVersion();
-            platflag = mysqlVersion + osVersion;
-            return platflag;
+            this.defaultMultiConfigFile = mcfContext.ParentContext.Records.GetValue("defaultMultiConfigurationFile");
+            this.defaultMultiErrorlogFile = mcfContext.ParentContext.Records.GetValue("defaultMultiErrorLogFile");
+            this.defaultMultiSockFile = mcfContext.ParentContext.Records.GetValue("defaultMultiSocketFile");
+            this.defaultMultiDataDirectory = mcfContext.ParentContext.Records.GetValue("defaultMultiDataDirectory");
+
+            this.version = this.mysqlVersion;
+            this.defaultMultiProductVersion = this.mysqlVersion;
         }
 
         /// <summary>
         /// GetMySqlVersion
         /// </summary>
         /// <returns>GetMySqlVersion</returns>
-        public string GetMySqlVersion()
+        public string GetMySqlVersion(IContext mcfContext)
         {
-            string mysqlVersion = this.RunCommandAsRoot(this.GetMySQLVersionCmd, this.RootPassword);
-            if (mysqlVersion.ToLower().Contains("5.0"))
+            this.mysqlVersion = this.RunCommandAsRoot(this.GetMySQLVersionCmd, this.RootPassword);
+            if (this.mysqlVersion.ToLower().Contains("5.0"))
             {
-                mysqlVersion = "m50";
                 IsMySql5 = true;
+                this.mysqlVersion = mcfContext.ParentContext.Records.GetValue("ProductVersionM50");
             }
-            return mysqlVersion;
+            if (this.mysqlVersion.ToLower().Contains("5.1"))
+            {
+                IsMySql51 = true;
+                this.mysqlVersion = mcfContext.ParentContext.Records.GetValue("ProductVersionM51");
+            }
+            if (this.mysqlVersion.ToLower().Contains("5.5"))
+            {
+                IsMySql55 = true;
+                this.mysqlVersion = mcfContext.ParentContext.Records.GetValue("ProductVersionM55");
+            }
+            if (this.mysqlVersion.ToLower().Contains("5.6"))
+            {
+                IsMySql56 = true;
+                this.mysqlVersion = mcfContext.ParentContext.Records.GetValue("ProductVersionM56");
+            }
+            if (this.mysqlVersion.ToLower().Contains("5.7"))
+            {
+                IsMySql57 = true;
+                this.mysqlVersion = mcfContext.ParentContext.Records.GetValue("ProductVersionM57");
+            }
+            return this.mysqlVersion;
         }
 
-        /// <summary>
-        /// Get OS Info
-        /// </summary>
-        /// <returns>os version</returns>
-        private string GetOSInfo()
-        {
-            string osVersion = this.RunCommandAsRoot(this.GetOSVersionCmd, this.RootPassword);
-            if (osVersion.ToLower().Contains("redhat") && osVersion.ToLower().Contains("5"))
-            {
-                osVersion = "ora5";
-            }
-            return osVersion;
-        }
 
         /// <summary>
         /// GetOSIsDebInfo
@@ -813,7 +861,7 @@ namespace Scx.Test.MySQL.Provider
         /// Generic wait method for use to allow the state of the installed agent to stabilize
         /// </summary>
         /// <param name="ctx">Current MCF context</param>
-        private void Wait(IContext ctx)
+        public void Wait(IContext ctx)
         {
             ctx.Trc(string.Format("Waiting for {0}...", this.queryRetryInterval));
             System.Threading.Thread.Sleep(this.queryRetryInterval);

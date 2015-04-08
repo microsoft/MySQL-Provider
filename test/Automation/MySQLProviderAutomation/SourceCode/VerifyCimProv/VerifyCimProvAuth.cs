@@ -33,7 +33,7 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         public void Setup(IContext ctx)
         {
             this.GetValueFromVarList(ctx);
-
+            this.Wait(ctx);
             if (ctx.Records.HasKey("AddMySQLAuthCmd"))
             {
                 this.addMySQLAuthCmd = ctx.Records.GetValue("AddMySQLAuthCmd");

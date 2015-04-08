@@ -38,31 +38,25 @@ namespace Scx.Test.MySQL.Provider
         /// Required: Command to install agent
         /// </summary>
         private string installOmCmd;
-        private string installMySQLCmd;
 
         /// <summary>
         /// Required: Command to remove agent
         /// </summary>
         private string uninstallOmCmd;
-        private string uninstallMySQLCmd;
 
         /// <summary>
         /// Required: Command to clean the Client Machine:Uninstall/delete scx direcotries
         /// </summary>
         private string cleanupOmCmd;
-        private string cleanupMySQLCmd;
 
         /// <summary>
         /// Required: string tag used in identifying the platform
         /// </summary>
         private string platformTag;
-        private string MySQLTag;
 
-        ///<summary>
-        ///Optional: check MySQL status command
-        ///</summary>
-
-        private string startMySQLCmd;
+        /// <summary>
+        /// checkServiceCmd
+        /// </summary>
         private string checkServiceCmd;
 
         /// <summary>
@@ -103,83 +97,36 @@ namespace Scx.Test.MySQL.Provider
                 this.installOmCmd = ctx.Records.GetValue("InstallOMCmd");
                 this.uninstallOmCmd = ctx.Records.GetValue("UninstallOMCmd");
                 this.cleanupOmCmd = ctx.Records.GetValue("CleanupOMCmd");
-                // get GetPlatformTag
-                // this.platformTag = ctx.Records.GetValue("PlatformTag");
-                this.platformTag = GetPlatformTag(this.hostName);
-                this.MySQLTag = ctx.Records.GetValue("MySQLTag");
-                this.installMySQLCmd = ctx.Records.GetValue("installmySQLCmd");
-                this.uninstallMySQLCmd = ctx.Records.GetValue("UninstallMySQLCmd");
-                this.cleanupMySQLCmd = ctx.Records.GetValue("CleanupMySQLCmd");
-                this.startMySQLCmd = ctx.Records.GetValue("startMySQLCmd");
                 this.checkServiceCmd = ctx.Records.GetValue("checkServiceCmd");
 
                 if (string.IsNullOrEmpty(this.userName) ||
                     string.IsNullOrEmpty(this.password) || string.IsNullOrEmpty(this.installOmCmd) ||
-                    string.IsNullOrEmpty(this.platformTag) || string.IsNullOrEmpty(this.uninstallOmCmd) || string.IsNullOrEmpty(this.cleanupOmCmd))
+                    string.IsNullOrEmpty(this.uninstallOmCmd) || string.IsNullOrEmpty(this.cleanupOmCmd))
                 {
-                    throw new GroupAbort("Error, check UserName, Password, installOmCmd, uninstallOmCmd, cleanupOmCmd, platformTag");
+                    throw new GroupAbort("Error, check UserName, Password, installOmCmd, uninstallOmCmd, cleanupOmCmd");
                 }
 
                 this.agentHelper = new AgentHelper(ctx.Trc, this.hostName, this.userName, this.password, this.installOmCmd, this.cleanupOmCmd);
-
+                this.platformTag = this.agentHelper.PlatformTag;
                 this.agentHelper.VerifySSH();
 
                 this.agentHelper.SynchDateTime();
 
                 this.mySQLHelper = new MySQLHelper(ctx.Trc, this.hostName, this.userName, this.password);
 
-                //  this.mySQLHelper.CheckMySQLServiceStatus(this.checkServiceCmd);
+                this.mySQLHelper.CheckMySQLServiceStatus(this.checkServiceCmd);
+                string omilocation = ctx.Records.GetValue("OMAgentLocation");
 
-                this.SetMySQLAgentPath(ctx);
-
-                this.mySQLHelper.UninstallMySQLAgent(this.uninstallMySQLCmd);
-
-                this.SetOmAgentPath(ctx);
+                this.agentHelper.SetOmAgentPath(omilocation);
 
                 this.CleanupAgent(ctx);
 
                 this.agentHelper.Install();
-
-                this.mySQLHelper.InstallMySQLAgent(this.installMySQLCmd);
             }
             catch (Exception ex)
             {
                 throw new GroupAbort(ex.Message);
             }
-        }
-
-        /// <summary>
-        /// GetPlatformTag
-        /// </summary>
-        /// <param name="hostName">hostName</param>
-        /// <returns>platformtag</returns>
-        private string GetPlatformTag(string hostName)
-        {
-            string platformtagstr = string.Empty;
-            if (hostName.ToLower().Contains("rhel") || hostName.ToLower().Contains("sles"))
-            {
-                string[] names = hostName.Split('-');
-                platformtagstr = names[1].Substring(0, 4) + "." + (hostName.ToLower().Contains("sles") ? names[1].Substring(4, 2) : names[1].Substring(4, 1));
-            }
-            else if (hostName.ToLower().Contains("deb") || hostName.ToLower().Contains("ubun"))
-            {
-                platformtagstr = ".universald.1";
-            }
-            else
-            {
-                platformtagstr = ".universalr.1";
-            }
-
-            if (hostName.Contains("64"))
-            {
-                platformtagstr = platformtagstr + ".x64";
-            }
-            else
-            {
-                platformtagstr = platformtagstr + ".x86";
-            }
-
-            return platformtagstr;
         }
 
         /// <summary>
@@ -213,8 +160,6 @@ namespace Scx.Test.MySQL.Provider
 
                 if (installOnly == false)
                 {
-                    this.mySQLHelper.UninstallMySQLAgent(this.uninstallMySQLCmd);
-                    this.mySQLHelper.Cleanup();
                     this.CleanupAgent(ctx);
                 }
             }
@@ -227,24 +172,6 @@ namespace Scx.Test.MySQL.Provider
 
         #endregion
         #region private method
-
-        private void SetMySQLAgentPath(IContext ctx)
-        {
-            string mysqllocation = ctx.Records.GetValue("MySQLsLocation");
-
-            this.mySQLHelper.SetMySQLAgentFullPath(mysqllocation, this.MySQLTag, true);
-        }
-
-        /// <summary>
-        /// Set om agent path
-        /// </summary>
-        /// <param name="ctx"></param>
-        private void SetOmAgentPath(IContext ctx)
-        {
-            string omilocation = ctx.Records.GetValue("OMAgentLocation");
-
-            this.agentHelper.SetOmAgentFullPath(omilocation, this.platformTag, true);
-        }
 
         private void CleanupAgent(IContext ctx)
         {

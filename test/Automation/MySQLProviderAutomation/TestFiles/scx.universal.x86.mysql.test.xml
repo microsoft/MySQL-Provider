@@ -9,7 +9,7 @@
     <rec key="MySQL.VerifyMySQLInstalledCmd">dpkg -l |grep -i mysql-cimprov</rec>
   </snippet>
   <snippet id="LinuxInfo">
-    <rec key="Linux.Host">m50p-sles10-01</rec>
+    <rec key="Linux.Host">m57s64-cent7-01</rec>
     <rec key="LocalIP">127.0.0.1</rec>
     <rec key="DefaultPort">3306</rec>
     <rec key="DefaultAuthorUser">root</rec>
@@ -559,36 +559,6 @@
     <rec key="enumerateresult">false</rec>
   </var>
 
-  <!--TestCase 728909 Verify provider works fine when multi mysql instances are configured-->
-  <var set="4" lvl="0" vid="728909" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
-    <snipref id="MultiMySQL"/>
-    <snipref id="LinuxInfo" />
-    <snipref id="MySQLAuthInfo"/>
-    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
-    <rec key="IsMulti">true</rec>
-  </var>
-
-  <!--TestCase 728910 Verify provider works fine when multi mysql instances are configured-->
-  <var set="4" lvl="0" vid="728910" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
-    <snipref id="MultiMySQL"/>
-    <snipref id="LinuxInfo" />
-    <snipref id="MySQLAuthInfo"/>
-    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
-    <rec key="IsMulti">true</rec>
-  </var>
-
-  <!--TestCase 728911 Verify provider works fine when multi mysql instances are configured-->
-  <var set="4" lvl="0" vid="728911" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
-    <snipref id="LinuxInfo" />
-    <snipref id="MySQLAuthInfo"/>
-    <snipref id="MultiMySQL"/>
-    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
-    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
-    <rec key="IsMulti">true</rec>
-  </var>
-
   <!-- Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman-->
   <var set="2" lvl="0" vid="779298" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman" act="true">
     <snipref id="LinuxInfo" />
@@ -665,14 +635,21 @@
     <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3306</rec>
   </var>
 
-  <!--TestCase 784102 Verify the enumeration not work after delete the authenticated credentials-->
-  <var set="2" lvl="0" vid="784102" cid="MySQL_Server"  cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify the enumeration not work after delete the authenticated credentials" act="true">
-    <snipref id="LinuxInfo"/>
-    <snipref id="MySQLAuthInfo"/>
+  <!--728902-Verify the method 'UpdateCredentials' works fine-->
+  <var set="2" lvl="0" vid="728902" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the method 'UpdateCredentials' works fine." act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <rec key="addMySQLAuthCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth update %DefaultPort% %LocalIP% %DefaultAuthorUser% %DefaultAuthorPassWord% </rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+  </var>
+
+  <!--784101-Verify the enumeration not work if set unauthenticated credentials for MySQL CIM Provider-->
+  <var set="2" lvl="0" vid="784101" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the enumeration not work if set unauthenticated credentials for MySQL CIM Provider." act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo" />
+    <rec key="addBadMySQLAuthCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth update 3306 127.0.0.1 test test</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="enumerateresult">false</rec>
-    <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
-    <rec key="deleteCredentials">true</rec>
-    <rec key="deleteCredentialsCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth delete 3306</rec>
   </var>
 
   <!--TestCase 728903 Verify the enumeration still works fine after delete one credentials for multi mysql instances environment-->
@@ -696,8 +673,8 @@
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="IsMulti">true</rec>
     <rec key="IsStopOneInstance">true</rec>
-    <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
-    <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+    <rec key="stopOneInstanceCmd">/etc/init.d/mysqld_multi stop 2</rec>
+    <rec key="startStopedInstanceCmd">/etc/init.d/mysqld_multi start 2</rec>
   </var>
 
   <!--778553-Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment-->
@@ -708,8 +685,8 @@
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="IsMulti">true</rec>
     <rec key="IsStopOneInstance">true</rec>
-    <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
-    <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+    <rec key="stopOneInstanceCmd">/etc/init.d/mysqld_multi stop 2</rec>
+    <rec key="startStopedInstanceCmd">/etc/init.d/mysqld_multi start 2</rec>
   </var>
   <!--778554-Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment-->
   <var set="4" lvl="0" vid="778554" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="Verify provider return correct instance info when stop one mysql instance in multi mysql instances environment" act="true">
@@ -719,25 +696,38 @@
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="IsMulti">true</rec>
     <rec key="IsStopOneInstance">true</rec>
-    <rec key="stopOneInstanceCmd">mysqld_multi stop 2</rec>
-    <rec key="startStopedInstanceCmd">mysqld_multi start 2</rec>
+    <rec key="stopOneInstanceCmd">/etc/init.d/mysqld_multi stop 2</rec>
+    <rec key="startStopedInstanceCmd">/etc/init.d/mysqld_multi start 2</rec>
   </var>
 
-  <!--728902-Verify the method 'UpdateCredentials' works fine-->
-  <var set="2" lvl="0" vid="728902" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the method 'UpdateCredentials' works fine." act="true">
+  <!--TestCase 728909 Verify provider works fine when multi mysql instances are configured-->
+  <var set="4" lvl="0" vid="728909" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
+    <snipref id="MultiMySQL"/>
     <snipref id="LinuxInfo" />
-    <snipref id="MySQLAuthInfo" />
-    <rec key="addMySQLAuthCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth update %DefaultPort% %LocalIP% %DefaultAuthorUser% %DefaultAuthorPassWord% </rec>
+    <snipref id="MySQLAuthInfo"/>
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
   </var>
 
-  <!--784101-Verify the enumeration not work if set unauthenticated credentials for MySQL CIM Provider-->
-  <var set="2" lvl="0" vid="784101" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the enumeration not work if set unauthenticated credentials for MySQL CIM Provider." act="true">
+  <!--TestCase 728910 Verify provider works fine when multi mysql instances are configured-->
+  <var set="4" lvl="0" vid="728910" cid="MySQL_ServerStatistics" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerStatistics" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
+    <snipref id="MultiMySQL"/>
     <snipref id="LinuxInfo" />
-    <snipref id="MySQLAuthInfo" />
-    <rec key="addBadMySQLAuthCmd">/opt/microsoft/mysql-cimprov/bin/mycimprovauth update 3306 127.0.0.1 test test</rec>
+    <snipref id="MySQLAuthInfo"/>
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
-    <rec key="enumerateresult">false</rec>
+    <rec key="IsMulti">true</rec>
+  </var>
+
+  <!--TestCase 728911 Verify provider works fine when multi mysql instances are configured-->
+  <var set="4" lvl="0" vid="728911" cid="MySQL_Server_Database" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServerDataBases" dsc="[MySQL] Verify provider works fine when multi mysql instances are configured" act="true">
+    <snipref id="LinuxInfo" />
+    <snipref id="MySQLAuthInfo"/>
+    <snipref id="MultiMySQL"/>
+    <rec key="addMySQLAuthCmd">%MultiMySQLAddAuth%</rec>
+    <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
+    <rec key="IsMulti">true</rec>
   </var>
 
   <!-- Test Variables Definition -->
@@ -775,11 +765,11 @@
     <rec key="stopOmAgentCmd">scxadmin -stop</rec>
     <rec key="startOmAgentCmd">scxadmin -start</rec>
     <rec key="checkMySQLInstalled">dpkg -l |grep -i mysql</rec>
-    <rec key="startMultiMySQLCmd">service mysqld_multi start</rec>
-    <rec key="stopMultiMySQLCmd">service mysqld_multi stop</rec>
+    <rec key="startMultiMySQLCmd">/etc/init.d/mysqld_multi start</rec>
+    <rec key="stopMultiMySQLCmd">/etc/init.d/mysqld_multi stop</rec>
 
     <rec key="getOSVersionCmd">python -c "import platform; print platform.dist()"</rec>
-    <rec key="getMySQLVersionCmd">mysql -V | awk '{print $5}' | sed -e 's/,$//'</rec>
+    <rec key="getMySQLVersionCmd">/usr/local/mysql/bin/mysqld -V| awk '{print $3}' | sed -e 's/,$//'</rec>
 
     <!--Expected MySQL Properties-->
     <!--One Instance-->

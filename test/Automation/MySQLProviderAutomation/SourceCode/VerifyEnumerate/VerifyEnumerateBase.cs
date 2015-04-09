@@ -756,7 +756,7 @@ namespace Scx.Test.MySQL.Provider
 
             // The Default data base name different in MySQL 5.0 and MySQL 55
             string diffDatabase = mcfContext.ParentContext.Records.GetValue("DiffDataBase50");
-            if (this.HostName.Contains("m55") || this.HostName.Contains("m56"))
+            if (this.HostName.Contains("m55") || this.HostName.Contains("m56") || this.HostName.Contains("m57"))
             {
                 diffDatabase = mcfContext.ParentContext.Records.GetValue("DiffDataBase55");
             }

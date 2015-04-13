@@ -1202,103 +1202,13 @@
     </recm>
   </var>
 
-  <!--Task[6]-->
-  <var set="1" lvl="1" vid="798936" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify if install/upgrade MySQL Server Provider works well by running task Install/Upgrade MySQL Server Provider with valid root account" permutation="rows">
-    <recm key="EntityName">
-      <val>Install Apache CIM Module with valid root account</val>
-    </recm>
-    <recm key="TaskName">
-      <val>Microsoft.MySQLServer.DeployModule.Task</val>
-    </recm>
-    <recm key="InstanceClass">
-      <val>Microsoft.MySQLServer.Installation</val>
-    </recm>
-    <recm key="ExpectedTaskStatus">
-      <val>Success</val>
-    </recm>
-    <recm key="expectedOutputKeyWord">
-      <val>&lt;returnCode&gt;0&lt;/returnCode&gt;</val>
-    </recm>
-    <recm key="RemoveDefaultAgent">
-      <val>true</val>
-    </recm>
-  </var>
-
-  <var set="1" lvl="1" vid="798935" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify if install MySQL Server Provider successfully by running task Install/Upgrade MySQL Server Provider with valid scxuser account." permutation="rows">
-    <recm key="EntityName">
-      <val>Install/Upgrade MySQL Server Provider with valid scxuser account.</val>
-    </recm>
-    <recm key="TaskName">
-      <val>Microsoft.MySQLServer.DeployModule.Task</val>
-    </recm>
-    <recm key="InstanceClass">
-      <val>Microsoft.MySQLServer.Installation</val>
-    </recm>
-    <recm key="agentCredentialSettings">
-      <val>1,1,0,2</val>
-    </recm>
-    <recm key="ExpectedTaskStatus">
-      <val>Success</val>
-    </recm>
-    <recm key="expectedOutputKeyWord">
-      <val>&lt;returnCode&gt;0&lt;/returnCode&gt;</val>
-    </recm>
-    <recm key="RemoveDefaultAgent">
-      <val>true</val>
-    </recm>
-  </var>
-
-  <var set="1" lvl="1" vid="798928" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify it doesn't upgrade MySQL Server Provider to lower version by running Install/Upgrade MySQL Server Provider task." permutation="rows">
-    <recm key="EntityName">
-      <val>Doesn't upgrade MySQL Server Provider to lower version by running Install/Upgrade MySQL Server Provider task."</val>
-    </recm>
-    <recm key="TaskName">
-      <val>Microsoft.MySQLServer.DeployModule.Task</val>
-    </recm>
-    <recm key="InstanceClass">
-      <val>Microsoft.MySQLServer.Installation</val>
-    </recm>
-    <recm key="ExpectedTaskStatus">
-      <val>Success</val>
-    </recm>
-    <recm key="expectedOutputKeyWord">
-      <val>&lt;stderr&gt;\S*&lt;/stderr&gt;</val>
-    </recm>
-    <recm key="RemoveDefaultAgent">
-      <val>false</val>
-    </recm>
-  </var>
-
-  <var set="1" lvl="1" vid="798925" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify the MySQL Server Provide installation failed by running task Install/Upgrade MySQL Server Provider with root account which password is incorrect." permutation="rows">
-    <recm key="EntityName">
-      <val>Install/Upgrade MySQL Server Provider with root account which password is incorrect.</val>
-    </recm>
-    <recm key="TaskName">
-      <val>Microsoft.MySQLServer.DeployModule.Task</val>
-    </recm>
-    <recm key="InstanceClass">
-      <val>Microsoft.MySQLServer.Installation</val>
-    </recm>
-    <recm key="agentCredentialSettings">
-      <val>1,0,0,0</val>
-    </recm>
-    <recm key="ExpectedTaskStatus">
-      <val>Success</val>
-    </recm>
-    <recm key="expectedOutputKeyWord">
-      <val>&lt;stderr&gt;\S*&lt;/stderr&gt;</val>
-    </recm>
-    <recm key="RemoveDefaultAgent">
-      <val>true</val>
-    </recm>
-  </var>
-
+  <!--Task[2]-->
   <var set="1" lvl="1" vid="798926" cid="DeployModuleTask" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.DeployModuleTask" dsc="Verify the 'Set Default Credentials for MySQL Server' task works correctly" permutation="rows">
     <recm key="EntityName">
       <val>Set Default Credentials for MySQL Server</val>
     </recm>
     <recm key="TaskName">
-      <val>Microsoft.MySQLServer.SetDefaultCredentials.Task</val>
+      <val>Microsoft.MySQLServer.SetDefaultCred.Task</val>
     </recm>
     <recm key="InstanceClass">
       <val>Microsoft.MySQLServer.Installation</val>
@@ -1332,6 +1242,25 @@
     </recm>
     <recm key="RemoveDefaultAgent">
       <val>false</val>
+    </recm>
+  </var>
+   <!--Actions[1]-->
+  <!--This case will test two actions in administrator workload:Uninstall Agent and Upgrade Agent-->
+  <var set="2" lvl="2" vid="798928" cid="TaskHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.TaskHealth" dsc="This case will test two actions in administrator workload:Uninstall Agent and Upgrade Agent" permutation="rows">
+    <recm key="EntityName">
+      <val>Elevated Agent Tasks</val>
+    </recm>
+    <recm key="AppInstalledVerifyCmd">
+      <val>rpm -q scx</val>
+    </recm>
+    <recm key="ElevatedUninstallAgentTask">
+      <val>Microsoft.Linux.UniversalR.1.Agent.Uninstall.Task</val>
+    </recm>
+    <recm key="ElevatedInstallAgentTask">
+      <val>Microsoft.Linux.UniversalR.1.Agent.Install.Task</val>
+    </recm>
+    <recm key="ElevatedUpgradeAgentTask">
+      <val>Microsoft.Linux.UniversalR.1.Agent.Upgrade.Task</val>
     </recm>
   </var>
 
@@ -1549,7 +1478,7 @@
     <rec key="mysqlAgentPath"><![CDATA[C:\MySQL\cimprov]]></rec>
     <rec key="mysqlHelperSqlTestPath"><![CDATA[C:\MySQL\bin]]></rec>
     <rec key="AgentPkgExt">rpm</rec>
-    <rec key="DirectoryTag">Debian5.0_X86</rec>
+    <rec key="DirectoryTag">oracle.5.0_X86</rec>
     <rec key="latestonly">true</rec>
     <rec key="installonly">true</rec>
     <!--

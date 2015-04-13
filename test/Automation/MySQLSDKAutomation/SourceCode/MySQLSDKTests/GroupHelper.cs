@@ -326,42 +326,20 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     }
 
                     ctx.Trc("Cleaning up remote system using SSH");
-                    //this.CleanupAgent(ctx);
+                    this.CleanupAgent(ctx);
 
                     ctx.Trc("Deploying/installing agent on client machine");
-                    //this.discoveryHelper.InstallClient(this.fullNewAgentPath);
+                    this.discoveryHelper.InstallClient(this.fullNewAgentPath);
 
                     ctx.Trc("Signing agent");
-                    //this.discoveryHelper.CreateSignedCert();
+                    this.discoveryHelper.CreateSignedCert();
 
                     ctx.Trc("Adding client to OM");
-                    //this.discoveryHelper.DiscoverClientWSMan();
+                    this.discoveryHelper.DiscoverClientWSMan();
                 }
 
                 this.WaitForClientVerification(ctx);
-
-                bool mysqlAgentInstalled = this.mysqlAgentHelper.VerifyMySQLAgentInstalled();
-
-                if (!mysqlAgentInstalled)
-                {
-                    bool useTaskInstallMySQLAgent = false;
-                    if (ctx.Records.HasKey("useTaskInstallMySQLAgent") &&
-                       ctx.Records.GetValue("useTaskInstallMySQLAgent") == "true")
-                    {
-                        useTaskInstallMySQLAgent = true;
-                    }
-
-                    if (useTaskInstallMySQLAgent)
-                    {
-                        this.mysqlAgentHelper.InstallMySQLAgentWihTask();
-                    }
-                    else
-                    {
-                        this.fullMySQLAgentPath = ctx.Records.GetValue("mysqlAgentPath");
-                        string tag = ctx.Records.GetValue("mysqlTag");
-                        //this.mysqlAgentHelper.InstallMySQLAgentWihCommand(fullMySQLAgentPath, tag);
-                    }
-                }
+          
                 // Add the mySQL Auth for superuser and nonsuperuser
                 this.mySQLAddAuthCmd = ctx.Records.GetValue("mySQLAddAuthCmd");
                 this.mysqlAgentHelper.SetupMySqlAuth(this.mySQLAddAuthCmd);

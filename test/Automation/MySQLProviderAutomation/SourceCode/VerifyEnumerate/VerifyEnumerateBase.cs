@@ -567,6 +567,20 @@ namespace Scx.Test.MySQL.Provider
         /// <returns>GetMySqlVersion</returns>
         public string GetMySqlVersion(IContext mcfContext)
         {
+            string fileExistCmd = "/bin/ls /etc/profile.d/|grep -ic mysql.sh";
+            try
+            {
+                fileExistCmd = this.RunCommandAsRoot(fileExistCmd, this.RootPassword);
+                if (fileExistCmd.Contains("1"))
+                {
+                    this.GetMySQLVersionCmd = "source /etc/profile.d/mysql.sh;" + this.GetMySQLVersionCmd;
+                }
+            }
+            catch
+            {
+
+            }
+
             this.mysqlVersion = this.RunCommandAsRoot(this.GetMySQLVersionCmd, this.RootPassword);
             if (this.mysqlVersion.ToLower().Contains("5.0"))
             {

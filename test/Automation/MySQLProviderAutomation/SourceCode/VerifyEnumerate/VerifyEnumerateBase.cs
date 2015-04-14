@@ -291,7 +291,7 @@ namespace Scx.Test.MySQL.Provider
         /// <summary>
         /// version
         /// </summary>
-        private string version = "5.0.96";
+        private string version = "5.0";
 
         /// <summary>
         /// collectionID
@@ -344,7 +344,7 @@ namespace Scx.Test.MySQL.Provider
         /// <summary>
         /// defaultMultiConfigFile
         /// </summary>
-        private string defaultMultiProductVersion = "5.0.96";
+        private string defaultMultiProductVersion = "5.0";
 
         /// <summary>
         /// defaultMultiConfigFile

@@ -156,7 +156,12 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             root.SetAttribute("xmlns:xsi", xsi);
             root.SetAttribute("xml:lang", lang);
             xdoc.AppendChild(root);
-            propertyLists.Add("ProductIdentifyingNumber", string.Format("{0}:{1}:{2}", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"hostname\"").ToLower(), hostIp, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"port\";")));
+            string hostName = this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"hostname\"").ToLower();
+            if (hostName == string.Empty)
+            {
+                hostName = this.HostName.ToLower();
+            }
+            propertyLists.Add("ProductIdentifyingNumber", string.Format("{0}:{1}:{2}", hostName, hostIp, this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"port\";")));
             propertyLists.Add("ProductName", "MySQL");
             propertyLists.Add("ProductVendor", "Oracle");
             propertyLists.Add("ProductVersion", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"version\""));
@@ -165,7 +170,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             // Can't get the configuration file path so skip this verify.
             // propertyLists.Add("ConfigurationFile", "/etc/my.cnf");
             propertyLists.Add("ErrorLogFile", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"log_error\";"));
-            propertyLists.Add("Hostname", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"hostname\"").ToLower());
+            propertyLists.Add("Hostname", hostName);
             propertyLists.Add("BindAddress", hostIp);
             propertyLists.Add("Port", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"port\";"));
             propertyLists.Add("SocketFile", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"socket\";"));
@@ -474,9 +479,16 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         private string GetVariablesValueFromMySQLCmd(string getVariablesCmd, string value = "Value:", bool needTrim = true)
         {
             string cmdoutput = string.Empty;
+            string fileExistCmd = "/bin/ls /etc/profile.d/|grep -ic mysql.sh";
             try
             {
                 string mysqlCmd = "mysql -E -e '{0}'| grep '{1}'";
+                fileExistCmd = this.RunCommandAsRoot(fileExistCmd, this.RootPassword);
+                if (fileExistCmd.Contains("1"))
+                {
+                    mysqlCmd = "source /etc/profile.d/mysql.sh;" + mysqlCmd;
+                }
+
                 RunPosixCmd execCmd = new RunPosixCmd(this.HostName, this.UserName, this.Password);
                 string cmd = string.Format(mysqlCmd, getVariablesCmd, value) + "| awk '{print $2}'";
                 execCmd.FileName = cmd;

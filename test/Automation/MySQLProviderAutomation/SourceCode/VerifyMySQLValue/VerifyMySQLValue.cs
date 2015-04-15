@@ -480,15 +480,22 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
         {
             string cmdoutput = string.Empty;
             string fileExistCmd = "/bin/ls /etc/profile.d/|grep -ic mysql.sh";
+            string mysqlCmd = "mysql -E -e '{0}'| grep '{1}'";
             try
             {
-                string mysqlCmd = "mysql -E -e '{0}'| grep '{1}'";
                 fileExistCmd = this.RunCommandAsRoot(fileExistCmd, this.RootPassword);
                 if (fileExistCmd.Contains("1"))
                 {
                     mysqlCmd = "source /etc/profile.d/mysql.sh;" + mysqlCmd;
                 }
+            }
+            catch (Exception)
+            {
 
+            }
+
+            try
+            {
                 RunPosixCmd execCmd = new RunPosixCmd(this.HostName, this.UserName, this.Password);
                 string cmd = string.Format(mysqlCmd, getVariablesCmd, value) + "| awk '{print $2}'";
                 execCmd.FileName = cmd;
@@ -497,7 +504,7 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             }
             catch
             {
-                throw new VarAbort("cid field not specified, specify query class in cid");
+                throw new VarAbort("Get Variables value from MySQL CMD Failed!");
             }
             if (needTrim)
             {

@@ -6,10 +6,10 @@
   <snippet id="MySQLInstallInfo">
     <rec key="MySQL.InstallCmd">sh /tmp/{0}</rec>
     <rec key="MySQL.VerifyFolderExistCmd"><![CDATA[/bin/ls /opt/microsoft/|grep -ic "MySQL";/bin/ls /var/opt/microsoft/|grep -ic "MySQL";/bin/ls /etc/opt/microsoft/|grep -ic "MySQL"]]></rec>
-    <rec key="MySQL.VerifyMySQLInstalledCmd">dpkg -l |grep -i mysql-cimprov</rec>
+    <rec key="MySQL.VerifyMySQLInstalledCmd">rpm -aq |grep -i mysql-cimprov</rec>
   </snippet>
   <snippet id="LinuxInfo">
-    <rec key="Linux.Host">m50p64-rhel5-02</rec>
+    <rec key="Linux.Host">m55s-sles11-01</rec>
     <rec key="LocalIP">127.0.0.1</rec>
     <rec key="DefaultPort">3306</rec>
     <rec key="DefaultAuthorUser">root</rec>
@@ -734,7 +734,7 @@
   <grp cls="Scx.Test.MySQL.Provider.GroupHelper">
     <snipref id="LinuxInfo" />
     <rec key="hostname">%Linux.Host%</rec>
-    <rec key="omserver">osst-w12r2-01</rec>
+    <rec key="omserver">osst-w12r2-03</rec>
     <rec key="username">root</rec>
     <rec key="password">OpsMgr2007R2</rec>
     <rec key="nonsuperuser">scxtest</rec>
@@ -745,7 +745,7 @@
     <rec key="CleanupOMCmd"><![CDATA[sh /tmp/{0} --purge;]]></rec>
     <rec key="installonly">false</rec>
     <rec key="knownIssueFormat">Known Issue: WI {0}: '{1}'</rec>
-    <rec key="OMAgentLocation"><![CDATA[C:\Program Files\Microsoft System Center 2012 R2\Operations Manager\Server\AgentManagement\UnixAgents]]></rec>
+    <rec key="OMAgentLocation"><![CDATA[C:\Program Files\Microsoft System Center 2012 R2\Operations Manager\Server\AgentManagement\UnixAgents\DownloadedKits]]></rec>
     <rec key="oldOMAgentLocation"><![CDATA[C:\MySQL\cimprov\old]]></rec>
     <!--cimprov-->
     <rec key="MySQLsLocation"><![CDATA[C:\MySQL\cimprov]]></rec>
@@ -756,7 +756,7 @@
     <rec key="CleanupMySQLCmd"><![CDATA[sh /tmp/{0} --purge;rm -rf /etc/opt/microsoft/mysql*;rm -rf /opt/microsoft/mysql*;rm -rf /var/opt/microsoft/mysql*;]]></rec>
 
     <!--check MySQL status-->
-    <rec key="installMySQLPkg">yum install mysql</rec>
+    <rec key="installMySQLPkg">zypper install mysql</rec>
     <rec key="startMySQLCmd">service mysql start</rec>
     <rec key="stopMySQLCmd">service mysql stop</rec>
     <rec key="restartMySQLCmd">service mysql restart</rec>
@@ -764,7 +764,7 @@
     <rec key="restartOmAgentCmd">scxadmin -restart</rec>
     <rec key="stopOmAgentCmd">scxadmin -stop</rec>
     <rec key="startOmAgentCmd">scxadmin -start</rec>
-    <rec key="checkMySQLInstalled">dpkg -l |grep -i mysql</rec>
+    <rec key="checkMySQLInstalled">rpm -aq |grep -i mysql</rec>
     <rec key="startMultiMySQLCmd">service mysqld_multi start</rec>
     <rec key="stopMultiMySQLCmd">service mysqld_multi stop</rec>
 

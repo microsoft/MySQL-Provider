@@ -39,7 +39,7 @@ namespace Scx.Test.Common
         /// Path to local UnixAgents directory 
         /// </summary>
         private string localAgentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                        @"System Center 2012\Operations Manager\Server\AgentManagement\UnixAgents");
+                        @"System Center 2012\Operations Manager\Server\AgentManagement\UnixAgents\DownloadedKits");
 
         /// <summary>
         /// Path to the SCX log on the remote client.

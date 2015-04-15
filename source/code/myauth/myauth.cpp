@@ -34,6 +34,11 @@ static void show_version();
 extern char *optarg;
 extern int optind, opterr, optopt;
 
+/*----------------------------------------------------------------------------*/
+/**
+   Valid commands that can be selected and executed
+
+*/
 enum commands_t
 {
     op_unknown,
@@ -48,6 +53,11 @@ enum commands_t
     op_update
 };
 
+/*----------------------------------------------------------------------------*/
+/**
+   Return values (ultimately returned as exit code) from functions
+
+*/
 enum returnValues_t
 {
     retOkay = 0,
@@ -83,11 +93,31 @@ static bool sf_testMode = false;        //<! Are we in test mode?
  * Parse/process commands and return non-zero upon error
  */
 
+/*----------------------------------------------------------------------------*/
+/**
+   Match if a command is entered (based on command and minimum valid length)
+
+   \param[in]  option     The command that was entered by the user
+   \param[in]  command    Full text of the command being tested
+   \param[in]  minLength  Minimum length of the command to be considered valid
+   \returns    true if command is valid
+
+*/
 bool CommandMatch(const wstring& option, const wstring command, size_t minLength)
 {
     return StrIsPrefix(command, option) && option.length() >= minLength;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Parse the command from the user
+
+   \param[out] operation  Command operation selected
+   \param[out] options    Vector of arguments from the command line
+   \param[in]  line       Full command line entered
+   \returns    enum returnValues_t value
+
+*/
 int ParseCommand(commands_t &operation, vector<wstring>& options, const wstring& line)
 {
     StrTokenize(line, options);
@@ -154,6 +184,14 @@ int ParseCommand(commands_t &operation, vector<wstring>& options, const wstring&
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Helper function to save the authentication file
+
+   \param[in]  auth     Authentication class (containing all authentication rules)
+   \returns    enum returnValues_t value
+
+*/
 bool CommandHelper_SaveAuthenticationFile(MySQL_Authentication& auth)
 {
     try
@@ -177,6 +215,15 @@ bool CommandHelper_SaveAuthenticationFile(MySQL_Authentication& auth)
     return true;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for AutoUpdate command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_AutoUpdate(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 2 )
@@ -203,6 +250,15 @@ int CommandHandler_AutoUpdate(MySQL_Authentication& auth, const vector<wstring> 
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Default/Update commands (common for both commands)
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_CommonUpdate(MySQL_Authentication& auth, const vector<wstring> command)
 {
     // Validate the port
@@ -311,6 +367,15 @@ int CommandHandler_CommonUpdate(MySQL_Authentication& auth, const vector<wstring
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Default command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Default(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() < 2 || command.size() > 5 )
@@ -326,6 +391,17 @@ int CommandHandler_Default(MySQL_Authentication& auth, const vector<wstring> com
     return CommandHandler_CommonUpdate(auth, myCommands);
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Delete command
+
+   Removes a credential set from the passed in authentication.
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Delete(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 2 )
@@ -364,6 +440,15 @@ int CommandHandler_Delete(MySQL_Authentication& auth, const vector<wstring> comm
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Exit command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Exit(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 1 )
@@ -375,6 +460,15 @@ int CommandHandler_Exit(MySQL_Authentication& auth, const vector<wstring> comman
     return ( CommandHelper_SaveAuthenticationFile(auth) ? retOkay : retCannotSaveAuth );
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Help command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Help(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 1 )
@@ -420,6 +514,15 @@ int CommandHandler_Help(MySQL_Authentication& auth, const vector<wstring> comman
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Print command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Print(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 1 )
@@ -476,6 +579,15 @@ int CommandHandler_Print(MySQL_Authentication& auth, const vector<wstring> comma
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Quit command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Quit(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 1 )
@@ -487,6 +599,15 @@ int CommandHandler_Quit(MySQL_Authentication& auth, const vector<wstring> comman
     return retOkay;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Save command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Save(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() != 1 )
@@ -506,6 +627,15 @@ int CommandHandler_Save(MySQL_Authentication& auth, const vector<wstring> comman
     }
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Command handler for Update command
+
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int CommandHandler_Update(MySQL_Authentication& auth, const vector<wstring> command)
 {
     if ( command.size() < 3 || command.size() > 6 )
@@ -517,6 +647,16 @@ int CommandHandler_Update(MySQL_Authentication& auth, const vector<wstring> comm
     return CommandHandler_CommonUpdate(auth, command);
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Parse and dispatch for a command to execute
+
+   \param[out] op       Operation code (commands_t value) for command to execute
+   \param[in]  auth     Authentication class
+   \param[in]  command  Vector of command and arguments
+   \returns    enum returnValues_t value
+
+*/
 int ProcessCommand(commands_t& op, MySQL_Authentication& auth, const wstring& command)
 {
     vector<wstring> options;
@@ -687,6 +827,15 @@ int main(int argc, char *argv[])
     return exitStatus;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Display help output (usage from shell)
+
+   \param[in]  nname      Command name we were run with (argv[0])
+   \param[in]  fBrief     'True' if output should be brief only
+   \param[in]  exitValue  Exit value that we should exit with
+
+*/
 void show_usage(const char * nname, bool fBrief, int exitValue)
 {
     const wstring name = StrFromUTF8(nname);
@@ -715,6 +864,11 @@ void show_usage(const char * nname, bool fBrief, int exitValue)
     exit(exitValue);
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Display version information
+
+*/
 void show_version()
 {
     wcout << L"Version: " << CIMPROV_BUILDVERSION_MAJOR << L"." << CIMPROV_BUILDVERSION_MINOR

@@ -9,7 +9,16 @@
 
 using namespace SCXCoreLib;
 
-// Helper functions to compute a ratio
+/*----------------------------------------------------------------------------*/
+/**
+   Helper function to compute a ratio, useful for percentages
+
+   \param[in]  numerator    Numerator of ratio to compute
+   \param[in]  denominator  Denominator of ratio to compute
+   \param[out] ratio        Resulting ratio
+   \param[in]  fAddToDenom  Flag if numerator should be added to denominator (optional)
+
+*/
 static void ComputeRatio(float numerator, float denominator, uint8_t& ratio, bool bAddToDenominator = false)
 {
     ratio = 0;
@@ -26,6 +35,20 @@ static void ComputeRatio(float numerator, float denominator, uint8_t& ratio, boo
     }
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Helper function to compute a ratio, useful for percentages. This function
+   will look up values from a std::map (show variables, show global status)
+   and use those values to compute the percentage.
+
+   \param[in]  mymap        Dictionary of values (std::map)
+   \param[in]  key1         Key for numerator of ratio to compute
+   \param[in]  key2         Key for denominator of ratio to compute
+   \param[out] ratio        Resulting ratio
+   \param[in]  fAddToDenom  Flag if numerator should be added to denominator (optional)
+   \returns    True if value was computed (keys found), false otherwise
+
+*/
 static bool ComputeRatio(
     std::map<std::string, std::string> mymap,
     const char *key1,
@@ -46,6 +69,21 @@ static bool ComputeRatio(
 
 MI_BEGIN_NAMESPACE
 
+/*----------------------------------------------------------------------------*/
+/**
+   Enumerate one single instance of MySQL_ServerStatistics class given inputs
+
+   Note that since the context isn't passed in, the caller must post the
+   instance to OMI (only if this function returns 'true').
+
+   \param[in]  hLog      LogHandle for logging purposes
+   \param[out] inst      Instance to populate (caller will post the instance)
+   \param[in]  port      Port number of MySQL server instance to connect to
+   \param[in]  auth      Authentication class for MySQL authentication
+   \param[in]  keysOnly  True if only keys should be populated, false otherwise
+   \returns    True if instance was populated, false otherwise
+
+*/
 static bool EnumerateOneInstance(
     SCXLogHandle& hLog,
     MySQL_ServerStatistics_Class& inst,
@@ -393,10 +431,16 @@ void MySQL_ServerStatistics_Class_Provider::GetInstance(
         }
 
         MySQL_ServerStatistics_Class inst;
-        EnumerateOneInstance(hLog, inst, port, pAuth, false /* keysOnly */);
-        context.Post(inst);
+        if ( EnumerateOneInstance(hLog, inst, port, pAuth, false /* keysOnly */) )
+        {
+            context.Post(inst);
+            context.Post(MI_RESULT_OK);
+        }
+        else
+        {
+            context.Post(MI_RESULT_FAILED);
+        }
 
-        context.Post(MI_RESULT_OK);
     }
     CIM_PEX_END( L"MySQL_ServerStatistics_Class_Provider::GetInstance", hLog );
 }

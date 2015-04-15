@@ -13,6 +13,16 @@ using namespace SCXCoreLib;
 
 MI_BEGIN_NAMESPACE
 
+/**
+   Enumerate each of the databases in a MySQL server instance given inputs
+
+   \param[in]  context   OMI context for posting instances to
+   \param[in]  hLog      LogHandle for logging purposes
+   \param[in]  port      Port number of MySQL server instance to connect to
+   \param[in]  pAuth     Authentication class for MySQL authentication
+   \param[in]  keysOnly  True if only keys should be populated, false otherwise
+
+*/
 static void EnumerateServerDatabases(
     Context& context,
     SCXLogHandle& hLog,

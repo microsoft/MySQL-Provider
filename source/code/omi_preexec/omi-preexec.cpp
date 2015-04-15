@@ -30,6 +30,24 @@
 
 const static bool s_bDebug = false;
 
+/*----------------------------------------------------------------------------*/
+/**
+   Create a named directory (in baseDir) based on the user ID for the user
+
+   This function will create a named directory, based on the UID, for the
+   user in the 'baseDir' directory. For example, if the user ID for UID 500
+   is "jeffcof", and basedir is "/var/opt/microsoft/scx/log/", then a new
+   directory, "/var/opt/microsoft/scx/log/jeffcof", will be created.
+
+   NOTE: The directory is created with UID/GID ownership of the passed
+   parameters. This is important because omi-prexec generally runs as root.
+
+   \param[in]  baseDir  Base directory (with trailing "/")
+   \param[in]  uid      User identifier for the user
+   \param[in]  gid      Group identifier for the user
+   \returns    errno value, if error; otherwise zero if no error
+
+*/
 int PreExecution::_createDir(
     const std::string baseDir,
     uid_t uid,
@@ -117,6 +135,21 @@ int PreExecution::_createDir(
 
    This program will create subdirectories necessary for proper OM execution
    (primarily for log/state files).
+
+   A variety of "hooks" are called by the main function:
+
+     GetDirectoryCreationList(std::vector<std::string>& dirList);
+        List of directories to create user-name directory within.
+        May be empty if no directories are to be created.
+
+   int NonPrived_Hook(uid_t uid, gid_t gid);
+       Hook called only if the UID is non-zero.     
+
+   int Prived_Hook(uid_t uid, gid_t gid);
+       Hook called only if the UID is zero.
+
+   int Generic_Hook(uid_t uid, gid_t gid);
+       Hook called regardless of the value of the UID.
 
 */
 

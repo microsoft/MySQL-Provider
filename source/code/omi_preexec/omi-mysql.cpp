@@ -27,7 +27,21 @@
 
 using namespace SCXCoreLib;
 
-static int MySQL_ConfigurationParser(uid_t uid, gid_t gid, const std::wstring cnfFile)
+/*----------------------------------------------------------------------------*/
+/**
+   Parse a MySQL configuration file looking for 'port' and 'bind-address'
+   options, and add an entry to the provider auth file for each 'port'/
+   'bind-address' pair.
+
+   Note: If automatic updates are disabled in authentication file, then just
+   exit without doing any parsing.
+
+   \param[in]  uid      User identifier for the user
+   \param[in]  gid      Group identifier for the user
+   \returns    Zero on success, non-zero on error
+
+*/
+static int MySQL_ConfigurationParser(uid_t uid, gid_t gid, const std::wstring& cnfFile)
 {
     SCXLogHandle hLog = SCXLogHandleFactory::GetLogHandle(L"mysql.omi-preexec");
     int rc = 0;
@@ -151,6 +165,16 @@ static int MySQL_ConfigurationParser(uid_t uid, gid_t gid, const std::wstring cn
     return rc;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Find a MySQL configuraiton file. For first configuration file found,
+   parse it to populate provider authentication file.
+
+   \param[in]  uid      User identifier for the user
+   \param[in]  gid      Group identifier for the user
+   \returns    Zero on success, non-zero on error
+
+*/
 static int MySQL_ConfigurationFinder(uid_t uid, gid_t gid)
 {
     SCXLogHandle hLog = SCXLogHandleFactory::GetLogHandle(L"mysql.omi-preexec");

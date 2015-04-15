@@ -23,7 +23,18 @@ using namespace SCXCoreLib;
 // Technically, these can be in anonomous namespace, but they're not for unit test purposes
 //
 
-// Helper to get a value for a specified key in a given query, throws MissingValue
+/**
+   Helper to get a value for a specified key in a given query
+
+   Given a WQL query like: "select * from foo where param1='value' or param2='foo'",
+   find the value given a key (param1's value is 'value', param2's value is 'foo')
+
+   \param[out] value     Value for the key/property specified in the query
+   \param[in]  query     WQL query to search
+   \param[in]  key       Key or property to search for within the WQL query
+   \throws               MissingValue if the specified key isn't found in query
+
+*/
 bool GetValueForKey(string& value, const string& query, const string& key)
 {
     // Note: We want parameter names in query to be case insensitive (as they are in OMI itself).

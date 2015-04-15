@@ -125,7 +125,6 @@ void MySQL_Authentication::AddCredentialSet(unsigned int port, const std::string
     m_config.SetValue(StrFrom(port), FormatPortSpecification(binding, username, password));
 }
 
-// This entry point is intended only for OMI PreExec program (doesn't validate additions)
 bool MySQL_Authentication::AddCredentialSet(unsigned int port, const std::string& binding)
 {
     // Default entry can't be added through this interface

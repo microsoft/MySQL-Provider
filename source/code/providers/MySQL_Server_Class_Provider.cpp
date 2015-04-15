@@ -31,6 +31,14 @@ using namespace SCXCoreLib;
 
 MI_BEGIN_NAMESPACE
 
+/*----------------------------------------------------------------------------*/
+/**
+   Find the MySQL configuration file (priority-based search algorithm)
+
+   \param[in]  pBinding  Binding object
+   \param[in]  pAuth     Authentication class for MySQL authentication
+   \returns    MySQL configuraiton file path, or empty string if none found
+*/
 static std::string FindConfigurationFile(
     util::unique_ptr<MySQL_Binding>& pBinding,
     util::unique_ptr<MySQL_Authentication>& pAuth)
@@ -54,6 +62,20 @@ static std::string FindConfigurationFile(
     return configFile;
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Enumerate special "failure" case of MySQL_Server class (if we're unable
+   to connect or authenticate to the MySQL instance from port/auth data)
+
+   \param[in]  hLog      LogHandle for logging purposes
+   \param[in]  pBinding  Binding object to get information about MySQL install
+   \param[out] inst      Instance to populate (caller will post the instance)
+   \param[in]  port      Port number of MySQL server instance to connect to
+   \param[in]  auth      Authentication class for MySQL authentication
+   \param[in]  keysOnly  True if only keys should be populated, false otherwise
+   \param[in]  sqlError  MySQL error from connection/authentication failure
+
+*/
 static void EnumerateConnectionFailure(
     SCXLogHandle& hLog,
     util::unique_ptr<MySQL_Binding>& pBinding,
@@ -147,6 +169,22 @@ static void EnumerateConnectionFailure(
     }
 }
 
+/*----------------------------------------------------------------------------*/
+/**
+   Enumerate one single instance of MySQL_Server class given inputs
+
+   Note: If we're unable to connect to MySQL for whatever reason (server down,
+   authentication issues, etc), then we populate the instance as a failure
+   using function 'EnumerateConnectionFailure'. Since SOMETHING is always
+   set up in the instance, the caller should always post the result.
+
+   \param[in]  hLog      LogHandle for logging purposes
+   \param[out] inst      Instance to populate (caller will post the instance)
+   \param[in]  port      Port number of MySQL server instance to connect to
+   \param[in]  auth      Authentication class for MySQL authentication
+   \param[in]  keysOnly  True if only keys should be populated, false otherwise
+
+*/
 static void EnumerateOneInstance(
     SCXLogHandle& hLog,
     MySQL_Server_Class& inst,

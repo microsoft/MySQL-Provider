@@ -22,27 +22,55 @@
 #include "sqlauth.h"
 #include "sqlbinding.h"
 
-// Define single global copy (intended as a singleton class)
+/**
+   Define single global copy (intended as a singleton class)
+*/
 SCXCoreLib::SCXHandle<MySQL_Factory> g_pFactory(new MySQL_Factory());
 
+/*----------------------------------------------------------------------------*/
+/**
+   Thrown when an unexpected MySQL error occurs
+*/
 class SQLError : public SCXCoreLib::SCXException
 {
 public:
+    /*----------------------------------------------------------------------------*/
+    /**
+       Constructor
+
+       \param[in] l Source code location.
+
+    */
     SQLError(const SCXCoreLib::SCXCodeLocation& l)
         : SCXException(l), m_errorText(L"Generic Error")
     { }
+
+    /*----------------------------------------------------------------------------*/
+    /**
+       Constructor
+
+       \param[in] errorText Description of MySQL error
+       \param[in] l Source code location.
+
+    */
     SQLError(const char *errorText, const SCXCoreLib::SCXCodeLocation& l)
         : SCXException(l), m_errorText(SCXCoreLib::StrFromUTF8(errorText))
     { }
-    ~SQLError() { }
 
+    /*----------------------------------------------------------------------------*/
+    /**
+       Get error text from MySQL database
+
+       \returns Error text from MySQL database
+
+    */
     std::wstring What() const
     {
         return m_errorText;
     }
 
 private:
-    std::wstring m_errorText;
+    std::wstring m_errorText; //!< Error text from MySQL database
 };
 
 
@@ -435,7 +463,6 @@ void MySQL_Binding::GetConfigurationFilePaths( std::vector<std::string>& paths )
 
 
 
-// Get string value from map
 bool GetStrValue(const std::map<std::string, std::string>& mymap, const std::string keyName, std::string& value)
 {
     std::map<std::string, std::string>::const_iterator it;

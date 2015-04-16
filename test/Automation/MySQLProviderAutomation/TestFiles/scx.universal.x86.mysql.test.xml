@@ -9,7 +9,7 @@
     <rec key="MySQL.VerifyMySQLInstalledCmd">rpm -aq |grep -i mysql-cimprov</rec>
   </snippet>
   <snippet id="LinuxInfo">
-    <rec key="Linux.Host">m55s-sles11-01</rec>
+    <rec key="Linux.Host">m56p-deb6-01</rec>
     <rec key="LocalIP">127.0.0.1</rec>
     <rec key="DefaultPort">3306</rec>
     <rec key="DefaultAuthorUser">root</rec>
@@ -71,7 +71,7 @@
         <ProductVendor>Oracle</ProductVendor> 
         <ProductVersion>{ProductVersionInfo}</ProductVersion> 
         <SystemID>[0-9]</SystemID> 
-        <CollectionID>[lL]inux</CollectionID> 
+        <CollectionID>{CollectionIDInfo}</CollectionID> 
         <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
         <ErrorLogFile>{ErrorLogFileInfo}</ErrorLogFile> 
         <Hostname>{MachineName}</Hostname> 
@@ -200,7 +200,7 @@
         <ProductVendor>Oracle</ProductVendor> 
         <ProductVersion>{ProductVersionInfo}</ProductVersion> 
         <SystemID>[0-9]</SystemID> 
-        <CollectionID>[lL]inux</CollectionID> 
+        <CollectionID>{CollectionIDInfo}</CollectionID> 
         <ConfigurationFile>{ConfigurationFileInfo}</ConfigurationFile> 
         <ErrorLogFile>{ErrorLogFileInfo}</ErrorLogFile> 
         <Hostname>{MachineName}</Hostname> 

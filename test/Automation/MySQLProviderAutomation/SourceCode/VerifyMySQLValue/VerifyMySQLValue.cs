@@ -166,7 +166,9 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             propertyLists.Add("ProductVendor", "Oracle");
             propertyLists.Add("ProductVersion", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"version\""));
             propertyLists.Add("SystemID", "[0-9]");
-            propertyLists.Add("CollectionID", "linux");
+            string collectionID = GetCollectionID();
+            propertyLists.Add("CollectionID", collectionID);
+
             // Can't get the configuration file path so skip this verify.
             // propertyLists.Add("ConfigurationFile", "/etc/my.cnf");
             propertyLists.Add("ErrorLogFile", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"log_error\";"));
@@ -185,6 +187,8 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             }
             this.QueryXmlResult.Add(xdoc.InnerXml);
         }
+
+
 
         /// <summary>
         /// Get MySQL_serviceStatistics Map. all the values get from mysql cmd.
@@ -468,53 +472,5 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
                 this.QueryXmlResult.Add(xdoc.InnerXml);
             }
         }
-
-        /// <summary>
-        /// Get Variables' Value From MySQL Cmd
-        /// </summary>
-        /// <param name="getVariablesCmd">getVariablesCmd</param>
-        /// <param name="value">Got value</param>
-        /// <param name="needTrim">need removed the last one \n</param>
-        /// <returns>std output</returns>
-        private string GetVariablesValueFromMySQLCmd(string getVariablesCmd, string value = "Value:", bool needTrim = true)
-        {
-            string cmdoutput = string.Empty;
-            string fileExistCmd = "/bin/ls /etc/profile.d/|grep -ic mysql.sh";
-            string mysqlCmd = "mysql -E -e '{0}'| grep '{1}'";
-            try
-            {
-                fileExistCmd = this.RunCommandAsRoot(fileExistCmd, this.RootPassword);
-                if (fileExistCmd.Contains("1"))
-                {
-                    mysqlCmd = "source /etc/profile.d/mysql.sh;" + mysqlCmd;
-                }
-            }
-            catch (Exception)
-            {
-
-            }
-
-            try
-            {
-                RunPosixCmd execCmd = new RunPosixCmd(this.HostName, this.UserName, this.Password);
-                string cmd = string.Format(mysqlCmd, getVariablesCmd, value) + "| awk '{print $2}'";
-                execCmd.FileName = cmd;
-                execCmd.RunCmd();
-                cmdoutput = execCmd.StdOut;
-            }
-            catch
-            {
-                throw new VarAbort("Get Variables value from MySQL CMD Failed!");
-            }
-            if (needTrim)
-            {
-                return cmdoutput.Trim('\n');
-            }
-            else
-            {
-                return cmdoutput;
-            }
-        }
-
     }
 }

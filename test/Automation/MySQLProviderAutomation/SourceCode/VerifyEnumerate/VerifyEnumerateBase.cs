@@ -631,6 +631,69 @@ namespace Scx.Test.MySQL.Provider
         }
 
         /// <summary>
+        /// GetCollectionID
+        /// </summary>
+        /// <returns></returns>
+        public string GetCollectionID()
+        {
+            string collectionID = "[lL]inux";
+            string getOSDistCmd = "python -c \"import platform; print platform.dist()\"";
+            RunPosixCmd execCmd = this.MySQLHelper.RunCmd(getOSDistCmd);
+            if (execCmd.StdOut.ToLower().Contains("debian"))
+            {
+                collectionID = this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"version_compile_os\"");
+            }
+            return collectionID;
+        }
+
+        /// <summary>
+        /// Get Variables' Value From MySQL Cmd
+        /// </summary>
+        /// <param name="getVariablesCmd">getVariablesCmd</param>
+        /// <param name="value">Got value</param>
+        /// <param name="needTrim">need removed the last one \n</param>
+        /// <returns>std output</returns>
+        public string GetVariablesValueFromMySQLCmd(string getVariablesCmd, string value = "Value:", bool needTrim = true)
+        {
+            string cmdoutput = string.Empty;
+            string fileExistCmd = "/bin/ls /etc/profile.d/|grep -ic mysql.sh";
+            string mysqlCmd = "mysql -E -e '{0}'| grep '{1}'";
+            try
+            {
+                fileExistCmd = this.RunCommandAsRoot(fileExistCmd, this.RootPassword);
+                if (fileExistCmd.Contains("1"))
+                {
+                    mysqlCmd = "source /etc/profile.d/mysql.sh;" + mysqlCmd;
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+
+            try
+            {
+                RunPosixCmd execCmd = new RunPosixCmd(this.HostName, this.UserName, this.Password);
+                string cmd = string.Format(mysqlCmd, getVariablesCmd, value) + "| awk '{print $2}'";
+                execCmd.FileName = cmd;
+                execCmd.RunCmd();
+                cmdoutput = execCmd.StdOut;
+            }
+            catch
+            {
+                throw new VarAbort("Get Variables value from MySQL CMD Failed!");
+            }
+            if (needTrim)
+            {
+                return cmdoutput.Trim('\n');
+            }
+            else
+            {
+                return cmdoutput;
+            }
+        }
+
+        /// <summary>
         /// SetUpMultiMySQLEnv
         /// </summary>
         /// <param name="mcfContext">mcfContext</param>
@@ -714,7 +777,9 @@ namespace Scx.Test.MySQL.Provider
             this.resultTemplate = this.resultTemplate.Replace("{DefaultPort}", this.defaultport);
             // Product Version Info.
             this.resultTemplate = this.resultTemplate.Replace("{ProductVersionInfo}", this.version);
+
             // CollectionID.
+            this.collectionID = GetCollectionID();
             this.resultTemplate = this.resultTemplate.Replace("{CollectionIDInfo}", this.collectionID);
             // Config file
             this.resultTemplate = this.resultTemplate.Replace("{ConfigurationFileInfo}", this.defaultConfigFile);

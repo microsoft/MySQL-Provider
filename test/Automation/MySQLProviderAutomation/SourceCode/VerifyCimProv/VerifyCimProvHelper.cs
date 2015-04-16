@@ -329,6 +329,7 @@ namespace Scx.Test.MySQL.Provider.VerifyCimProv
         {
             try
             {
+                verifyMySQLInstalledCmd = "dpkg -l |grep -i mysql-cimprov";
                 // get acutally version number using cmd.
                 if (!this.isDeb)
                 {

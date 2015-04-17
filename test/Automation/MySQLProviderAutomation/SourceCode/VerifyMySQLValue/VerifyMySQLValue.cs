@@ -166,7 +166,13 @@ namespace Scx.Test.MySQL.Provider.VerifyMySQLValue
             propertyLists.Add("ProductVendor", "Oracle");
             propertyLists.Add("ProductVersion", this.GetVariablesValueFromMySQLCmd("show variables where Variable_name =\"version\""));
             propertyLists.Add("SystemID", "[0-9]");
-            string collectionID = GetCollectionID();
+
+            string collectionID = "linux";
+            string tempCollectionID = GetCollectionID();
+            if (!tempCollectionID.Contains("[lL]inux"))
+            {
+                collectionID = tempCollectionID;
+            }
             propertyLists.Add("CollectionID", collectionID);
 
             // Can't get the configuration file path so skip this verify.

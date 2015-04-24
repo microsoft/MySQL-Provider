@@ -1237,25 +1237,6 @@
       <val>false</val>
     </recm>
   </var>
-  <!--Actions[1]-->
-  <!--This case will test two actions in administrator workload:Uninstall Agent and Upgrade Agent-->
-  <var set="2" lvl="2" vid="798928" cid="TaskHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.TaskHealth" dsc="This case will test two actions in administrator workload:Uninstall Agent and Upgrade Agent" permutation="rows">
-    <recm key="EntityName">
-      <val>Elevated Agent Tasks</val>
-    </recm>
-    <recm key="AppInstalledVerifyCmd">
-      <val>rpm -q scx</val>
-    </recm>
-    <recm key="ElevatedUninstallAgentTask">
-      <val>Microsoft.Linux.UniversalR.1.Agent.Uninstall.Task</val>
-    </recm>
-    <recm key="ElevatedInstallAgentTask">
-      <val>Microsoft.Linux.UniversalR.1.Agent.Install.Task</val>
-    </recm>
-    <recm key="ElevatedUpgradeAgentTask">
-      <val>Microsoft.Linux.UniversalR.1.Agent.Upgrade.Task</val>
-    </recm>
-  </var>
 
   <!--Performance[17]-->
   <!--This case will test Performance Collection Rule InnoDB Buffer Pool 799578,799582-->

@@ -430,7 +430,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
             string discoveryTaskName = "Microsoft.Unix.WSMan.Discovery.Task";
 
             ManagementPackTask task = this.tasksHelper.GetMonitoringTask(discoveryTaskName);
-            
+
             // Wsman now only support taking the regular username and password, rathar than the xml username and xml password.
             Pair<string, string>[] configOverrideParams = new Pair<string, string>[] 
             {
@@ -441,7 +441,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
                 new Pair<string, string>("Password", this.clientInfo.SuperUserPassword)
             };
 
-            Microsoft.EnterpriseManagement.Runtime.TaskConfiguration monitorTaskConfig = 
+            Microsoft.EnterpriseManagement.Runtime.TaskConfiguration monitorTaskConfig =
                 this.tasksHelper.GetMonitoringTaskConfiguration(task, configOverrideParams);
 
             IList<Microsoft.EnterpriseManagement.Runtime.TaskResult> results =
@@ -457,6 +457,10 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
             XmlElement resultXmlRoot = resultXml.DocumentElement;
 
             string wsmanHostName = this.GetXmlNodeValue(resultXmlRoot, "p:Hostname");
+            if (wsmanHostName.Contains("."))
+            {
+                wsmanHostName = wsmanHostName.Substring(0, wsmanHostName.IndexOf('.', 0));
+            }
             string wsmanIPAddr = Dns.GetHostEntry(wsmanHostName).AddressList[0].ToString();
             string wsmanAgentVersion = this.GetXmlNodeValue(resultXmlRoot, "p:VersionString");
             string wsmanUnameArchitecture = this.GetXmlNodeValue(resultXmlRoot, "p:UnameArchitecture");
@@ -658,7 +662,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
             };
 
             Microsoft.EnterpriseManagement.Runtime.TaskConfiguration monitorTaskConfig = this.tasksHelper.GetMonitoringTaskConfiguration(task, configOverrideParams);
-            
+
             IList<Microsoft.EnterpriseManagement.Runtime.TaskResult> results =
                 this.tasksHelper.RunTask(this.TargetList, task, monitorTaskConfig);
 
@@ -729,7 +733,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
                 {
                 };
 
-            Microsoft.EnterpriseManagement.Runtime.TaskConfiguration monitorTaskConfig = 
+            Microsoft.EnterpriseManagement.Runtime.TaskConfiguration monitorTaskConfig =
                 this.tasksHelper.GetMonitoringTaskConfiguration(task, configOverrideParams);
 
             IList<Microsoft.EnterpriseManagement.Runtime.TaskResult> results =
@@ -815,7 +819,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
             IList<Microsoft.EnterpriseManagement.Runtime.TaskResult> results =
                 this.tasksHelper.RunTask(this.TargetList, task, monitorTaskConfig);
         }
-        
+
         /// <summary>
         /// Upgrades the agent on the remote system for Astro's test coverage improvement
         /// </summary>
@@ -938,7 +942,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
 
             CreatableEnterpriseManagementRelationshipObject relationshipObject =
                 new CreatableEnterpriseManagementRelationshipObject(this.managementGroup, shouldManageClass);
-            
+
             MonitoringObject managementServicePoolObject =
                 this.GetMonitoringObject(managementServicePoolClass, this.defaultResourcePool);
 
@@ -1006,7 +1010,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
                     new Pair<string, string>("TargetFile", kitFileName)
                 };
             }
-            else 
+            else
             {
                 // Deploy task only support taking xml user name and password. 
                 configOverrideParams = new Pair<string, string>[] 
@@ -1113,7 +1117,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKHelper
 
         #endregion Methods
     }
-    
+
     /// <summary>
     /// An exception specific to the ManageMonitors class
     /// </summary>

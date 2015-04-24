@@ -116,7 +116,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
 
                 // Run the recovery command
                 this.RecoverMonitor(ctx);
-
+                this.Wait();
                 this.OverridePerformanceMonitor(ctx, true);
 
                 this.DeleteMonitorOverride(ctx);
@@ -390,6 +390,16 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
             execCmd.RunCmd();
             return execCmd;
         }
+
+        /// <summary>
+        /// Generic wait method for use to allow OM internal state to stabilize.
+        /// </summary>
+        public void Wait()
+        {
+            TimeSpan serverWaitTime = new TimeSpan(0, 2, 0);
+            System.Threading.Thread.Sleep(serverWaitTime);
+        }
+
         #endregion
     }
 

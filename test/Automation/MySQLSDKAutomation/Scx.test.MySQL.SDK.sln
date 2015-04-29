@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFiles", "TestFiles", "{
 		TestFiles\sqlAbortConnection.bat = TestFiles\sqlAbortConnection.bat
 		TestFiles\sqlKeyWritePct.bat = TestFiles\sqlKeyWritePct.bat
 		TestFiles\sqlMultiConnection.bat = TestFiles\sqlMultiConnection.bat
+		TestFiles\sqlSlowlyQuery.bat = TestFiles\sqlSlowlyQuery.bat
 		TestFiles\sqlTest.bat = TestFiles\sqlTest.bat
 		TestFiles\sqlUsingQueryTest.bat = TestFiles\sqlUsingQueryTest.bat
 	EndProjectSection

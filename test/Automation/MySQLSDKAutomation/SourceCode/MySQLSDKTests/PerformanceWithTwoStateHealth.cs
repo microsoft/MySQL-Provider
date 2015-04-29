@@ -117,6 +117,17 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 // Run the recovery command
                 this.RecoverMonitor(ctx);
                 this.Wait();
+                // if mysql is 5.0 don't need Set global slow_query_log=true;
+                if (!IsMySql50Version())
+                {
+                    string cmd = ctx.Records.GetValue("IsLargerThan50");
+                    if (!(string.IsNullOrEmpty(cmd)))
+                    {
+                        ctx.Trc("Running recovery command: " + cmd);
+                        this.PosixCmd(ctx, cmd);
+                    }
+                }
+
                 this.OverridePerformanceMonitor(ctx, true);
 
                 this.DeleteMonitorOverride(ctx);
@@ -398,6 +409,43 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         {
             TimeSpan serverWaitTime = new TimeSpan(0, 2, 0);
             System.Threading.Thread.Sleep(serverWaitTime);
+        }
+
+        /// <summary>
+        /// IsMySql50Version
+        /// </summary>        
+        /// <returns>IsMySql50Version</returns>
+        public bool IsMySql50Version()
+        {
+            string mysqlVersion = "5.0";
+            string fileExistCmd = "/bin/ls /etc/profile.d/|grep -ic mysql.sh";
+            string getMySQLVersionCmd = "mysql -V| awk '{print $5}' | sed -e 's/,$//'";
+            bool isMySql5 = false;
+            try
+            {
+                fileExistCmd = this.RunCmd(fileExistCmd).StdOut;
+                if (fileExistCmd.Contains("1"))
+                {
+                    getMySQLVersionCmd = "source /etc/profile.d/mysql.sh;" + getMySQLVersionCmd;
+                }
+            }
+            catch
+            {
+
+            }
+            try
+            {
+                mysqlVersion = this.RunCmd(getMySQLVersionCmd).StdOut;
+            }
+            catch
+            {
+            }
+            if (mysqlVersion.ToLower().Contains("5.0"))
+            {
+                isMySql5 = true;
+            }
+
+            return isMySql5;
         }
 
         #endregion

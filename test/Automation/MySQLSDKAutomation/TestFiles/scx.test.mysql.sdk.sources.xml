@@ -942,10 +942,17 @@
 
   <var set="1" lvl="1" vid="797339" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Error when Slowly Query Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
-      <val>sqlTest.bat %hostname% 25</val>
+      <val>sqlSlowlyQuery.bat %hostname% 1</val>
     </recm>
     <recm key="PostCmd">
-      <val>%restartMySQLCmd%</val>
+      <val>
+        %restartMySQLCmd%;mysql -E -e 'set global long_query_time=1;';
+      </val>
+    </recm>
+    <recm key="IsLargerThan50">
+      <val>
+        mysql -E -e 'Set global slow_query_log=true;';
+      </val>
     </recm>
     <recm key="ActionType">
       <val>Server</val>
@@ -972,7 +979,7 @@
       <val>25</val>
     </recm>
     <recm key="overrideWarningThreshold">
-      <val>50</val>
+      <val>110</val>
     </recm>
     <recm key="overrideErrorThreshold">
       <val>1</val>
@@ -980,11 +987,24 @@
     <recm key="ExpectedState">
       <val>Error</val>
     </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
+    </recm>
   </var>
 
   <var set="1" lvl="1" vid="797340" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Row Operation: Verify if the MySQL server Slowly Query Percent become Warning when Slowly Query Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
-      <val>sqlTest.bat %hostname% 25</val>
+      <val>sqlSlowlyQuery.bat %hostname% 1</val>
+    </recm>
+    <recm key="PostCmd">
+      <val>
+        %restartMySQLCmd%;mysql -E -e 'set global long_query_time=1;';
+      </val>
+    </recm>
+    <recm key="IsLargerThan50">
+      <val>
+        mysql -E -e 'Set global slow_query_log=true;';
+      </val>
     </recm>
     <recm key="ActionType">
       <val>Server</val>
@@ -1014,10 +1034,13 @@
       <val>1</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>50</val>
+      <val>110</val>
     </recm>
     <recm key="ExpectedState">
       <val>Warning</val>
+    </recm>
+    <recm key="ShouldNotVerifyMonitorStatusAfterResetValue">
+      <val>true</val>
     </recm>
   </var>
 
@@ -1113,7 +1136,7 @@
 
   <var set="1" lvl="1" vid="797343" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Use Percent become Error when Table Cache Use Percent is reached Error Threshold." permutation="rows">
     <recm key="ActionCmd">
-      <val>sqlTest.bat %hostname% 5</val>
+      <val>sqlTest.bat %hostname% 25</val>
     </recm>
     <recm key="ActionType">
       <val>Server</val>
@@ -1146,7 +1169,7 @@
       <val>85</val>
     </recm>
     <recm key="overrideErrorThreshold">
-      <val>10</val>
+      <val>2</val>
     </recm>
     <recm key="ExpectedState">
       <val>Error</val>
@@ -1155,7 +1178,7 @@
 
   <var set="1" lvl="1" vid="797344" cid="PerformanceWithTwoStateHealth" cls="Scx.Test.MySQL.SDK.MySQLSDKTests.PerformanceWithTwoStateHealth" dsc="Table Cache: Verify if the MySQL server Table Cache Use Percent become Warning when Table Cache Use Percent is reached Warning Threshold." permutation="rows">
     <recm key="ActionCmd">
-      <val>sqlTest.bat %hostname% 5</val>
+      <val>sqlTest.bat %hostname% 25</val>
     </recm>
     <recm key="ActionType">
       <val>Server</val>
@@ -1185,7 +1208,7 @@
       <val>95</val>
     </recm>
     <recm key="overrideWarningThreshold">
-      <val>10</val>
+      <val>2</val>
     </recm>
     <recm key="overrideErrorThreshold">
       <val>95</val>

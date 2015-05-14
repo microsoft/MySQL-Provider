@@ -40,7 +40,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <summary>
         /// New Thread.
         /// </summary>
-        private Thread t = null;
+        private Thread t = null;      
 
         /// <summary>
         /// Framework setup method
@@ -182,9 +182,9 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     {
                         this.RunWinCMDWithThread(ctx);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-
+                        ctx.Trc("error" + e.Message);
                     }
                 }
                 else
@@ -210,6 +210,18 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                     this.VerifyMonitor(ctx, requiredState);
 
                     this.VerifyAlert(ctx, true);
+                }
+                // kill the Server side CMD. after verify.
+                if (this.actionCmdType.Equals("Server"))
+                {
+                    try
+                    {
+                        this.StopRunWinCMD(ctx);
+                    }
+                    catch (Exception)
+                    {
+
+                    }
                 }
             }
             catch (Exception ex)
@@ -280,9 +292,28 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         /// <param name="ctx">IContext</param>
         private void RunWinCMDWithThread(IContext ctx)
         {
-            this.t = new Thread(new ParameterizedThreadStart(RunWinCMD));
-            this.t.Start(ctx);
+            try
+            {
+                this.t = new Thread(new ParameterizedThreadStart(RunWinCMD));
+                this.t.Start(ctx);
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException("testting");
+            }
+        }
 
+        private void StopRunWinCMD(IContext ctx)
+        {
+            System.Diagnostics.Process[] myProcesses;
+            myProcesses = System.Diagnostics.Process.GetProcessesByName("cmd");
+
+            System.Diagnostics.Process[] myProcesses01;
+            myProcesses01 = System.Diagnostics.Process.GetProcessesByName("test");
+            foreach (System.Diagnostics.Process instance in myProcesses)
+            {
+                instance.CloseMainWindow();
+            }
         }
 
         /// <summary>
@@ -293,7 +324,8 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
         {
             IContext ctx = (IContext)parObject;
             RunWinCmd winCmd = new RunWinCmd();
-            string sqlTestPath = ctx.ParentContext.Records.GetValue("mysqlHelperSqlTestPath");
+            //string sqlTestPath = ctx.ParentContext.Records.GetValue("mysqlHelperSqlTestPath");
+            string sqlTestPath = Environment.CurrentDirectory;
             string actionCmd = ctx.Records.GetValue("ActionCmd");
             winCmd.WorkingDirectory = sqlTestPath;
             string[] cmds = actionCmd.Split(' ');

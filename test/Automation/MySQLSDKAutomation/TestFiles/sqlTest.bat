@@ -26,10 +26,10 @@ Set /A _RND=_RND%%%_Len%
 SET _RndAlphaNum=!_RndAlphaNum!!_Alphanumeric:~%_RND%,1!
 If !_count! lss %_RNDLength% goto _loop
 Echo Random string is !_RndAlphaNum!
-c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=70 --iterations=2 --create-schema=employees --query="SELECT * FROM employees where last_name like '%!_RndAlphaNum!%';"
-c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="SELECT COUNT(*) from employees;"
-c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="insert into employees (emp_no, birth_date, first_name, last_name, gender, hire_date) values('10000000', '1967-04-21', 'Alfred', '!_RndAlphaNum!', 'M', '2001-01-09');"
-c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="DELETE FROM employees where last_name = '!_RndAlphaNum!';"
-c:\temp\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="SELECT COUNT(*) from employees;"
+.\mysqlslap.exe --user=root --host=%1  --concurrency=70 --iterations=2 --create-schema=employees --query="SELECT * FROM employees where last_name like '%!_RndAlphaNum!%';"
+.\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="SELECT COUNT(*) from employees;"
+.\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="insert into employees (emp_no, birth_date, first_name, last_name, gender, hire_date) values('10000000', '1967-04-21', 'Alfred', '!_RndAlphaNum!', 'M', '2001-01-09');"
+.\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="DELETE FROM employees where last_name = '!_RndAlphaNum!';"
+.\mysqlslap.exe --user=root --host=%1  --concurrency=1 --iterations=1 --create-schema=employees --query="SELECT COUNT(*) from employees;"
 GOTO :_Repeat
 :_End

@@ -242,6 +242,16 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                         ctx.Trc("Test Override xml is not provided to import");
                     }
                 }
+                // copy the default my.cnf into driver c.
+                if (ctx.Records.HasKey("defaultAccountInfoFile"))
+                {
+                    string defaultAccountFileLocation = @"C:\my.cnf";
+                    if (!File.Exists(defaultAccountFileLocation))
+                    {
+                        File.Copy(Path.Combine(Environment.CurrentDirectory, "my.cnf"), defaultAccountFileLocation);
+                    }
+
+                }
 
                 // optionally delete all existing systems monitored by Operations Manager
                 if (ctx.Records.HasKey("deploytestapp") &&
@@ -339,7 +349,7 @@ namespace Scx.Test.MySQL.SDK.MySQLSDKTests
                 }
 
                 this.WaitForClientVerification(ctx);
-          
+
                 // Add the mySQL Auth for superuser and nonsuperuser
                 this.mySQLAddAuthCmd = ctx.Records.GetValue("mySQLAddAuthCmd");
                 this.mysqlAgentHelper.SetupMySqlAuth(this.mySQLAddAuthCmd);

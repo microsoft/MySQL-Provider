@@ -29,7 +29,7 @@ namespace Scx.Test.MySQL.Provider
         private RunPosixCmd rPC;
 
         /// <summary>
-        /// addMySQLAuthCmd eg./opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }
+        /// addMySQLAuthCmd eg./opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }
         /// </summary>
         private string addMySQLAuthCmd;
 

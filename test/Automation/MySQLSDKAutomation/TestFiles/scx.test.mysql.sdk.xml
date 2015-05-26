@@ -1508,8 +1508,8 @@
     <rec key="restartMySQLCmd">service mysql restart</rec>
     <rec key="checkServiceCmd">ps-ef |grep mysql</rec>
     <!--Verify the MySQL CIM Provider Installed -->
-    <rec key="mySQLAddAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
-    <rec key="mySQLAddNonSuperUserAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxuser Password scxuser }</rec>
+    <rec key="mySQLAddAuthCmd">/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
+    <rec key="mySQLAddNonSuperUserAuthCmd">/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxuser Password scxuser }</rec>
     <varref />
   </grp>
 </varmap>

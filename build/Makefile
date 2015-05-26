@@ -99,14 +99,14 @@ distclean : clean
 # This assumes that:
 #   1) OMI already has registration files for libmysqlProvider.so
 
-install : /opt/microsoft/omi/lib/libmysqlProvider.so
+install : /opt/omi/lib/libmysqlProvider.so
 	@[ -e $(TARGET_DIR)/tmp_start_omi  ] && rm $(TARGET_DIR)/tmp_start_omi  && sudo /etc/init.d/omiserverd start || exit 0
 
-/opt/microsoft/omi/lib/libmysqlProvider.so : $(PROVIDER_LIBRARY)
+/opt/omi/lib/libmysqlProvider.so : $(PROVIDER_LIBRARY)
 	@echo "========================= Performing Installing OMI provider"
 	-sudo /etc/init.d/omiserverd stop
 	touch $(TARGET_DIR)/tmp_start_omi
-	sudo cp -v $(PROVIDER_LIBRARY) /opt/microsoft/omi/lib/
+	sudo cp -v $(PROVIDER_LIBRARY) /opt/omi/lib/
 
 restart :
 	@-sudo /etc/init.d/omiserverd stop

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <varmap xmlns="http://smxinfranet/schemas/mcf/2002/01/varmap"
         assembly="..\MySQL.dll"
         dsc="MySQL Automation Test"
@@ -16,11 +16,11 @@
     <rec key="DefaultAuthorPassWord">OpsMgr2007R2</rec>
   </snippet>
   <snippet id="MySQLAuthInfo">
-    <rec key="MySQL.DefaultAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
+    <rec key="MySQL.DefaultAuthCmd">/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
     <rec key="MySQL.DeleteAuthCmd">rm -rf /var/opt/microsoft/mysql-cimprov/auth/*</rec>
   </snippet>
   <snippet id="MultiMySQL">
-    <rec key="MultiMySQLAddAuth">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 };/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3307 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
+    <rec key="MultiMySQLAddAuth">/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 };/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3307 BindAddress 127.0.0.1 Username root Password OpsMgr2007R2 }</rec>
   </snippet>
   <snippet id="GenralStopedOneInstanceInMultiEnvMySQLServerDataBasesProperties">
     <rec key="expectedStopedOneInstanceInMultiEnvDatabase">
@@ -369,10 +369,10 @@
   <!-- 779296-VerifynonprivilegedAccountEnumeratedMySQL_Server -->
   <var set="1" lvl="0" vid="779296" cid="VerifyCimProv" cls="Scx.Test.MySQL.Provider.VerifyCimProv.VerifyCimProvAuth" dsc="[MySQL]Verify the non-privileged account can enumerated for MySQL_Server" act="true">
     <snipref id="MySQLAuthInfo" />
-    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxtest Password scxtest }</rec>
+    <rec key="addMySQLAuthCmd">/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxtest Password scxtest }</rec>
     <rec key="removeMySQLAuthCmd">rm -rf /var/opt/microsoft/mysql-cimprov/auth/scxtest</rec>
     <rec key="useNonSuperUser">true</rec>
-    <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
+    <rec key="mysqlCmd">/opt/omi/bin/omicli ei root/mysql MySQL_Server</rec>
     <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic scxtest</rec>
     <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/scxtest|grep -i mysql-auth</rec>
     <rec key="expectedAuthFolderCount">1</rec>
@@ -386,7 +386,7 @@
     <snipref id="MySQLAuthInfo" />
     <rec key="addMySQLAuthCmd">%MySQL.DefaultAuthCmd%</rec>
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
-    <rec key="mysqlCmd">/opt/microsoft/omi/bin/omicli ei root/mysql MySQL_Server</rec>
+    <rec key="mysqlCmd">/opt/omi/bin/omicli ei root/mysql MySQL_Server</rec>
     <rec key="VerifyAuthFolderExistCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth/|grep -ic mysql-auth</rec>
     <rec key="VerifyAuthFileProtectionCmd">ls -al /var/opt/microsoft/mysql-cimprov/auth|grep -i mysql-auth</rec>
     <rec key="expectedAuthFolderCount">1</rec>
@@ -563,7 +563,7 @@
   <var set="2" lvl="0" vid="779298" cid="MySQL_Server" cls="Scx.Test.MySQL.Provider.VerifyEnumerateMySQLServer" dsc="Verify the property 'OperatingStatus' is ‘Insufficient Privileges ' when we using non-privileged account to query wsman" act="true">
     <snipref id="LinuxInfo" />
     <snipref id="MySQLAuthInfo" />
-    <rec key="addMySQLAuthCmd">/opt/microsoft/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxtest Password scxtest}</rec>
+    <rec key="addMySQLAuthCmd">/opt/omi/bin/omicli iv root/mysql { MySQL_Server } UpdateCredentials { Port 3306 BindAddress 127.0.0.1 Username scxtest Password scxtest}</rec>
     <rec key="removeMySQLAuthCmd">%MySQL.DeleteAuthCmd%</rec>
     <rec key="useNonSuperUser">true</rec>
     <rec key="IsBadStatus">true</rec>

@@ -1,9 +1,38 @@
 # -*- mode: Makefile; -*- 
-#--------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#--------------------------------------------------------------------------------
+
+#--------------------------------- START OF LICENSE ----------------------------
+#
+# MySQL cimprov ver. 1.0
+#
+# Copyright (c) Microsoft Corporation
+#
+# All rights reserved. 
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the ""Software""), to deal
+# in the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+#---------------------------------- END OF LICENSE -----------------------------
+
+#-------------------------------------------------------------------------------
 # 2014-01-17
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 BASE_DIR := $(subst /build,,$(PWD))
 OMI_ROOT := $(shell cd ../../omi/Unix; pwd -P)
@@ -57,7 +86,7 @@ PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
 MYAUTH_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) `mysql_config --cflags`
 PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) 
 
-LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
+LINK_LIBRARIES := -Wl,-rpath=/opt/omi/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 MYAUTH_LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 PREEXEC_LINK_LIBRARIES := -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt -pthread
 PROVIDER_TEST_LINK_LIBRARIES := -lbase -lpal -L$(SCXPAL_TARGET_DIR) -lscxcore $(SCXPAL_DIR)/test/ext/lib/linux/$(ARCH)/cppunit/libcppunit.a -lpthread -lrt
@@ -95,6 +124,8 @@ distclean : clean
 	-$(RM) $(SCXPAL_DIR)/build/config.mak
 	-$(RM) $(SCXPAL_DIR)/build/Makefile.config_cache
 
+ifeq ($(OPENSOURCE_DISTRO),0)
+
 # Install the OMI provider for test purposes
 # This assumes that:
 #   1) OMI already has registration files for libmysqlProvider.so
@@ -112,6 +143,27 @@ restart :
 	@-sudo /etc/init.d/omiserverd stop
 	@sudo /etc/init.d/omiserverd start
 
+else
+
+install : all
+	$(MKPATH) /etc/opt/microsoft/mysql-cimprov/conf
+	$(MKPATH) /opt/microsoft/mysql-cimprov/bin
+	$(MKPATH) /opt/microsoft/mysql-cimprov/lib
+	$(MKPATH) /var/opt/microsoft/mysql-cimprov/auth
+	$(MKPATH) /var/opt/microsoft/mysql-cimprov/log
+	$(MKPATH) /var/opt/microsoft/mysql-cimprov/run
+
+	$(COPY) $(TARGET_DIR)/mycimprovauth /opt/microsoft/mysql-cimprov/bin
+	$(COPY) $(TARGET_DIR)/omi_preexec /opt/microsoft/mysql-cimprov/bin
+	$(COPY) $(TARGET_DIR)/libmysqlProvider.so /opt/microsoft/mysql-cimprov/lib 
+
+	chmod 755 /opt/microsoft/mysql-cimprov/bin/mycimprovauth
+	chmod 755 /opt/microsoft/mysql-cimprov/bin/omi_preexec
+	chmod 755 /opt/microsoft/mysql-cimprov/lib/libmysqlProvider.so
+
+	$(SOFTLINK) /opt/microsoft/mysql-cimprov/lib/libmysqlProvider.so /opt/omi/lib
+
+endif # ifeq ($(OPENSOURCE_DISTRO),0)
 
 PROVIDER_STATUS:
 	@echo "========================= Performing Building provider"
@@ -427,6 +479,8 @@ test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
 	@echo "========================= Performing MySQL testrun execution"
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib; cd $(TARGET_DIR); ./testrunner
 
+ifeq ($(OPENSOURCE_DISTRO),0)
+
 #--------------------------------------------------------------------------------
 # Build the distribution kit
 #
@@ -544,6 +598,8 @@ endif
                                              $(TARGET_DIR) \
                                              `cat $(TARGET_DIR)/package_filename`
 	rm $(TARGET_DIR)/package_filename
+
+endif # ifeq ($(OPENSOURCE_DISTRO),0)
 
 #
 # The following is all for OMI "bootstrap" stuff (allowing omigen and omireg to run)

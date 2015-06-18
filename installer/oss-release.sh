@@ -125,8 +125,7 @@ while ( true ); do
 	fi
 
 	# Clean up from the build
-	make clean
-	rm $TARGET_DIR/mysql/mysql/build/config.mak
+	make clean distclean
 	chmod -R u+w $TARGET_DIR/mysql/omi
 	rm -r $TARGET_DIR/mysql/omi/*
     else

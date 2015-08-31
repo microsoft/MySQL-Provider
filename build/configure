@@ -260,6 +260,7 @@ fi
 cat <<EOF > config.mak
 ENABLE_DEBUG=$enable_debug_flag
 PERFORM_OMI_MAKEINSTALL=$enable_omi_tools_flag
+OPENSOURCE_DISTRO=$opensource_distro
 OMI_CONFIGURE_QUALS=$omi_configure_quals
 
 BUILD_TYPE=$build_type

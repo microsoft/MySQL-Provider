@@ -1,5 +1,6 @@
 %Variables
-PF:	'Linux'
+PF:           'Linux'
+OMI_SERVICE:  '/opt/omi/bin/service_control'
 
 %FindClientLibrary
 # Note: FindClientLibrary() is found in SCXCore/installer/oss-kits/mysql-oss-test.sh
@@ -64,36 +65,6 @@ FindClientLibrary()
 
 FindClientLibrary
 
-%OmiService_funcs
-StopOmiServer() {
-    if [ -x /usr/sbin/invoke-rc.d ]; then
-        /usr/sbin/invoke-rc.d omiserverd stop
-    elif [ -x /sbin/service ]; then
-        service omiserverd stop
-    else
-        echo "Unrecognized Service Controller to start OMI Service" 1>&2
-        exit 1
-    fi
-}
-
-StartOmiServer() {
-    if [ -x /usr/sbin/invoke-rc.d ]; then
-        /usr/sbin/invoke-rc.d omiserverd start
-    elif [ -x /sbin/service ]; then
-        service omiserverd start
-    else
-        echo "Unrecognized Service Controller to start OMI Service" 1>&2
-        exit 1
-    fi
-}
-
-RestartOmiServer() {
-    if [ $OMI_IS_RUNNING -eq 1 ]; then
-        StopOmiServer
-    fi
-    StartOmiServer
-}
-
 %Preinstall_100
 #include FindClientLibrary
 
@@ -102,14 +73,6 @@ if [ -z "${CLIENT_LIBRARY}" ]; then
     exit 1
 fi
 
-
-%Preinstall_200
-#include OmiService_funcs
-
-#include CheckIfOmiIsRunning
-if [ $OMI_IS_RUNNING -eq 1 ]; then
-    StopOmiServer
-fi
 
 %Postinstall_2000
 #include FindClientLibrary
@@ -125,8 +88,8 @@ LIBRARY_DIR='/opt/microsoft/mysql-cimprov/lib'
 [ -e ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY} ] && rm ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY}
 ln -s ${CLIENT_LIBRARY} ${LIBRARY_DIR}/${MYSQL_BUILD_LIBRARY}
 
-#include OmiService_funcs
-StartOmiServer
+# Reload the OMI server
+${{OMI_SERVICE}} reload
 
 %Postuninstall_1000
 # Calling sequence for RPM pre/post scripts, during upgrade, is as follows:
@@ -151,10 +114,8 @@ if ${{PERFORMING_UPGRADE_NOT}}; then
 fi
 
 %Postuninstall_1100
-#include OmiService_funcs
-#include CheckIfOmiIsRunning
-
 # If we're called for upgrade, don't do anything
 if ${{PERFORMING_UPGRADE_NOT}}; then 
-    RestartOmiServer
+    # Reload the OMI server
+    ${{OMI_SERVICE}} reload
 fi

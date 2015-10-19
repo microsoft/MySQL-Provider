@@ -15,7 +15,8 @@ MAINTAINER:              'Microsoft Corporation'
 %Defines
 
 %Files
-/opt/microsoft/mysql-cimprov/bin/mycimprovauth;                         target/${{BUILD_CONFIGURATION}}/mycimprovauth;         755; root; root
+/opt/microsoft/mysql-cimprov/bin/mycimprovauth;                         installer/scripts/mycimprovauth;                       755; root; root
+/opt/microsoft/mysql-cimprov/bin/.mycimprovauth;                        target/${{BUILD_CONFIGURATION}}/mycimprovauth;         755; root; root
 /opt/microsoft/mysql-cimprov/bin/omi_preexec;                           target/${{BUILD_CONFIGURATION}}/omi_preexec;           755; root; root
 /opt/microsoft/mysql-cimprov/lib/libmysqlProvider.${{SHLIB_EXT}};       target/${{BUILD_CONFIGURATION}}/libmysqlProvider.${{SHLIB_EXT}}; 755; root; root
 
@@ -58,19 +59,6 @@ MAINTAINER:              'Microsoft Corporation'
 
 
 %Dependencies
-
-%CheckIfOmiIsRunning
-OMI_IS_RUNNING=1
-if [ -f /var/opt/omi/run/omiserver.pid ]; then
-    #  Check if omiserver is running with this pid.
-    omi_pid=`cat /var/opt/omi/run/omiserver.pid`
-    ps -aef | grep $omi_pid | grep omiserver 1> /dev/null 2> /dev/null
-    if [ $? -ne 0 ]; then
-	OMI_IS_RUNNING=0
-    fi
-else
-    OMI_IS_RUNNING=0
-fi
 
 %Postinstall_10
 WriteInstallInfo() {

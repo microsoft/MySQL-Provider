@@ -48,6 +48,10 @@ ifndef ENABLE_DEBUG
 $(error "ENABLE_DEBUG is not set.  Please re-run configure")
 endif
 
+ifndef SCX_BUILDVERSION_STATUS
+$(error "Is Makefile.version missing?  Please re-run configure")
+endif
+
 SOURCE_DIR := $(BASE_DIR)/source/code
 TEST_DIR := $(BASE_DIR)/test/code
 
@@ -117,7 +121,8 @@ clean :
 	-find $(BASE_DIR) -name \*~ -exec rm {} \;
 
 distclean : clean
-	$(RM) $(BASE_DIR)/build/config.mak
+	-$(RM) $(BASE_DIR)/build/config.mak
+	-$(RM) $(BASE_DIR)/build/Makefile.version
 	-make -C $(OMI_ROOT) distclean
 	-make -C $(SCXPAL_DIR)/build distclean
 	-$(RMDIR) $(OMI_ROOT)/output*

@@ -63,23 +63,23 @@ PAL_TESTUTILS_DIR := $(SCXPAL_DIR)/test/code/testutils
 
 INTERMEDIATE_DIR=$(BASE_DIR)/intermediate/$(BUILD_CONFIGURATION)
 TARGET_DIR := $(BASE_DIR)/target/$(BUILD_CONFIGURATION)
-PROVIDER_LIBRARY := $(TARGET_DIR)/libmysqlProvider.so
-OMI_PREEXEC := $(TARGET_DIR)/omi_preexec
-MYAUTH_PROG := $(TARGET_DIR)/mycimprovauth
+PROVIDER_LIBRARY := $(INTERMEDIATE_DIR)/libmysqlProvider.so
+OMI_PREEXEC := $(INTERMEDIATE_DIR)/omi_preexec
+MYAUTH_PROG := $(INTERMEDIATE_DIR)/mycimprovauth
 
-INSTALLER_TMPDIR := $(TARGET_DIR)/installer_tmp
+INSTALLER_TMPDIR := $(INTERMEDIATE_DIR)/installer_tmp
 
 # Include files
 
-INCLUDE_VERSION := $(TARGET_DIR)/buildversion.h
-INCLUDE_DEFINES := $(TARGET_DIR)/defines.h
+INCLUDE_VERSION := $(INTERMEDIATE_DIR)/buildversion.h
+INCLUDE_DEFINES := $(INTERMEDIATE_DIR)/defines.h
 
 # Compiler flags
 
 OMI_INCLUDE_FLAGS := -I$(OMI_ROOT)/output/include
-PROVIDER_INCLUDE_FLAGS := -I$(PROVIDER_DIR)/support -I$(PAL_INCLUDE_DIR) -I$(TARGET_DIR)
+PROVIDER_INCLUDE_FLAGS := -I$(PROVIDER_DIR)/support -I$(PAL_INCLUDE_DIR) -I$(INTERMEDIATE_DIR)
 
-PROVIDER_TEST_INCLUDE_FLAGS := -Wmissing-include-dirs -Wno-non-virtual-dtor -I$(SCXPAL_DIR)/source/code/include -I$(TARGET_DIR) -I$(SCXPAL_DIR)/test/ext/include -I$(OMI_ROOT)/output/include -I$(OMI_ROOT) -I$(OMI_ROOT)/common -I$(SCXPAL_DIR)/test/code/include $(PROVIDER_INCLUDE_FLAGS) -I$(PROVIDER_DIR) -I$(PROVIDER_TEST_SUPPORT_DIR)
+PROVIDER_TEST_INCLUDE_FLAGS := -Wmissing-include-dirs -Wno-non-virtual-dtor -I$(SCXPAL_DIR)/source/code/include -I$(INTERMEDIATE_DIR) -I$(SCXPAL_DIR)/test/ext/include -I$(OMI_ROOT)/output/include -I$(OMI_ROOT) -I$(OMI_ROOT)/common -I$(SCXPAL_DIR)/test/code/include $(PROVIDER_INCLUDE_FLAGS) -I$(PROVIDER_DIR) -I$(PROVIDER_TEST_SUPPORT_DIR)
 
 ifeq ($(ENABLE_DEBUG),1)
 PROV_DEBUG_FLAGS := -g
@@ -87,8 +87,8 @@ endif
 
 COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
 PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
-MYAUTH_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) `mysql_config --cflags`
-PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(TARGET_DIR) 
+MYAUTH_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(INTERMEDIATE_DIR) `mysql_config --cflags`
+PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(INTERMEDIATE_DIR) 
 
 LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -Wl,-rpath=/opt/omi/lib -L$(OMI_ROOT)/output/lib -lmicxx -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
 MYAUTH_LINK_LIBRARIES := -Wl,-rpath=/opt/microsoft/mysql-cimprov/lib -L$(SCXPAL_TARGET_DIR) -lscxcore -lUtil -lscxassertabort -lrt `mysql_config --libs`
@@ -99,7 +99,7 @@ SHARED_FLAGS := -shared
 
 # Support for installbuilder
 
-STAGING_DIR := $(TARGET_DIR)/staging
+STAGING_DIR := $(INTERMEDIATE_DIR)/staging
 
 # Support for src_to_obj handling
 
@@ -123,8 +123,8 @@ clean :
 distclean : clean
 	-$(RM) $(BASE_DIR)/build/config.mak
 	-$(RM) $(BASE_DIR)/build/Makefile.version
-	-make -C $(OMI_ROOT) distclean
-	-make -C $(SCXPAL_DIR)/build distclean
+	-$(MAKE) -C $(OMI_ROOT) distclean
+	-$(MAKE) -C $(SCXPAL_DIR)/build distclean
 	-$(RMDIR) $(OMI_ROOT)/output*
 	-$(RM) $(SCXPAL_DIR)/build/config.mak
 	-$(RM) $(SCXPAL_DIR)/build/Makefile.config_cache
@@ -136,13 +136,13 @@ ifeq ($(OPENSOURCE_DISTRO),0)
 #   1) OMI already has registration files for libmysqlProvider.so
 
 install : /opt/omi/lib/libmysqlProvider.so
-	@[ -e $(TARGET_DIR)/tmp_start_omi  ] && rm $(TARGET_DIR)/tmp_start_omi  && sudo /etc/init.d/omiserverd start || exit 0
+	@[ -e $(INTERMEDIATE_DIR)/tmp_start_omi  ] && rm $(INTERMEDIATE_DIR)/tmp_start_omi  && sudo /etc/init.d/omiserverd start || exit 0
 
 /opt/omi/lib/libmysqlProvider.so : $(PROVIDER_LIBRARY)
 	@echo "========================= Performing Installing OMI provider"
 	-sudo /etc/init.d/omiserverd stop
-	touch $(TARGET_DIR)/tmp_start_omi
-	sudo cp -v $(PROVIDER_LIBRARY) /opt/omi/lib/
+	touch $(INTERMEDIATE_DIR)/tmp_start_omi
+	sudo $(COPY) -v $(PROVIDER_LIBRARY) /opt/omi/lib/
 
 restart :
 	@-sudo /etc/init.d/omiserverd stop
@@ -158,9 +158,9 @@ install : all
 	$(MKPATH) /var/opt/microsoft/mysql-cimprov/log
 	$(MKPATH) /var/opt/microsoft/mysql-cimprov/run
 
-	$(COPY) $(TARGET_DIR)/mycimprovauth /opt/microsoft/mysql-cimprov/bin
-	$(COPY) $(TARGET_DIR)/omi_preexec /opt/microsoft/mysql-cimprov/bin
-	$(COPY) $(TARGET_DIR)/libmysqlProvider.so /opt/microsoft/mysql-cimprov/lib 
+	$(COPY) $(INTERMEDIATE_DIR)/mycimprovauth /opt/microsoft/mysql-cimprov/bin
+	$(COPY) $(INTERMEDIATE_DIR)/omi_preexec /opt/microsoft/mysql-cimprov/bin
+	$(COPY) $(INTERMEDIATE_DIR)/libmysqlProvider.so /opt/microsoft/mysql-cimprov/lib 
 
 	chmod 755 /opt/microsoft/mysql-cimprov/bin/mycimprovauth
 	chmod 755 /opt/microsoft/mysql-cimprov/bin/omi_preexec
@@ -197,9 +197,9 @@ $(OMI_ROOT)/output : $(OMI_ROOT)/output/lib/libmicxx.so
 
 $(OMI_ROOT)/output/lib/libmicxx.so :
 	@echo "========================= Performing Building OMI"
-	make -C $(OMI_ROOT)
+	$(MAKE) -C $(OMI_ROOT)
 ifeq ($(PERFORM_OMI_MAKEINSTALL),1)
-	make -C $(OMI_ROOT) install
+	$(MAKE) -C $(OMI_ROOT) install
 endif
 
 #--------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ endif
 
 $(SCXPAL_INTERMEDIATE_DIR) :
 	@echo "========================= Performing Building PAL"
-	make -C $(SCXPAL_DIR)/build
+	$(MAKE) -C $(SCXPAL_DIR)/build
 
 #--------------------------------------------------------------------------------
 # Version information header file
@@ -380,7 +380,7 @@ $(PROVIDER_LIBRARY): CFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(PROVIDER_LIBRARY): CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(PROVIDER_LIBRARY): $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS)
 	$(MKPATH) $(INTERMEDIATE_DIR)
-	$(MKPATH) $(TARGET_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	g++ $(PROVIDER_COMPILE_FLAGS) $(SHARED_FLAGS) $(PROVIDER_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDERLIB_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(LINK_LIBRARIES)
 
 #--------------------------------------------------------------------------------
@@ -405,7 +405,7 @@ $(MYAUTH_PROG): CFLAGS += $(MYAUTH_COMPILE_FLAGS)
 $(MYAUTH_PROG): CXXFLAGS += $(MYAUTH_COMPILE_FLAGS)
 $(MYAUTH_PROG): $(STATIC_MYAUTH_OBJFILES) $(STATIC_MYAUTH_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
 	$(MKPATH) $(INTERMEDIATE_DIR)
-	$(MKPATH) $(TARGET_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	g++ $(MYAUTH_COMPILE_FLAGS) -o $@ $(STATIC_MYAUTH_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(MYAUTH_LINK_LIBRARIES)
 
 #--------------------------------------------------------------------------------
@@ -431,7 +431,7 @@ $(OMI_PREEXEC): CFLAGS += $(PREEXEC_COMPILE_FLAGS)
 $(OMI_PREEXEC): CXXFLAGS += $(PREEXEC_COMPILE_FLAGS)
 $(OMI_PREEXEC): $(STATIC_OMI_PREEXEC_OBJFILES) $(STATIC_OMI_PREEXEC_HEADERS) $(INCLUDE_DEFINES) $(INCLUDE_VERSION)
 	$(MKPATH) $(INTERMEDIATE_DIR)
-	$(MKPATH) $(TARGET_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	g++ $(PREEXEC_COMPILE_FLAGS) -o $@ $(STATIC_OMI_PREEXEC_OBJFILES) $(STATIC_PROVIDERLIB_LOGPOLICY) $(PREEXEC_LINK_LIBRARIES)
 
 #--------------------------------------------------------------------------------
@@ -467,12 +467,12 @@ STATIC_PROVIDER_PAL_UNITFILES = \
 
 STATIC_PROVIDER_TEST_OBJFILES = $(call src_to_obj,$(STATIC_PROVIDER_UNITFILES))
 
-$(TARGET_DIR)/testrunner: INCLUDES += $(PROVIDER_TEST_INCLUDE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PAL_TESTUTILS_DIR)
-$(TARGET_DIR)/testrunner: CFLAGS += $(PROVIDER_COMPILE_FLAGS)
-$(TARGET_DIR)/testrunner: CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
-$(TARGET_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS) $(MYAUTH_PROG)
+$(INTERMEDIATE_DIR)/testrunner: INCLUDES += $(PROVIDER_TEST_INCLUDE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PAL_TESTUTILS_DIR)
+$(INTERMEDIATE_DIR)/testrunner: CFLAGS += $(PROVIDER_COMPILE_FLAGS)
+$(INTERMEDIATE_DIR)/testrunner: CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
+$(INTERMEDIATE_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS) $(MYAUTH_PROG)
 	$(MKPATH) $(INTERMEDIATE_DIR)
-	$(MKPATH) $(TARGET_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	g++ $(PROVIDER_COMPILE_FLAGS) $(PROVIDER_TEST_INCLUDE_FLAGS) -o $@ $(STATIC_PROVIDER_PAL_UNITFILES) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(LINK_LIBRARIES) $(PROVIDER_TEST_LINK_LIBRARIES)
 
 testrun : test
@@ -480,9 +480,9 @@ testrun : test
 TEST_STATUS:
 	@echo "========================= Performing Building provider tests"
 
-test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(TARGET_DIR)/testrunner
+test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(INTERMEDIATE_DIR)/testrunner
 	@echo "========================= Performing MySQL testrun execution"
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib; cd $(TARGET_DIR); ./testrunner
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib; cd $(INTERMEDIATE_DIR); ./testrunner
 
 ifeq ($(OPENSOURCE_DISTRO),0)
 
@@ -502,10 +502,10 @@ ifeq ($(ULINUX),1)
 	@echo "========================= Performing Building RPM and DPKG packages"
 	$(MKPATH) $(INSTALLER_TMPDIR)
 	sudo $(RMDIR) $(STAGING_DIR)
-	$(MKPATH) $(TARGET_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
 		--BASE_DIR=$(BASE_DIR) \
-		--TARGET_DIR=$(TARGET_DIR) \
+		--TARGET_DIR=$(INTERMEDIATE_DIR) \
 		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
 		--STAGING_DIR=$(STAGING_DIR) \
 		--BUILD_TYPE=$(BUILD_TYPE) \
@@ -521,15 +521,15 @@ ifeq ($(ULINUX),1)
 		base_mysql.data linux.data linux_rpm.data
 
 	# The kit has a name including .universalr., and the 'r' is only desired for OM
-	sed -e 's/\.universalr\./.universal./' $(TARGET_DIR)/package_filename > $(TARGET_DIR)/package_file.tmp
-	mv $(TARGET_DIR)/`cat $(TARGET_DIR)/package_filename` $(TARGET_DIR)/`cat $(TARGET_DIR)/package_file.tmp`
-	mv $(TARGET_DIR)/package_file.tmp $(TARGET_DIR)/package_filename
+	sed -e 's/\.universalr\./.universal./' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
+	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename` $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`
+	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
 
 	sudo $(RMDIR) $(STAGING_DIR)
-	$(MKPATH) $(TARGET_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
 	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
 		--BASE_DIR=$(BASE_DIR) \
-		--TARGET_DIR=$(TARGET_DIR) \
+		--TARGET_DIR=$(INTERMEDIATE_DIR) \
 		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
 		--STAGING_DIR=$(STAGING_DIR) \
 		--BUILD_TYPE=$(BUILD_TYPE) \
@@ -546,22 +546,22 @@ ifeq ($(ULINUX),1)
 		base_mysql.data linux.data linux_dpkg.data
 
 	# The kit has a name including .universald., and the 'd' is only desired for OM
-	sed -e 's/\.universald\./.universal./' $(TARGET_DIR)/package_filename > $(TARGET_DIR)/package_file.tmp
-	mv $(TARGET_DIR)/`cat $(TARGET_DIR)/package_filename` $(TARGET_DIR)/`cat $(TARGET_DIR)/package_file.tmp`
-	mv $(TARGET_DIR)/package_file.tmp $(TARGET_DIR)/package_filename
+	sed -e 's/\.universald\./.universal./' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
+	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename` $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`
+	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
 
 	# Strip the package extension from the package filename
-	sed -re 's/.rpm$$|.deb$$//' $(TARGET_DIR)/package_filename > $(TARGET_DIR)/package_file.tmp
-	mv $(TARGET_DIR)/package_file.tmp $(TARGET_DIR)/package_filename
+	sed -re 's/.rpm$$|.deb$$//' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
+	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
 
 	# The MP needs architecture of i686 (for x86) and x86_64 (for x64).
-	sed -e 's/\.x86$$/\.i686/' $(TARGET_DIR)/package_filename | sed 's/\.x64$$/.x86_64/' > $(TARGET_DIR)/package_file.tmp
-	mv $(TARGET_DIR)/`cat $(TARGET_DIR)/package_filename`.rpm $(TARGET_DIR)/`cat $(TARGET_DIR)/package_file.tmp`.rpm
-	mv $(TARGET_DIR)/`cat $(TARGET_DIR)/package_filename`.deb $(TARGET_DIR)/`cat $(TARGET_DIR)/package_file.tmp`.deb
-	mv $(TARGET_DIR)/package_file.tmp $(TARGET_DIR)/package_filename
+	sed -e 's/\.x86$$/\.i686/' $(INTERMEDIATE_DIR)/package_filename | sed 's/\.x64$$/.x86_64/' > $(INTERMEDIATE_DIR)/package_file.tmp
+	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.rpm $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`.rpm
+	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.deb $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`.deb
+	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
 
 	# Build the tar file containing both .rpm and .deb packages
-	cd $(TARGET_DIR); tar cvf `cat $(TARGET_DIR)/package_filename`.tar `cat $(TARGET_DIR)/package_filename`.rpm `cat $(TARGET_DIR)/package_filename`.deb
+	cd $(INTERMEDIATE_DIR); tar cvf `cat $(INTERMEDIATE_DIR)/package_filename`.tar `cat $(INTERMEDIATE_DIR)/package_filename`.rpm `cat $(INTERMEDIATE_DIR)/package_filename`.deb
 
 else
 
@@ -570,7 +570,7 @@ else
 	sudo $(RMDIR) $(STAGING_DIR)
 	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
 		--BASE_DIR=$(BASE_DIR) \
-		--TARGET_DIR=$(TARGET_DIR) \
+		--TARGET_DIR=$(INTERMEDIATE_DIR) \
 		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
 		--STAGING_DIR=$(STAGING_DIR) \
 		--BUILD_TYPE=$(BUILD_TYPE) \
@@ -586,23 +586,24 @@ else
 		base_mysql.data linux.data linux_rpm.data
 
 	# Strip the package extension from the package filename
-	sed -re 's/.rpm$$|.deb$$//' $(TARGET_DIR)/package_filename > $(TARGET_DIR)/package_file.tmp
-	mv $(TARGET_DIR)/package_file.tmp $(TARGET_DIR)/package_filename
+	sed -re 's/.rpm$$|.deb$$//' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
+	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
 
 	# The MP needs architecture of i686 (for x86) and x86_64 (for x64).
-	sed -e 's/\.x86$$/\.i686/' $(TARGET_DIR)/package_filename | sed 's/\.x64$$/.x86_64/' > $(TARGET_DIR)/package_file.tmp
-	mv $(TARGET_DIR)/`cat $(TARGET_DIR)/package_filename`.rpm $(TARGET_DIR)/`cat $(TARGET_DIR)/package_file.tmp`.rpm
-	mv $(TARGET_DIR)/package_file.tmp $(TARGET_DIR)/package_filename
+	sed -e 's/\.x86$$/\.i686/' $(INTERMEDIATE_DIR)/package_filename | sed 's/\.x64$$/.x86_64/' > $(INTERMEDIATE_DIR)/package_file.tmp
+	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.rpm $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`.rpm
+	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
 
 	# Build the tar file containing the .rpm package
-	cd $(TARGET_DIR); tar cvf `cat $(TARGET_DIR)/package_filename`.tar `cat $(TARGET_DIR)/package_filename`.rpm
+	cd $(INTERMEDIATE_DIR); tar cvf `cat $(INTERMEDIATE_DIR)/package_filename`.tar `cat $(INTERMEDIATE_DIR)/package_filename`.rpm
 
 endif
 
 	../installer/bundle/create_bundle.sh $(PF)_$(PF_DISTRO) \
-                                             $(TARGET_DIR) \
-                                             `cat $(TARGET_DIR)/package_filename`
-	rm $(TARGET_DIR)/package_filename
+            $(INTERMEDIATE_DIR) \
+            `cat $(INTERMEDIATE_DIR)/package_filename`
+	$(MKPATH) $(TARGET_DIR)
+	$(COPY) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.sh $(TARGET_DIR)
 
 endif # ifeq ($(OPENSOURCE_DISTRO),0)
 
@@ -631,14 +632,14 @@ MOF_DIR = $(SOURCE_DIR)/mof
 schema_gen :
 	# The omigen facility is unhappy if no ~/.omigenrc file exists, so create one for this run
 	touch ~/.omigenrc
-	$(MKPATH) $(TARGET_DIR)/omi
-	cd $(TARGET_DIR)/omi; $(OMIGEN) $(MOF_DIR)/mysql.mof -d $(PROVIDER_DIR) $(CLASSES) --cpp -I $(OMI_DIR)/share/omischema
+	$(MKPATH) $(INTERMEDIATE_DIR)/omi
+	cd $(INTERMEDIATE_DIR)/omi; $(OMIGEN) $(MOF_DIR)/mysql.mof -d $(PROVIDER_DIR) $(CLASSES) --cpp -I $(OMI_DIR)/share/omischema
 	$(RM) ~/.omigenrc
 
 omi_reg :
-	$(MKPATH) $(TARGET_DIR)/omi
+	$(MKPATH) $(INTERMEDIATE_DIR)/omi
 	$(MKPATH) $(OMI_DIR)/etc/omiregister/root-mysql
-	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(OMI_LIBDIR); cd $(TARGET_DIR)/omi; $(OMI_BINDIR)/omireg -n root/mysql -o @requestor@ $(PROVIDER_LIBRARY)
-	cp -r $(OMI_DIR)/etc/omiregister/root-mysql $(TARGET_DIR)/omi
+	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(OMI_LIBDIR); cd $(INTERMEDIATE_DIR)/omi; $(OMI_BINDIR)/omireg -n root/mysql -o @requestor@ $(PROVIDER_LIBRARY)
+	$(COPY) -r $(OMI_DIR)/etc/omiregister/root-mysql $(INTERMEDIATE_DIR)/omi
 
 endif # $(PERFORM_OMI_MAKEINSTALL),1

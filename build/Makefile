@@ -85,7 +85,10 @@ ifeq ($(ENABLE_DEBUG),1)
 PROV_DEBUG_FLAGS := -g
 endif
 
-COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wcast-qual -fPIC
+# On newer compilers (Cent 7 / gcc v4.8.3), OMI can't tolerate -Wcast-qual
+# Disable that until the OMI problem is resolved ...
+
+COMPILE_FLAGS := $(PROV_DEBUG_FLAGS) -D_REENTRANT -fstack-protector-all -Wall -fno-nonansi-builtins  -Woverloaded-virtual -Wformat -Wformat-security -Wcast-align -Wswitch-enum -Wshadow -Wwrite-strings -Wredundant-decls -Werror  -Wno-cast-qual -fPIC
 PROVIDER_COMPILE_FLAGS := $(COMPILE_FLAGS) `mysql_config --cflags`
 MYAUTH_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(INTERMEDIATE_DIR) `mysql_config --cflags`
 PREEXEC_COMPILE_FLAGS := $(COMPILE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PROVIDER_DIR)/support -I$(INTERMEDIATE_DIR) 
@@ -100,6 +103,24 @@ SHARED_FLAGS := -shared
 # Support for installbuilder
 
 STAGING_DIR := $(INTERMEDIATE_DIR)/staging
+ifeq ($(ULINUX),1)
+
+  # The MP needs architecture of i686 (for x86) and x86_64 (for x64).
+  MYSQL_ARCH := $(shell echo $(PF_ARCH) | sed -e 's/x86$$/i686/' -e 's/x64$$/x86_64/')
+  OUTPUT_PACKAGE_PREFIX=mysql-cimprov-$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH)-$(SCX_BUILDVERSION_BUILDNR).universal.$(MYSQL_ARCH)
+
+else
+
+  PF_DISTRO_LC := $(shell echo $(PF_DISTRO) | tr A-Z a-z)
+  OUTPUT_PACKAGE_PREFIX=mysql-cimprov-$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH)-$(SCX_BUILDVERSION_BUILDNR).$(PF_DISTRO_LC).$(PF_MAJOR).$(PF_ARCH)
+
+endif
+
+ifeq ("$(wildcard /usr/bin/dpkg-deb)","")
+DPKG_LOCATION="--DPKG_LOCATION=$(SCXPAL_DIR)/installer/InstallBuilder/tools/bin/dpkg-deb-$(PF_ARCH)"
+else
+DPKG_LOCATION=
+endif
 
 # Support for src_to_obj handling
 
@@ -494,78 +515,79 @@ ifeq ($(OPENSOURCE_DISTRO),0)
 # While the "formal build" only builds ULINUX, we may build something else for DEV purposes.
 # Assume we ALWAYS build RPM, but only build DPKG if --enable-ulinux is speified in configure.
 
-kit : MYSQLLIB_FULLFILENAME = $(shell ldd $(PROVIDER_LIBRARY) | grep libmysqlclient.so | awk '{print $$3}')
-kit : MYSQLLIB_FILENAME = $(shell basename $(MYSQLLIB_FULLFILENAME))
-kit : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(MYAUTH_PROG) $(OMI_PREEXEC)
 ifeq ($(ULINUX),1)
 
-	@echo "========================= Performing Building RPM and DPKG packages"
-	$(MKPATH) $(INSTALLER_TMPDIR)
-	sudo $(RMDIR) $(STAGING_DIR)
-	$(MKPATH) $(INTERMEDIATE_DIR)
-	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
-		--BASE_DIR=$(BASE_DIR) \
-		--TARGET_DIR=$(INTERMEDIATE_DIR) \
-		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
-		--STAGING_DIR=$(STAGING_DIR) \
-		--BUILD_TYPE=$(BUILD_TYPE) \
-		--BUILD_CONFIGURATION=$(BUILD_CONFIGURATION) \
-		--PFARCH=$(PF_ARCH) \
-		--PFDISTRO=$(PF_DISTRO) \
-		--PFMAJOR=$(PF_MAJOR) \
-		--PFMINOR=$(PF_MINOR) \
-		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
-		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
-		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
-		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
-		base_mysql.data linux.data linux_rpm.data
+kit : $(TARGET_DIR)/$(OUTPUT_PACKAGE_PREFIX).sh
 
-	# The kit has a name including .universalr., and the 'r' is only desired for OM
-	sed -e 's/\.universalr\./.universal./' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
-	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename` $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`
-	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
+$(TARGET_DIR)/$(OUTPUT_PACKAGE_PREFIX).sh : $(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).tar
+	@echo "========================= Performing Building shell bundle"
+	../installer/bundle/create_bundle.sh $(PF)_$(PF_DISTRO) $(INTERMEDIATE_DIR) $(OUTPUT_PACKAGE_PREFIX)
+	$(MKPATH) $(TARGET_DIR)
+	$(COPY) $(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).sh $(TARGET_DIR)
 
-	sudo $(RMDIR) $(STAGING_DIR)
-	$(MKPATH) $(INTERMEDIATE_DIR)
-	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
-		--BASE_DIR=$(BASE_DIR) \
-		--TARGET_DIR=$(INTERMEDIATE_DIR) \
-		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
-		--STAGING_DIR=$(STAGING_DIR) \
-		--BUILD_TYPE=$(BUILD_TYPE) \
-		--BUILD_CONFIGURATION=$(BUILD_CONFIGURATION) \
-		--PFARCH=$(PF_ARCH) \
-		--PFDISTRO=$(PF_DISTRO) \
-		--PFMAJOR=$(PF_MAJOR) \
-		--PFMINOR=$(PF_MINOR) \
-		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
-		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
-		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
-		--DPKG_LOCATION=$(SCXPAL_DIR)/installer/InstallBuilder/tools/bin/dpkg-deb-$(PF_ARCH) \
-		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
-		base_mysql.data linux.data linux_dpkg.data
-
-	# The kit has a name including .universald., and the 'd' is only desired for OM
-	sed -e 's/\.universald\./.universal./' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
-	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename` $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`
-	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
-
-	# Strip the package extension from the package filename
-	sed -re 's/.rpm$$|.deb$$//' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
-	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
-
-	# The MP needs architecture of i686 (for x86) and x86_64 (for x64).
-	sed -e 's/\.x86$$/\.i686/' $(INTERMEDIATE_DIR)/package_filename | sed 's/\.x64$$/.x86_64/' > $(INTERMEDIATE_DIR)/package_file.tmp
-	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.rpm $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`.rpm
-	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.deb $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`.deb
-	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).tar : \
+		$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).rpm \
+		$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).deb
 
 	# Build the tar file containing both .rpm and .deb packages
-	cd $(INTERMEDIATE_DIR); tar cvf `cat $(INTERMEDIATE_DIR)/package_filename`.tar `cat $(INTERMEDIATE_DIR)/package_filename`.rpm `cat $(INTERMEDIATE_DIR)/package_filename`.deb
+	@echo "========================= Performing Building .tar file"
+	cd $(INTERMEDIATE_DIR); tar cvf $(OUTPUT_PACKAGE_PREFIX).tar $(OUTPUT_PACKAGE_PREFIX).rpm $(OUTPUT_PACKAGE_PREFIX).deb
 
-else
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).rpm : MYSQLLIB_FULLFILENAME = $(shell ldd $(PROVIDER_LIBRARY) | grep libmysqlclient.so | awk '{print $$3}')
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).rpm : MYSQLLIB_FILENAME = $(shell basename $(MYSQLLIB_FULLFILENAME))
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).rpm : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(MYAUTH_PROG) $(OMI_PREEXEC)
+	@echo "========================= Performing Building RPM package"
+	$(MKPATH) $(INSTALLER_TMPDIR)
+	sudo $(RMDIR) $(STAGING_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
+	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
+		--BASE_DIR=$(BASE_DIR) \
+		--TARGET_DIR=$(INTERMEDIATE_DIR) \
+		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
+		--STAGING_DIR=$(STAGING_DIR) \
+		--BUILD_TYPE=$(BUILD_TYPE) \
+		--BUILD_CONFIGURATION=$(BUILD_CONFIGURATION) \
+		--PFARCH=$(PF_ARCH) \
+		--PFDISTRO=$(PF_DISTRO) \
+		--PFMAJOR=$(PF_MAJOR) \
+		--PFMINOR=$(PF_MINOR) \
+		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
+		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
+		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
+		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
+		--OUTPUTFILE=$(OUTPUT_PACKAGE_PREFIX) \
+		base_mysql.data linux.data linux_rpm.data
 
-	@echo "========================= Performing Building RPM and DPKG packages"
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).deb : MYSQLLIB_FULLFILENAME = $(shell ldd $(PROVIDER_LIBRARY) | grep libmysqlclient.so | awk '{print $$3}')
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).deb : MYSQLLIB_FILENAME = $(shell basename $(MYSQLLIB_FULLFILENAME))
+$(INTERMEDIATE_DIR)/$(OUTPUT_PACKAGE_PREFIX).deb : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(MYAUTH_PROG) $(OMI_PREEXEC)
+	@echo "========================= Performing Building DPKG package"
+	$(MKPATH) $(INSTALLER_TMPDIR)
+	sudo $(RMDIR) $(STAGING_DIR)
+	$(MKPATH) $(INTERMEDIATE_DIR)
+	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
+		--BASE_DIR=$(BASE_DIR) \
+		--TARGET_DIR=$(INTERMEDIATE_DIR) \
+		--INTERMEDIATE_DIR=$(INSTALLER_TMPDIR) \
+		--STAGING_DIR=$(STAGING_DIR) \
+		--BUILD_TYPE=$(BUILD_TYPE) \
+		--BUILD_CONFIGURATION=$(BUILD_CONFIGURATION) \
+		--PFARCH=$(PF_ARCH) \
+		--PFDISTRO=$(PF_DISTRO) \
+		--PFMAJOR=$(PF_MAJOR) \
+		--PFMINOR=$(PF_MINOR) \
+		--VERSION=$(SCX_BUILDVERSION_MAJOR).$(SCX_BUILDVERSION_MINOR).$(SCX_BUILDVERSION_PATCH) \
+		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
+		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
+		$(DPKG_LOCATION) \
+		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
+		--OUTPUTFILE=$(OUTPUT_PACKAGE_PREFIX) \
+		base_mysql.data linux.data linux_dpkg.data
+
+else # ifeq ($(ULINUX),1)
+
+kit : $(OMI_ROOT)/output $(PROVIDER_LIBRARY) $(MYAUTH_PROG) $(OMI_PREEXEC)
+	@echo "========================= Performing building package"
 	$(MKPATH) $(INSTALLER_TMPDIR)
 	sudo $(RMDIR) $(STAGING_DIR)
 	python $(SCXPAL_DIR)/installer/InstallBuilder/installbuilder.py \
@@ -583,27 +605,12 @@ else
 		--RELEASE=$(SCX_BUILDVERSION_BUILDNR) \
 		--MYSQL_BUILD_LIBRARY=$(MYSQLLIB_FILENAME) \
 		--DATAFILE_PATH=$(BASE_DIR)/installer/datafiles \
+		--OUTPUTFILE=$(OUTPUT_PACKAGE_PREFIX) \
 		base_mysql.data linux.data linux_rpm.data
 
-	# Strip the package extension from the package filename
-	sed -re 's/.rpm$$|.deb$$//' $(INTERMEDIATE_DIR)/package_filename > $(INTERMEDIATE_DIR)/package_file.tmp
-	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
+endif # ifeq ($(ULINUX),1)
 
-	# The MP needs architecture of i686 (for x86) and x86_64 (for x64).
-	sed -e 's/\.x86$$/\.i686/' $(INTERMEDIATE_DIR)/package_filename | sed 's/\.x64$$/.x86_64/' > $(INTERMEDIATE_DIR)/package_file.tmp
-	$(MV) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.rpm $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_file.tmp`.rpm
-	$(MV) $(INTERMEDIATE_DIR)/package_file.tmp $(INTERMEDIATE_DIR)/package_filename
-
-	# Build the tar file containing the .rpm package
-	cd $(INTERMEDIATE_DIR); tar cvf `cat $(INTERMEDIATE_DIR)/package_filename`.tar `cat $(INTERMEDIATE_DIR)/package_filename`.rpm
-
-endif
-
-	../installer/bundle/create_bundle.sh $(PF)_$(PF_DISTRO) \
-            $(INTERMEDIATE_DIR) \
-            `cat $(INTERMEDIATE_DIR)/package_filename`
-	$(MKPATH) $(TARGET_DIR)
-	$(COPY) $(INTERMEDIATE_DIR)/`cat $(INTERMEDIATE_DIR)/package_filename`.sh $(TARGET_DIR)
+else # ifeq ($(OPENSOURCE_DISTRO),0)
 
 endif # ifeq ($(OPENSOURCE_DISTRO),0)
 

@@ -16,9 +16,9 @@ MAINTAINER:              'Microsoft Corporation'
 
 %Files
 /opt/microsoft/mysql-cimprov/bin/mycimprovauth;                         installer/scripts/mycimprovauth;                       755; root; root
-/opt/microsoft/mysql-cimprov/bin/.mycimprovauth;                        target/${{BUILD_CONFIGURATION}}/mycimprovauth;         755; root; root
-/opt/microsoft/mysql-cimprov/bin/omi_preexec;                           target/${{BUILD_CONFIGURATION}}/omi_preexec;           755; root; root
-/opt/microsoft/mysql-cimprov/lib/libmysqlProvider.${{SHLIB_EXT}};       target/${{BUILD_CONFIGURATION}}/libmysqlProvider.${{SHLIB_EXT}}; 755; root; root
+/opt/microsoft/mysql-cimprov/bin/.mycimprovauth;                        intermediate/${{BUILD_CONFIGURATION}}/mycimprovauth;         755; root; root
+/opt/microsoft/mysql-cimprov/bin/omi_preexec;                           intermediate/${{BUILD_CONFIGURATION}}/omi_preexec;           755; root; root
+/opt/microsoft/mysql-cimprov/lib/libmysqlProvider.${{SHLIB_EXT}};       intermediate/${{BUILD_CONFIGURATION}}/libmysqlProvider.${{SHLIB_EXT}}; 755; root; root
 
 /etc/opt/microsoft/mysql-cimprov/conf/installinfo.txt;                  installer/conf/installinfo.txt;                        644; root; root; conffile
 

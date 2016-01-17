@@ -11,6 +11,42 @@
 # We expect this script to run from the BUILD directory (i.e. mysql/build).
 # Directory paths are hard-coded for this location.
 
+# Notes for file bundle_skel.sh (included here since we dont want to ship
+# these comments in shell bundle):
+#
+# This script is a skeleton bundle file for the MySQL project, which only
+# ships in universal form (RPM & DEB installers for the Linux platforms).
+#
+# Use this script by concatenating it with some binary package.
+#
+# The bundle is created by cat'ing the script in front of the binary, so for
+# the gzip'ed tar example, a command like the following will build the bundle:
+#
+#     tar -czvf - <target-dir> | cat sfx.skel - > my.bundle
+#
+# The bundle can then be copied to a system, made executable (chmod +x) and
+# then run.  When run without any options it will make any pre-extraction
+# calls, extract the binary, and then make any post-extraction calls.
+#
+# This script has some usefull helper options to split out the script and/or
+# binary in place, and to turn on shell debugging.
+#
+# This script is paired with create_bundle.sh, which will edit constants in
+# this script for proper execution at runtime.  The "magic", here, is that
+# create_bundle.sh encodes the length of this script in the script itself.
+# Then the script can use that with 'tail' in order to strip the script from
+# the binary package.
+#
+# Developer note: A prior incarnation of this script used 'sed' to strip the
+# script from the binary package.  That didn't work on AIX 5, where 'sed' did
+# strip the binary package - AND null bytes, creating a corrupted stream.
+#
+# MySQL-specific implementaiton: Unlike CM & OM projects, this bundle does
+# not install OMI.  Why a bundle, then?  Primarily so a single package can
+# install either a .DEB file or a .RPM file, whichever is appropraite.  This
+# significantly simplies the complexity of installation by the Management
+# Pack (MP) in the Operations Manager product.
+
 SOURCE_DIR=`(cd ../installer/bundle; pwd -P)`
 INTERMEDIATE_DIR=`(mkdir -p ../installer/intermediate; cd ../installer/intermediate; pwd -P)`
 
@@ -80,8 +116,8 @@ OUTPUT_DIR=`(cd $2; pwd -P)`
 cd $INTERMEDIATE_DIR
 
 # Fetch the bundle skeleton file
-cp $SOURCE_DIR/primary.skel .
-chmod u+w primary.skel
+cp $SOURCE_DIR/bundle_skel.sh .
+chmod u+w bundle_skel.sh
 
 # See if we can resolve git references for output
 # (See if we can find the master project)
@@ -104,37 +140,30 @@ if [ -f ../../../.gitmodules ]; then
     rm $TEMP_FILE
 
     # Update the bundle file w/the ref hash (much easier with perl since multi-line)
-    perl -i -pe "s/-- Source code references --/${SOURCE_REFS}/" primary.skel
+    perl -i -pe "s/-- Source code references --/${SOURCE_REFS}/" bundle_skel.sh
 else
     echo "Unable to find git superproject!" >& 2
     exit 1
 fi
 
 # Edit the bundle file for hard-coded values
-sed -e "s/PLATFORM=<PLATFORM_TYPE>/PLATFORM=$1/" < primary.skel > primary.$$
-mv primary.$$ primary.skel
+sed -i "s/PLATFORM=<PLATFORM_TYPE>/PLATFORM=$1/" bundle_skel.sh
+sed -i "s/MYSQL_PKG=<MYSQL_PKG>/MYSQL_PKG=$3/" bundle_skel.sh
 
-sed -e "s/MYSQL_PKG=<MYSQL_PKG>/MYSQL_PKG=$3/" < primary.skel > primary.$$
-mv primary.$$ primary.skel
-
-SCRIPT_LEN=`wc -l < primary.skel | sed -e 's/ //g'`
+SCRIPT_LEN=`wc -l < bundle_skel.sh | sed -e 's/ //g'`
 SCRIPT_LEN_PLUS_ONE="$((SCRIPT_LEN + 1))"
 
-sed -e "s/SCRIPT_LEN=<SCRIPT_LEN>/SCRIPT_LEN=${SCRIPT_LEN}/" < primary.skel > primary.$$
-mv primary.$$ primary.skel
-
-sed -e "s/SCRIPT_LEN_PLUS_ONE=<SCRIPT_LEN+1>/SCRIPT_LEN_PLUS_ONE=${SCRIPT_LEN_PLUS_ONE}/" < primary.skel > primary.$$
-mv primary.$$ primary.skel
-
+sed -i "s/SCRIPT_LEN=<SCRIPT_LEN>/SCRIPT_LEN=${SCRIPT_LEN}/" bundle_skel.sh
+sed -i "s/SCRIPT_LEN_PLUS_ONE=<SCRIPT_LEN+1>/SCRIPT_LEN_PLUS_ONE=${SCRIPT_LEN_PLUS_ONE}/" bundle_skel.sh
 
 # Fetch the kit
 cp ${OUTPUT_DIR}/${3}.tar .
 
 # Build the bundle
 BUNDLE_FILE=${3}.sh
-gzip -c ${3}.tar | cat primary.skel - > $BUNDLE_FILE
+gzip -c ${3}.tar | cat bundle_skel.sh - > $BUNDLE_FILE
 chmod +x $BUNDLE_FILE
-rm primary.skel
+rm bundle_skel.sh
 
 # Remove the kit and copy the bundle to the kit location
 rm ${3}.tar

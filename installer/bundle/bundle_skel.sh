@@ -1,39 +1,8 @@
 #!/bin/sh
+
 #
+# Shell Bundle installer package for the MySQL project
 #
-# This script is a skeleton bundle file for primary platforms the MySQL
-# project, which only ships in universal form (RPM & DEB installers for the
-# Linux platforms).
-#
-# Use this script by concatenating it with some binary package.
-#
-# The bundle is created by cat'ing the script in front of the binary, so for
-# the gzip'ed tar example, a command like the following will build the bundle:
-#
-#     tar -czvf - <target-dir> | cat sfx.skel - > my.bundle
-#
-# The bundle can then be copied to a system, made executable (chmod +x) and
-# then run.  When run without any options it will make any pre-extraction
-# calls, extract the binary, and then make any post-extraction calls.
-#
-# This script has some usefull helper options to split out the script and/or
-# binary in place, and to turn on shell debugging.
-#
-# This script is paired with create_bundle.sh, which will edit constants in
-# this script for proper execution at runtime.  The "magic", here, is that
-# create_bundle.sh encodes the length of this script in the script itself.
-# Then the script can use that with 'tail' in order to strip the script from
-# the binary package.
-#
-# Developer note: A prior incarnation of this script used 'sed' to strip the
-# script from the binary package.  That didn't work on AIX 5, where 'sed' did
-# strip the binary package - AND null bytes, creating a corrupted stream.
-#
-# MySQL-specific implementaiton: Unlike CM & OM projects, this bundle does
-# not install OMI.  Why a bundle, then?  Primarily so a single package can
-# install either a .DEB file or a .RPM file, whichever is appropraite.  This
-# significantly simplies the complexity of installation by the Management
-# Pack (MP) in the Operations Manager product.
 
 set -e
 PATH=/usr/bin:/usr/sbin:/bin:/sbin

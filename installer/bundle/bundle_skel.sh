@@ -4,12 +4,12 @@
 # Shell Bundle installer package for the MySQL project
 #
 
-set -e
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 umask 022
 
 # Note: Because this is Linux-only, 'readlink' should work
 SCRIPT="`readlink -e $0`"
+set +e
 
 # These symbols will get replaced during the bundle creation process.
 #
@@ -17,7 +17,7 @@ SCRIPT="`readlink -e $0`"
 #       Linux_REDHAT, Linux_SUSE, Linux_ULINUX
 #
 # The MYSQL_PKG symbol should contain something like:
-#	mysql-cimprov-1.0.0-89.rhel.6.x64.  (script adds rpm or deb, as appropriate)
+#       mysql-cimprov-1.0.0-89.rhel.6.x64.  (script adds rpm or deb, as appropriate)
 
 PLATFORM=<PLATFORM_TYPE>
 MYSQL_PKG=<MYSQL_PKG>
@@ -36,6 +36,8 @@ usage()
     echo "  --restart-deps         Reconfigure and restart dependent services (no-op)."
     echo "  --source-references    Show source code reference hashes."
     echo "  --upgrade              Upgrade the package in the system."
+    echo "  --version              Version of this shell bundle."
+    echo "  --version-check        Check versions already installed to see if upgradable."
     echo "  --debug                use shell debug mode."
     echo "  -? | --help            shows this usage text."
 }
@@ -54,6 +56,80 @@ cleanup_and_exit()
     else
         exit 0
     fi
+}
+
+check_version_installable() {
+    # POSIX Semantic Version <= Test
+    # Exit code 0 is true (i.e. installable).
+    # Exit code non-zero means existing version is >= version to install.
+    #
+    # Parameter:
+    #   Installed: "x.y.z.b" (like "4.2.2.135"), for major.minor.patch.build versions
+    #   Available: "x.y.z.b" (like "4.2.2.135"), for major.minor.patch.build versions
+
+    if [ $# -ne 2 ]; then
+        echo "INTERNAL ERROR: Incorrect number of parameters passed to check_version_installable" >&2
+        cleanup_and_exit 1
+    fi
+
+    # Current version installed
+    local INS_MAJOR=`echo $1 | cut -d. -f1`
+    local INS_MINOR=`echo $1 | cut -d. -f2`
+    local INS_PATCH=`echo $1 | cut -d. -f3`
+    local INS_BUILD=`echo $1 | cut -d. -f4`
+
+    # Available version number
+    local AVA_MAJOR=`echo $2 | cut -d. -f1`
+    local AVA_MINOR=`echo $2 | cut -d. -f2`
+    local AVA_PATCH=`echo $2 | cut -d. -f3`
+    local AVA_BUILD=`echo $2 | cut -d. -f4`
+
+    # Check bounds on MAJOR
+    if [ $INS_MAJOR -lt $AVA_MAJOR ]; then
+        return 0
+    elif [ $INS_MAJOR -gt $AVA_MAJOR ]; then
+        return 1
+    fi
+
+    # MAJOR matched, so check bounds on MINOR
+    if [ $INS_MINOR -lt $AVA_MINOR ]; then
+        return 0
+    elif [ $INS_MINOR -gt $INS_MINOR ]; then
+        return 1
+    fi
+
+    # MINOR matched, so check bounds on PATCH
+    if [ $INS_PATCH -lt $AVA_PATCH ]; then
+        return 0
+    elif [ $INS_PATCH -gt $AVA_PATCH ]; then
+        return 1
+    fi
+
+    # PATCH matched, so check bounds on BUILD
+    if [ $INS_BUILD -lt $AVA_BUILD ]; then
+        return 0
+    elif [ $INS_BUILD -gt $AVA_BUILD ]; then
+        return 1
+    fi
+
+    # Version available is idential to installed version, so don't install
+    return 1
+}
+
+getVersionNumber()
+{
+    # Parse a version number from a string.
+    #
+    # Parameter 1: string to parse version number string from
+    #     (should contain something like mumble-4.2.2.135.universal.x86.tar)
+    # Parameter 2: prefix to remove ("mumble-" in above example)
+
+    if [ $# -ne 2 ]; then
+        echo "INTERNAL ERROR: Incorrect number of parameters passed to getVersionNumber" >&2
+        cleanup_and_exit 1
+    fi
+
+    echo $1 | sed -e "s/$2//" -e 's/\.universal\..*//' -e 's/\.x64.*//' -e 's/\.x86.*//' -e 's/-/./'
 }
 
 verifyNoInstallationOption()
@@ -79,13 +155,27 @@ ulinux_detect_installer()
     fi
 }
 
+# $1 - The name of the package to check as to whether it's installed
+check_if_pkg_is_installed() {
+    if [ "$INSTALLER" = "DPKG" ]; then
+        dpkg -s $1 2> /dev/null | grep Status | grep " installed" 1> /dev/null
+    else
+        rpm -q $1 2> /dev/null 1> /dev/null
+    fi
+
+    return $?
+}
+
 # $1 - The filename of the package to be installed
+# $2 - The package name of the package to be installed
 pkg_add() {
     pkg_filename=$1
+    pkg_name=$2
+
+    echo "----- Installing package: $2 ($1) -----"
+
     case "$PLATFORM" in
         Linux_ULINUX)
-            ulinux_detect_installer
-
             if [ "$INSTALLER" = "DPKG" ]; then
                 dpkg --install --refuse-downgrade ${pkg_filename}.deb
             else
@@ -106,9 +196,9 @@ pkg_add() {
 # $1 - The package name of the package to be uninstalled
 # $2 - Optional parameter. Only used when forcibly removing omi on SunOS
 pkg_rm() {
+    echo "----- Removing package: $1 -----"
     case "$PLATFORM" in
         Linux_ULINUX)
-            ulinux_detect_installer
             if [ "$INSTALLER" = "DPKG" ]; then
                 if [ "$installMode" = "P" ]; then
                     dpkg --purge $1
@@ -132,12 +222,24 @@ pkg_rm() {
 
 
 # $1 - The filename of the package to be installed
+# $2 - The package name of the package to be installed
+# $3 - Okay to upgrade the package? (Optional)
 pkg_upd() {
     pkg_filename=$1
+    pkg_name=$2
+    pkg_allowed=$3
+
+    echo "----- Updating package: $2 ($1) -----"
+
+    if [ -z "${forceFlag}" -a -n "$3" ]; then
+        if [ $3 -ne 0 ]; then
+            echo "Skipping package since existing version >= version available"
+            return 0
+        fi
+    fi
 
     case "$PLATFORM" in
         Linux_ULINUX)
-            ulinux_detect_installer
             if [ "$INSTALLER" = "DPKG" ]; then
                 [ -z "${forceFlag}" ] && FORCE="--refuse-downgrade"
                 dpkg --install $FORCE ${pkg_filename}.deb
@@ -160,22 +262,37 @@ pkg_upd() {
     esac
 }
 
-force_stop_omi_service() {
-    # For any installation or upgrade, we should be shutting down omiserver (and it will be started after install/upgrade).
-    if [ -x /usr/sbin/invoke-rc.d ]; then
-        /usr/sbin/invoke-rc.d omiserverd stop 1> /dev/null 2> /dev/null
-    elif [ -x /sbin/service ]; then
-        service omiserverd stop 1> /dev/null 2> /dev/null
+getInstalledVersion()
+{
+    # Parameter: Package to check if installed
+    # Returns: Printable string (version installed or "None")
+    if check_if_pkg_is_installed $1; then
+        if [ "$INSTALLER" = "DPKG" ]; then
+            local version=`dpkg -s $1 2> /dev/null | grep "Version: "`
+            getVersionNumber $version "Version: "
+        else
+            local version=`rpm -q $1 2> /dev/null`
+            getVersionNumber $version ${1}-
+        fi
+    else
+        echo "None"
     fi
- 
-    # Catchall for stopping omiserver
-    /etc/init.d/omiserverd stop 1> /dev/null 2> /dev/null
-    /sbin/init.d/omiserverd stop 1> /dev/null 2> /dev/null
+}
+
+shouldInstall_mysql()
+{
+    local versionInstalled=`getInstalledVersion mysql-cimprov`
+    [ "$versionInstalled" = "None" ] && return 0
+    local versionAvailable=`getVersionNumber $MYSQL_PKG mysql-cimprov-`
+
+    check_version_installable $versionInstalled $versionAvailable
 }
 
 #
 # Executable code follows
 #
+
+ulinux_detect_installer
 
 while [ $# -ne 0 ]; do
     case "$1" in
@@ -240,6 +357,23 @@ while [ $# -ne 0 ]; do
             verifyNoInstallationOption
             installMode=U
             shift 1
+            ;;
+
+        --version)
+            echo "Version: `getVersionNumber $MYSQL_PKG mysql-cimprov-`"
+            exit 0
+            ;;
+
+        --version-check)
+            printf '%-15s%-15s%-15s%-15s\n\n' Package Installed Available Install?
+
+            # mysql-cimprov itself
+            versionInstalled=`getInstalledVersion mysql-cimprov`
+            versionAvailable=`getVersionNumber $MYSQL_PKG mysql-cimprov-`
+            if shouldInstall_mysql; then shouldInstall="Yes"; else shouldInstall="No"; fi
+            printf '%-15s%-15s%-15s%-15s\n' mysql-cimprov $versionInstalled $versionAvailable $shouldInstall
+
+            exit 0
             ;;
 
         --debug)
@@ -336,17 +470,15 @@ case "$installMode" in
     I)
         echo "Installing MySQL agent ..."
 
-        force_stop_omi_service
-
-        pkg_add $MYSQL_PKG
+        pkg_add $MYSQL_PKG mysql-cimprov
         EXIT_STATUS=$?
         ;;
 
     U)
         echo "Updating MySQL agent ..."
-        force_stop_omi_service
 
-        pkg_upd $MYSQL_PKG
+        shouldInstall_mysql
+        pkg_upd $MYSQL_PKG mysql-cimprov $?
         EXIT_STATUS=$?
         ;;
 

@@ -744,7 +744,7 @@ extern SCXCoreLib::SCXHandle<MySQL_Factory> g_pFactory; //!< Define single globa
 template <typename T> bool ConvertToUnsigned(const std::string& strNum, T& value)
 {
     try {
-        value = SCXCoreLib::StrToUInt( SCXCoreLib::StrFromUTF8(strNum) );
+        value = SCXCoreLib::StrToULong( SCXCoreLib::StrFromUTF8(strNum) );
     }
     catch (SCXCoreLib::SCXNotSupportedException& e)
     {

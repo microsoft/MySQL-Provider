@@ -1,0 +1,5 @@
+# A test cnf file that includes a diretory that references itself
+# file recursively includes itself
+!includedir /recursive-dir/
+
+

@@ -1,0 +1,13 @@
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+bind-address = 172.127.217.712
+port = 3507
+
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+# negative test case. The following is an invalid includedir directive
+!includedir 
+

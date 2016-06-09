@@ -439,11 +439,13 @@ STATIC_OMI_PREEXEC_SRCFILES = \
 	$(PROVIDER_DIR)/support/mycnf-paths.cpp \
 	$(PROVIDER_DIR)/support/productdependencies.cpp \
 	$(PROVIDER_DIR)/support/sqlauth.cpp \
+	$(SOURCE_DIR)/omi_preexec/mycnf-scanner.cpp \
 	$(SOURCE_DIR)/omi_preexec/omi-mysql.cpp \
 	$(SOURCE_DIR)/omi_preexec/omi-preexec.cpp
 
 STATIC_OMI_PREEXEC_HEADERS = \
 	$(PROVIDER_DIR)/support/mycnf-paths.h \
+	$(SOURCE_DIR)/omi_preexec/mycnf-scanner.h \
 	$(SOURCE_DIR)/omi_preexec/omi-preexec.h
 
 STATIC_OMI_PREEXEC_OBJFILES = $(call src_to_obj,$(STATIC_OMI_PREEXEC_SRCFILES))
@@ -480,7 +482,9 @@ STATIC_PROVIDER_UNITFILES = \
 	$(PROVIDER_TEST_DIR)/sqlstoredproc_test.cpp \
 	$(PROVIDER_TEST_DIR)/support/testrunnerlogpolicy.cpp \
 	$(TEST_DIR)/myauth/myauth_test.cpp \
-	$(PROVIDER_TEST_DIR)/providertestutils.cpp
+	$(TEST_DIR)/omi_preexec/config_scanner_test.cpp \
+	$(PROVIDER_TEST_DIR)/providertestutils.cpp \
+	$(SOURCE_DIR)/omi_preexec/mycnf-scanner.cpp
 
 STATIC_PROVIDER_PAL_UNITFILES = \
 	$(PAL_TESTUTILS_DIR)/scxassert_cppunit.cpp \
@@ -488,7 +492,7 @@ STATIC_PROVIDER_PAL_UNITFILES = \
 
 STATIC_PROVIDER_TEST_OBJFILES = $(call src_to_obj,$(STATIC_PROVIDER_UNITFILES))
 
-$(INTERMEDIATE_DIR)/testrunner: INCLUDES += $(PROVIDER_TEST_INCLUDE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PAL_TESTUTILS_DIR)
+$(INTERMEDIATE_DIR)/testrunner: INCLUDES += $(PROVIDER_TEST_INCLUDE_FLAGS) -I$(PAL_INCLUDE_DIR) -I$(PAL_TESTUTILS_DIR) -I$(SOURCE_DIR)/omi_preexec
 $(INTERMEDIATE_DIR)/testrunner: CFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(INTERMEDIATE_DIR)/testrunner: CXXFLAGS += $(PROVIDER_COMPILE_FLAGS)
 $(INTERMEDIATE_DIR)/testrunner : $(STATIC_PROVIDER_UNITFILES_INCLUDE) $(STATIC_PROVIDER_TEST_OBJFILES) $(STATIC_PROVIDERLIB_OBJFILES) $(INCLUDE_DEFINES) $(INCLUDE_VERSION) $(PROVIDER_HEADERS) $(MYAUTH_PROG)
@@ -501,7 +505,11 @@ testrun : test
 TEST_STATUS:
 	@echo "========================= Performing Building provider tests"
 
-test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(INTERMEDIATE_DIR)/testrunner
+TEST_DATA_PREP:
+	@echo "========================= Performing Test data preparation"
+	cp -R $(TEST_DIR)/omi_preexec/testdata/cnfs $(INTERMEDIATE_DIR)/.
+
+test : TEST_STATUS $(SCXPAL_INTERMEDIATE_DIR) $(INTERMEDIATE_DIR)/testrunner TEST_DATA_PREP
 	@echo "========================= Performing MySQL testrun execution"
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(OMI_ROOT)/output/lib; cd $(INTERMEDIATE_DIR); ./testrunner
 

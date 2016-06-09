@@ -1,0 +1,21 @@
+# For advice on how to change settings please see
+# http://dev.mysql.com/doc/refman/5.7/en/server-configuration-defaults.html
+
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+bind-address = 172.127.217.712
+port = 3507
+
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+!include  /test-default.cnf
+
+[random]
+port = 4301
+bind-address = 198.199.210.201
+
+log-error=/var/log/mysql/mysqld.log
+pid-file=/var/run/mysql/mysqld.pid

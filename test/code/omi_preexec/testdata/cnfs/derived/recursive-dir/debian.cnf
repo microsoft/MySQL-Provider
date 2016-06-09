@@ -1,0 +1,13 @@
+[client]
+host     = localhost
+user     = debian-sys-maint
+password = BWZDw2oKwgugUg2f
+socket   = /var/run/mysqld/mysqld.sock
+[mysql_upgrade]
+host     = localhost
+user     = debian-sys-maint
+password = BWZDw2oKwgugUg2f
+socket   = /var/run/mysqld/mysqld.sock
+
+#recursively include the same directory
+!includedir /recursive-dir/

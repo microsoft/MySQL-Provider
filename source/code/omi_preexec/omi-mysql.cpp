@@ -45,6 +45,7 @@
 #include <scxcorelib/stringaid.h>
 
 #include "mycnf-paths.h"
+#include "mycnf-scanner.h"
 #include "omi-preexec.h"
 #include "sqlauth.h"
 
@@ -82,13 +83,12 @@ static int MySQL_ConfigurationParser(uid_t uid, gid_t gid, const std::wstring& c
         return 0;
     }
 
-    SCX_LOGHYSTERICAL(hLog, StrAppend(L"Parsing MySQL configuration file: ", cnfFile));
+    SCX_LOGHYSTERICAL(hLog, StrAppend(L"Loading MySQL configuration file: ", cnfFile));
 
-    std::vector<std::wstring> lines;
+    MySQL::MySQL_ConfigurationScanner configScanner;
     try
     {
-        SCXStream::NLFs nlfs;
-        SCXFile::ReadAllLines(cnfFile, lines, nlfs );
+        configScanner.Scan(cnfFile, auth);
     }
     catch (const SCXException& e)
     {
@@ -96,99 +96,10 @@ static int MySQL_ConfigurationParser(uid_t uid, gid_t gid, const std::wstring& c
         return -1;
     }
 
-    std::map<unsigned int,std::wstring> ports;
-    unsigned int portNum = 0;
-    std::wstring bindAddress;
-
-    for (std::vector<std::wstring>::const_iterator it = lines.begin(); it != lines.end(); ++it)
-    {
-        std::wstring line( StrTrim(*it) );
-        SCX_LOGHYSTERICAL(hLog, StrAppend(L" Line: ", line));
-        if ( line.size() == 0 || line[0] == L'#')
-        {
-            continue;
-        }
-
-        // Does this line start with "[" (new section in file)?  If so, flush and reset.
-        if ( line[0] == L'[' )
-        {
-            // If we currently have a port number (and maybe a binding address), save it
-            if ( portNum )
-            {
-                SCX_LOGHYSTERICAL(hLog, StrAppend(StrAppend(L"   Flushing port ", portNum).append(L", Bind Address: "), bindAddress));
-
-                auth.AddCredentialSet(portNum, StrToUTF8(bindAddress));
-                ports[portNum] = bindAddress;
-            }
-
-            portNum = 0;
-            bindAddress = L"";
-
-            // Is the line of the form "[mysql]" or "[mysqlDD]" (where DD is one or more digits)?  If so, scan section.
-            if ( line == L"[mysqld]"
-                 || ( StrIsPrefix(line, L"[mysqld") && line.substr(line.size()-1) == L"]" && line.size() > 8
-                      && std::string::npos == line.substr(7,line.size()-8).find_first_not_of(L"0123456789") ) )
-            {
-                SCX_LOGHYSTERICAL(hLog, L"   New Section, scanning ...");
-
-                // Starting new section - set defaults
-                portNum = 3306;
-                bindAddress = L"127.0.0.1";
-            }
-
-            continue;
-        }
-
-        std::vector<std::wstring> elements;
-        StrTokenize(line, elements, L"=");
-        if ( elements.size() != 2 )
-        {
-            // Not a line that we care about
-            continue;
-        }
-
-        // Check for a port declaration (port = xxx)
-        if ( 0 == StrCompare(L"port", elements[0], true) )
-        {
-            SCX_LOGHYSTERICAL(hLog, StrAppend(L"   Found Port: ", elements[1]));
-            portNum = StrToUInt( elements[1] );
-        }
-
-        // Check for a bind-address declaration (bind-address = 172.0.0.1)
-        if ( 0 == StrCompare(L"bind-address", elements[0], true) )
-        {
-            SCX_LOGHYSTERICAL(hLog, StrAppend(L"   Found bind-address: ", elements[1]));
-            bindAddress = elements[1];
-        }
-    }
-
-    if ( portNum )
-    {
-        SCX_LOGHYSTERICAL(hLog, StrAppend(StrAppend(L"   Flushing port ", portNum).append(L", Bind Address: "), bindAddress));
-
-        auth.AddCredentialSet(portNum, StrToUTF8(bindAddress));
-        ports[portNum] = bindAddress;
-    }
-
-    // We've added what must be added, but we need to delete unreferenced ports
-    // (Loop through authentication ports and remove anything we didn't read from configuration
-
-    std::vector<unsigned int> authPorts;
-    auth.GetPortList( authPorts );
-    for (std::vector<unsigned int>::const_iterator it = authPorts.begin(); it != authPorts.end(); ++it)
-    {
-        if ( ports.count(*it) == 0 )
-        {
-            SCX_LOGHYSTERICAL(hLog, StrAppend(L"Deleting port: ", *it));
-            auth.DeleteCredentialSet(*it);
-        }
-    }
-
     SCX_LOGHYSTERICAL(hLog, L"Saving MySQL authentication");
     auth.Save();
 
     SCX_LOGHYSTERICAL(hLog, StrAppend(L"Successfully parsed file: ", cnfFile));
-
     return rc;
 }
 

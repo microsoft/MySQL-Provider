@@ -307,7 +307,7 @@ public:
         // If we run on an unknown platform, update the code below ...
         size_t expectedSize = 0;
         if ( 0 == pBinding->GetServerInfo().find("5.0.") )
-            expectedSize = 222;  // MySQL 5.0 returns 222 entries from query "show global status"
+            expectedSize = 224;  // build node MySQL 5.0.33 returns 224 entries from query "show global status"
         else if ( 0 == pBinding->GetServerInfo().find("5.1.") )
             expectedSize = 291;  // MySQL 5.1 returns 291 entries from query "show global status"
 
